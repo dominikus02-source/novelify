@@ -21,12 +21,93 @@ model User {
   plan            String    @default("free")
   wordCountUsed   Int       @default(0)
   dailyWordCount  Int       @default(0)
-  dailyWordDate   String?   // YYYY-MM-DD, null = never used today
+  dailyWordDate   String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   projects        Project[]
   accounts        Account[]
   sessions        Session[]
+  settings        UserSettings?
+}
+
+model UserSettings {
+  id                               String   @id @default(cuid())
+  userId                           String   @unique
+  user                             User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Profile
+  penName                          String?
+  authorBio                        String?
+  defaultAuthorName                String?
+  website                          String?
+
+  // Language & AI Output
+  defaultSourceLanguage            String   @default("id")
+  defaultTargetLanguage            String   @default("en")
+  defaultAiOutputLanguage          String   @default("en")
+  alwaysUseProjectTargetLanguage   Boolean  @default(true)
+  translationStyle                 String   @default("literary")
+  preserveCharacterNames           Boolean  @default(true)
+  preservePlaceNames               Boolean  @default(true)
+  glossaryBehavior                 String   @default("preserve")
+
+  // Writing Preferences
+  defaultGenre                     String?
+  defaultPOV                       String   @default("third_person_limited")
+  defaultTense                     String   @default("past")
+  defaultChapterWordTarget         Int      @default(3000)
+  defaultDailyWordGoal             Int      @default(1000)
+  autosaveInterval                 Int      @default(2000)
+  defaultWritingMode               String   @default("chapter")
+  manuscriptFont                   String   @default("serif")
+  editorDensity                    String   @default("comfortable")
+
+  // AI Preferences
+  aiCreativity                     String   @default("balanced")
+  defaultTone                      String   @default("literary")
+  proseStyle                       String   @default("clean")
+  contentLevel                     String   @default("general")
+  aiSuggestionMode                 String   @default("append_after_confirmation")
+  includeStoryBibleContext         Boolean  @default(true)
+  includePreviousChapterContext    Boolean  @default(true)
+  includeStyleGuideContext         Boolean  @default(true)
+
+  // Export & Publishing
+  defaultExportFormat              String   @default("epub")
+  pageSize                         String   @default("6x9")
+  includeTableOfContents           Boolean  @default(true)
+  includeCopyrightPage             Boolean  @default(true)
+  defaultCopyrightText             String?
+  publisherName                    String?
+  isbn                             String?
+  authorBioForExport               String?
+  frontMatterTemplate              String?
+  backMatterTemplate               String?
+
+  // Notifications
+  writingReminderEnabled           Boolean  @default(true)
+  writingReminderTime              String   @default("18:00")
+  dailyGoalReminder                Boolean  @default(true)
+  weeklyProgressEmail              Boolean  @default(false)
+  exportCompletedNotification      Boolean  @default(true)
+  aiTaskCompletedNotification      Boolean  @default(true)
+  marketingReminder                Boolean  @default(false)
+
+  // Privacy & Security
+  manuscriptPrivacy                String   @default("private")
+  allowAITrainingOnMyManuscript    Boolean  @default(false)
+  dataExportRequested              Boolean  @default(false)
+
+  // Appearance
+  theme                            String   @default("dark")
+  accentColor                      String   @default("gold")
+  editorPaper                      String   @default("warm")
+  editorFont                       String   @default("serif")
+  reducedMotion                    Boolean  @default(false)
+  compactSidebar                   Boolean  @default(false)
+
+  createdAt                        DateTime @default(now())
+  updatedAt                        DateTime @updatedAt
 }
 
 model Account {

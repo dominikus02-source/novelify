@@ -4,10 +4,10 @@ import { rateLimit } from '@/lib/rate-limit';
 import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { checkWordLimit } from '@/lib/word-limit';
+import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
 
 const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
-// POST /api/write - AI writing assistant
 export async function POST(request: NextRequest) {
   try {
     const limitCheck = limiter.check(request);
@@ -21,14 +21,13 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.flatten().fieldErrors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { prompt, context } = parsed.data;
-    const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage, projectTitle, genre } = context || {};
+    const { chapterContent, plotOutline, characters, styleGuide, projectTitle, genre } = context || {};
 
-    // Estimate words to generate (cap at 500 per request)
     const estimatedWords = Math.min(500, prompt.split(/\s+/).filter(Boolean).length * 3);
     const limitResult = await checkWordLimit(userId, estimatedWords);
     if ('error' in limitResult) {
@@ -43,43 +42,15 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
-    // Build the system prompt — language-agnostic novel writing specialist
-    const systemPrompt = `You are a professional novel-writing assistant. Your task is to continue the story or polish the user's prose. Detect the language of the user's content automatically and respond in the same language.
+    // Resolve language context
+    const language = await resolveLanguageContext(userId, parsed.data.projectId);
+    const systemPrompt = buildNovelSystemPrompt('writer', language, genre);
 
-RULES:
-- Detect and use the SAME language as the user's content (English, Indonesian, Spanish, etc.)
-- Fix grammar, spelling, and awkward phrasing naturally — never mention you fixed anything
-- Improve flow and readability while preserving the author's voice and style
-- Maintain consistent POV, tense, and character voice
-- Show-don't-tell technique
-- Natural dialogue that fits each character
-- No plot contradictions
-- Appropriate pacing for the scene
-- 200-500 words per response (adjust to scene needs)
-- End with a natural hook when possible (for chapter/scene transitions)
-- Follow genre conventions if specified (romance, fantasy, mystery, thriller, etc.)
-
-If the user submits existing text for polishing, treat it as a proofread/edit request — improve the language and feel without changing the story content.`;
-
-    // Build the user message with context
     let userMessage = '';
-
-    if (plotOutline) {
-      userMessage += `Plot Outline:\n${plotOutline}\n\n`;
-    }
-
-    if (characters) {
-      userMessage += `Characters:\n${characters}\n\n`;
-    }
-
-    if (styleGuide) {
-      userMessage += `Style Guide:\n${styleGuide}\n\n`;
-    }
-
-    if (chapterContent) {
-      userMessage += `Current Chapter Content:\n${chapterContent}\n\n`;
-    }
-
+    if (plotOutline) userMessage += `Plot Outline:\n${plotOutline}\n\n`;
+    if (characters) userMessage += `Characters:\n${characters}\n\n`;
+    if (styleGuide) userMessage += `Style Guide:\n${styleGuide}\n\n`;
+    if (chapterContent) userMessage += `Current Chapter Content:\n${chapterContent}\n\n`;
     userMessage += `Writer's Request: ${prompt}`;
 
     const content = await createChatCompletion([
@@ -87,19 +58,18 @@ If the user submits existing text for polishing, treat it as a proofread/edit re
       { role: 'user', content: userMessage },
     ]);
 
-    // Count actual generated words and adjust usage
     const actualWords = content.split(/\s+/).filter(Boolean).length;
     const diff = actualWords - estimatedWords;
     if (diff > 0) {
       await checkWordLimit(userId, diff);
     }
 
-    return NextResponse.json({ content, wordCount: actualWords, remaining: limitResult.remaining });
+    return NextResponse.json({ content, wordCount: actualWords, remaining: limitResult.remaining, aiOutputLanguage: language.aiOutputLanguage });
   } catch (error) {
     console.error('Error in AI writing assistant:', error);
     return NextResponse.json(
       { error: 'Failed to generate writing' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

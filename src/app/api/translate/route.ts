@@ -4,10 +4,10 @@ import { rateLimit } from '@/lib/rate-limit';
 import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { checkWordLimit } from '@/lib/word-limit';
+import { resolveLanguageContext, buildLanguageInstruction } from '@/lib/language-resolver';
 
 const limiter = rateLimit({ interval: 60000, maxRequests: 10 });
 
-// POST /api/translate - Literary translation
 export async function POST(request: NextRequest) {
   try {
     const limitCheck = limiter.check(request);
@@ -21,13 +21,12 @@ export async function POST(request: NextRequest) {
     if (!parsed.success) {
       return NextResponse.json(
         { error: parsed.error.flatten().fieldErrors },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const { sourceLanguage, targetLanguage, content } = parsed.data;
 
-    // Check word limit — translation costs source word count
     const sourceWords = content.split(/\s+/).filter(Boolean).length;
     const limitResult = await checkWordLimit(userId, sourceWords);
     if ('error' in limitResult) {
@@ -42,8 +41,12 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
-    // Build the system prompt for literary translation
+    // Resolve language for user settings context
+    const language = await resolveLanguageContext(userId, parsed.data.projectId);
+
     const systemPrompt = `You are a professional literary translator specializing in novels. Translate the following literary text from ${sourceLanguage} to ${targetLanguage} at publishable quality.
+
+${buildLanguageInstruction(language)}
 
 RULES:
 - Meaning-for-meaning translation (dynamic equivalence), never word-for-word
@@ -54,19 +57,21 @@ RULES:
 - Maintain narrative flow and literary style
 - Consistent translation of character names, places, and special terms
 - For idioms/slang: find natural equivalents in the target language
-- The output should read as if originally written in ${targetLanguage}`;
+- The output should read as if originally written in ${targetLanguage}
+
+CRITICAL: You are translating FROM ${sourceLanguage} TO ${targetLanguage}. The output MUST be in ${targetLanguage} only.`;
 
     const translatedText = await createChatCompletion([
       { role: 'assistant', content: systemPrompt },
       { role: 'user', content },
     ]);
 
-    return NextResponse.json({ content: translatedText, remaining: limitResult.remaining });
+    return NextResponse.json({ content: translatedText, remaining: limitResult.remaining, aiOutputLanguage: targetLanguage });
   } catch (error) {
     console.error('Error in translation:', error);
     return NextResponse.json(
       { error: 'Failed to translate content' },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
