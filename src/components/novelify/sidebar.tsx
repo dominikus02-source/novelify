@@ -3,10 +3,10 @@
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, BookOpen, PenTool, FileText, Layout, Sparkles,
-  Target, FileEdit, Languages, Download, Image, Layers, BookMarked,
-  BarChart3, Megaphone, Settings, ChevronLeft, LogOut,
+  FileEdit, Languages, Download, Layers, Megaphone,
+  Settings, ChevronLeft, LogOut,
 } from 'lucide-react';
-import { useNovelifyStore, type AppView } from '@/lib/store';
+import { useNovelifyStore, type AppView, PROJECT_VIEWS, resolveActiveProject } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
@@ -16,55 +16,74 @@ interface NavItemDef {
   icon: React.ElementType;
   label: string;
   view: AppView;
-  section: 'workspace' | 'tools' | 'publishing' | 'insights';
+  section: 'workspace' | 'tools' | 'publishing' | 'resources' | 'account';
+  path: string;
 }
 
 const navItems: NavItemDef[] = [
-  // Workspace
-  { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard', section: 'workspace' },
-  { icon: BookOpen, label: 'My Novels', view: 'my-novels', section: 'workspace' },
-  { icon: PenTool, label: 'Writing Studio', view: 'writing', section: 'workspace' },
-  { icon: FileText, label: 'Story Bible', view: 'story-bible', section: 'workspace' },
-  { icon: Layout, label: 'Plot Board', view: 'plot-board', section: 'workspace' },
+  { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard', section: 'workspace', path: '/dashboard' },
+  { icon: BookOpen, label: 'My Novels', view: 'my-novels', section: 'workspace', path: '/dashboard/novels' },
+  { icon: PenTool, label: 'Writing Studio', view: 'writing', section: 'workspace', path: '/dashboard/writing' },
+  { icon: FileText, label: 'Story Bible', view: 'story-bible', section: 'workspace', path: '/dashboard/bible' },
+  { icon: Layout, label: 'Plot Board', view: 'plot-board', section: 'workspace', path: '/dashboard/plot' },
 
-  // Tools
-  { icon: Sparkles, label: 'AI Co-Writer', view: 'ai-cowriter', section: 'tools' },
-  { icon: Target, label: 'Writing Goals', view: 'writing-goals', section: 'tools' },
-  { icon: FileEdit, label: 'Revision Room', view: 'revision', section: 'tools' },
-  { icon: Languages, label: 'Translation', view: 'translation-studio', section: 'tools' },
-  { icon: BookMarked, label: 'Research Vault', view: 'research', section: 'tools' },
+  { icon: Sparkles, label: 'AI Co-Writer', view: 'ai-cowriter', section: 'tools', path: '/dashboard/ai' },
+  { icon: FileEdit, label: 'Revision', view: 'revision', section: 'tools', path: '/dashboard/revision' },
+  { icon: Languages, label: 'Translation', view: 'translation', section: 'tools', path: '/dashboard/translation' },
+  { icon: Download, label: 'Publishing', view: 'publishing', section: 'tools', path: '/dashboard/publishing' },
 
-  // Publishing
-  { icon: Download, label: 'Publishing', view: 'publishing', section: 'publishing' },
-  { icon: Image, label: 'Cover Studio', view: 'cover-studio', section: 'publishing' },
-  { icon: Layers, label: 'Templates', view: 'templates', section: 'publishing' },
-  { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'publishing' },
+  { icon: Layers, label: 'Templates', view: 'templates', section: 'resources', path: '/dashboard/templates' },
+  { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'resources', path: '/dashboard/marketing' },
 
-  // Insights
-  { icon: BarChart3, label: 'Analytics', view: 'analytics', section: 'insights' },
-  { icon: Settings, label: 'Settings', view: 'settings', section: 'insights' },
+  { icon: Settings, label: 'Settings', view: 'settings', section: 'account', path: '/dashboard/settings' },
 ];
 
 const sectionLabels: Record<string, string> = {
   workspace: 'Workspace',
-  tools: 'Tools',
-  publishing: 'Publishing',
-  insights: 'Insights',
+  tools: 'AI & Production',
+  resources: 'Resources',
+  account: 'Account',
 };
 
 export function Sidebar() {
   const router = useRouter();
   const { data: session } = useSession();
-  const { currentView, setCurrentView, sidebarOpen, setSidebarOpen, selectedProject, setSelectedProject, projects } = useNovelifyStore();
+  const {
+    currentView, setCurrentView, sidebarOpen, setSidebarOpen,
+    selectedProject, setSelectedProject, projects,
+  } = useNovelifyStore();
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
-    setCurrentView('hero');
-    router.refresh();
+    router.push('/');
+  };
+
+  const getRoute = (item: NavItemDef) => {
+    if (PROJECT_VIEWS.includes(item.view)) {
+      const project = resolveActiveProject(projects, selectedProject, null);
+      if (project) {
+        return `${item.path}/${project.id}`;
+      }
+    }
+    return item.path;
+  };
+
+  const handleNavigate = (item: NavItemDef) => {
+    setCurrentView(item.view);
+
+    if (PROJECT_VIEWS.includes(item.view)) {
+      const project = resolveActiveProject(projects, selectedProject, null);
+      if (project) {
+        setSelectedProject(project);
+        router.push(`${item.path}/${project.id}`);
+        return;
+      }
+    }
+
+    router.push(item.path);
   };
 
   const isActive = (view: AppView) => currentView === view;
-  const totalChapters = projects.reduce((sum, p) => sum + p.chapters.length, 0);
 
   return (
     <motion.aside
@@ -78,8 +97,7 @@ export function Sidebar() {
         overflowY: 'auto', overflowX: 'hidden',
       }}
     >
-      {/* Logo */}
-      <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '18px 14px 20px' : '18px 0 20px', justifyContent: sidebarOpen ? 'flex-start' : 'center', textDecoration: 'none', flexShrink: 0 }}>
+      <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '18px 14px 20px' : '18px 0 20px', justifyContent: sidebarOpen ? 'flex-start' : 'center', textDecoration: 'none', flexShrink: 0 }}>
         <div style={{
           width: 30, height: 30, flexShrink: 0,
           background: 'linear-gradient(135deg, #C9A96E, #E8C98A)',
@@ -100,11 +118,10 @@ export function Sidebar() {
         </AnimatePresence>
       </a>
 
-      {/* Navigation sections */}
-      {(['workspace', 'tools', 'publishing', 'insights'] as const).map((section) => (
+      {(['workspace', 'tools', 'resources', 'account'] as const).map((section) => (
         <div key={section}>
           {sidebarOpen && (
-            <div style={{ fontSize: 9, fontWeight: 600, color: '#636366', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 14px', margin: '8px 0 4px' }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#636366', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 14px', margin: '8px 0 4px' }}>
               {sectionLabels[section]}
             </div>
           )}
@@ -112,10 +129,10 @@ export function Sidebar() {
             {navItems.filter((item) => item.section === section).map((item) => {
               const Icon = item.icon;
               const active = isActive(item.view);
-              const badge = item.view === 'writing' ? totalChapters : null;
+              const href = getRoute(item);
               return (
                 <button key={item.view}
-                  onClick={() => setCurrentView(item.view)}
+                  onClick={() => handleNavigate(item)}
                   title={!sidebarOpen ? item.label : undefined}
                   style={{
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -142,8 +159,8 @@ export function Sidebar() {
                       >{item.label}</motion.span>
                     )}
                   </AnimatePresence>
-                  {sidebarOpen && badge !== null && badge > 0 && (
-                    <span style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 10, padding: '0 6px', fontSize: 9, fontWeight: 600, color: '#8E8E93' }}>{badge}</span>
+                  {sidebarOpen && active && (
+                    <span style={{ width: 4, height: 4, borderRadius: '50%', background: '#C9A96E', flexShrink: 0 }} />
                   )}
                 </button>
               );
@@ -152,13 +169,9 @@ export function Sidebar() {
         </div>
       ))}
 
-      {/* Spacer */}
       <div style={{ flex: 1 }} />
 
-      {/* Bottom section */}
       <div style={{ padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-
-        {/* Selected project */}
         <AnimatePresence>
           {sidebarOpen && selectedProject && (
             <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} transition={{ duration: 0.2 }} style={{ overflow: 'hidden' }}>
@@ -173,25 +186,26 @@ export function Sidebar() {
           )}
         </AnimatePresence>
 
-        {/* User */}
         <AnimatePresence>
           {sidebarOpen && (
             <motion.div initial={{ opacity: 0, y: 5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: 5 }}
               style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '8px 8px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.06)', background: '#161616', marginBottom: 4 }}
             >
               <div style={{ width: 26, height: 26, borderRadius: '50%', background: 'rgba(201,169,110,0.10)', border: '1px solid rgba(201,169,110,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 600, color: '#C9A96E', flexShrink: 0 }}>
-                {session?.user?.name?.charAt(0)?.toUpperCase() || 'D'}
+                {session?.user?.name?.charAt(0)?.toUpperCase() || 'N'}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ fontSize: 11, fontWeight: 500, color: '#F5F5F7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {session?.user?.name || 'Writer'}
                 </div>
               </div>
+              <button onClick={handleSignOut} title="Sign out" style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#636366', padding: 2, display: 'flex' }}>
+                <LogOut style={{ width: 12, height: 12 }} />
+              </button>
             </motion.div>
           )}
         </AnimatePresence>
 
-        {/* Collapse */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)}
           title={sidebarOpen ? 'Collapse' : 'Expand'}
           style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '7px 8px', borderRadius: 10, cursor: 'pointer', border: 'none', width: '100%', fontSize: 12, fontWeight: 500, color: '#636366', background: 'transparent', justifyContent: sidebarOpen ? 'flex-start' : 'center', transition: 'background .15s', marginBottom: 8 }}

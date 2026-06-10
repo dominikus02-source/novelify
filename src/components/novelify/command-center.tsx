@@ -1,16 +1,17 @@
 'use client';
 
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  BookOpen, Plus, FileText, AlignLeft, Clock, Sparkles, ArrowRight,
-  Trash2, Search, Bell, PenTool, Languages, Image, Download,
-  CheckCircle2, Globe, Target, BookMarked, BarChart3, Layout,
-  FileEdit, Megaphone, Layers, Star, TrendingUp, Lightbulb,
-  Quote, MessageSquarePlus, Wand2, TextSelect, Zap, Award,
+  BookOpen, Plus, FileText, AlignLeft, Clock, Sparkles,
+  Search, Bell, PenTool, Languages, Image, Download,
+  CheckCircle2, Target, BookMarked,
+  FileEdit, Megaphone, Layers, Lightbulb,
+  Quote, Wand2, TextSelect,
 } from 'lucide-react';
 import { useNovelifyStore, type Project } from '@/lib/store';
 import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { CreateProjectDialog } from '@/components/novelify/create-project-dialog';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
@@ -34,9 +35,9 @@ const aiTools = [
   { icon: Wand2, label: 'Rewrite Scene', view: 'ai-cowriter', color: 'purple' },
   { icon: Quote, label: 'Improve Dialogue', view: 'ai-cowriter', color: 'blue' },
   { icon: TextSelect, label: 'Fix Pacing', view: 'ai-cowriter', color: 'teal' },
-  { icon: FileText, label: 'Generate Synopsis', view: 'synopsis', color: 'pink' },
-  { icon: Languages, label: 'Translate Chapter', view: 'translation-studio', color: 'emerald' },
-  { icon: BookMarked, label: 'Create Blurb', view: 'synopsis', color: 'red' },
+  { icon: FileText, label: 'Generate Synopsis', view: 'ai-cowriter', color: 'pink' },
+  { icon: Languages, label: 'Translate Chapter', view: 'translation', color: 'emerald' },
+  { icon: BookMarked, label: 'Create Blurb', view: 'ai-cowriter', color: 'red' },
   { icon: Megaphone, label: 'Marketing Caption', view: 'marketing', color: 'gold' },
 ];
 
@@ -64,8 +65,9 @@ const publishChecklist = [
 ];
 
 export function CommandCenter() {
+  const router = useRouter();
   const { data: session } = useSession();
-  const { projects, setProjects, setSelectedProject, setCurrentView, setDashboardTab } = useNovelifyStore();
+  const { projects, setProjects, setSelectedProject, setCurrentView } = useNovelifyStore();
   const [isLoading, setIsLoading] = useState(true);
   const [createOpen, setCreateOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -124,7 +126,33 @@ export function CommandCenter() {
   });
   const publishPct = Math.round((checklistStatus.filter((c) => c.done).length / checklistStatus.length) * 100);
 
-  const handleOpenProject = (p: Project) => { setSelectedProject(p); setCurrentView('project'); };
+  const navigate = (view: string, project?: Project | null) => {
+    if (project) setSelectedProject(project);
+    setCurrentView(view as any);
+    const base = '/dashboard';
+    const routes: Record<string, string> = {
+      'writing': `${base}/writing/${project?.id}`,
+      'story-bible': `${base}/bible/${project?.id}`,
+      'plot-board': `${base}/plot/${project?.id}`,
+      'revision': `${base}/revision/${project?.id}`,
+      'translation': `${base}/translation/${project?.id}`,
+      'translation-studio': `${base}/translation/${project?.id}`,
+      'publishing': `${base}/publishing/${project?.id}`,
+      'my-novels': `${base}/novels`,
+      'ai-cowriter': `${base}/ai`,
+      'templates': `${base}/templates`,
+      'marketing': `${base}/marketing`,
+      'synopsis': `${base}/ai`,
+      'writing-goals': `${base}`,
+      'analytics': `${base}`,
+      'cover-studio': `${base}/publishing`,
+      'research': `${base}/bible`,
+      'settings': `${base}/settings`,
+    };
+    router.push(routes[view] || base);
+  };
+
+  const handleOpenProject = (p: Project) => { navigate('project', p); };
   const handleDelete = async () => {
     if (!projectToDelete) return;
     setIsDeleting(true);
@@ -174,14 +202,14 @@ export function CommandCenter() {
               </p>
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
                 {lastEdited && (
-                  <GlassButton onClick={() => { setSelectedProject(lastEdited); setCurrentView('writing'); }}>
+                  <GlassButton onClick={() => navigate('writing', lastEdited)}>
                     <PenTool style={{ width: 13, height: 13 }} /> Continue Writing
                   </GlassButton>
                 )}
                 <GlassButton onClick={() => setCreateOpen(true)}>
                   <Plus style={{ width: 13, height: 13 }} /> Create New Novel
                 </GlassButton>
-                <button onClick={() => setCurrentView('ai-cowriter')}
+                <button onClick={() => navigate('ai-cowriter')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', borderRadius: 20, border: `1px solid ${colors.goldBorder}`, background: 'rgba(201,169,110,0.06)', color: colors.gold, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background .15s' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(201,169,110,0.12)'}
                   onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(201,169,110,0.06)'}
@@ -206,7 +234,7 @@ export function CommandCenter() {
         {/* ─── C. Continue Writing Card ─── */}
         {lastEdited && (
           <FadeIn delay={0.08}>
-            <Card hover onClick={() => { setSelectedProject(lastEdited); setCurrentView('writing'); }}>
+            <Card hover onClick={() => navigate('writing', lastEdited)}>
               <div style={{ display: 'flex', gap: 20, padding: 20, alignItems: 'center' }}>
                 <div style={{ width: 56, height: 56, borderRadius: 12, background: lastEdited.coverImage ? `url(${lastEdited.coverImage}) center/cover` : 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, border: `1px solid ${colors.goldBorder}` }}>
                   {!lastEdited.coverImage && <BookOpen style={{ width: 24, height: 24, color: colors.gold }} />}
@@ -237,7 +265,7 @@ export function CommandCenter() {
         {/* ─── D. Active Projects ─── */}
         <FadeIn delay={0.1}>
           <div>
-            <SectionHeader title="Active Projects" count={totalProjects} action={<a href="#" onClick={() => setCurrentView('my-novels')} style={{ fontSize: 12, color: colors.gold, cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}>View all →</a>} />
+            <SectionHeader title="Active Projects" count={totalProjects} action={<a href="#" onClick={() => navigate('my-novels')} style={{ fontSize: 12, color: colors.gold, cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}>View all →</a>} />
             {isLoading ? (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
                 {Array.from({ length: 3 }).map((_, i) => (
@@ -286,13 +314,13 @@ export function CommandCenter() {
                       </div>
                       <div style={{ display: 'flex', gap: 4, padding: '8px 12px', borderTop: `1px solid ${colors.border}` }}>
                         {[
-                          { icon: PenTool, label: 'Write', view: 'writing' as const },
-                          { icon: BookMarked, label: 'Bible', view: 'story-bible' as const },
-                          { icon: Languages, label: 'Translate', view: 'translation-studio' as const },
-                          { icon: Download, label: 'Export', view: 'publishing' as const },
-                          { icon: Sparkles, label: 'AI', view: 'ai-cowriter' as const },
-                        ].map((act) => (
-                          <button key={act.label} onClick={(e) => { e.stopPropagation(); setSelectedProject(project); setCurrentView(act.view); }}
+                          { icon: PenTool, label: 'Write', view: 'writing' },
+                          { icon: BookMarked, label: 'Bible', view: 'story-bible' },
+                          { icon: Languages, label: 'Translate', view: 'translation' },
+                          { icon: Download, label: 'Export', view: 'publishing' },
+                          { icon: Sparkles, label: 'AI', view: 'ai-cowriter' },
+                        ].map((act: { icon: any; label: string; view: string }) => (
+                          <button key={act.label} onClick={(e) => { e.stopPropagation(); navigate(act.view, project); }}
                             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 3, padding: '5px 6px', borderRadius: 6, background: 'rgba(255,255,255,0.03)', border: `1px solid ${colors.border}`, color: colors.muted, fontSize: 9, fontWeight: 500, cursor: 'pointer' }}
                           ><act.icon style={{ width: 10, height: 10 }} /> {act.label}</button>
                         ))}
@@ -316,7 +344,7 @@ export function CommandCenter() {
               <div style={{ background: 'linear-gradient(135deg, rgba(201,169,110,0.06), rgba(201,169,110,0.01))', border: `1px solid ${colors.goldBorder}`, borderRadius: 16, padding: 20 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
                   <span style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Today's Goal</span>
-                  <button onClick={() => setCurrentView('writing-goals')} style={{ fontSize: 11, color: colors.gold, cursor: 'pointer', fontWeight: 500, background: 'none', border: 'none' }}>Edit goal →</button>
+                  <button onClick={() => navigate('writing-goals')} style={{ fontSize: 11, color: colors.gold, cursor: 'pointer', fontWeight: 500, background: 'none', border: 'none' }}>Edit goal →</button>
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                   <div style={{ position: 'relative', width: 72, height: 72, flexShrink: 0 }}>
@@ -345,7 +373,7 @@ export function CommandCenter() {
                     const Icon = tool.icon;
                     const c = iconColors[tool.color] || colors.gold;
                     return (
-                      <button key={tool.label} onClick={() => setCurrentView(tool.view)}
+                      <button key={tool.label} onClick={() => navigate(tool.view, lastEdited)}
                         style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6, padding: '12px 8px', borderRadius: 12, background: '#161616', border: `1px solid ${colors.border}`, cursor: 'pointer', textAlign: 'center', transition: 'background .15s, border-color .15s' }}
                         onMouseEnter={(e) => { e.currentTarget.style.background = '#1c1c1e'; e.currentTarget.style.borderColor = `${c}33`; }}
                         onMouseLeave={(e) => { e.currentTarget.style.background = '#161616'; e.currentTarget.style.borderColor = colors.border; }}
@@ -420,10 +448,10 @@ export function CommandCenter() {
             {/* I. Templates */}
             <FadeIn delay={0.15}>
               <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
-                <SectionHeader title="Templates" action={<button onClick={() => setCurrentView('templates')} style={{ fontSize: 11, color: colors.gold, cursor: 'pointer', fontWeight: 500, background: 'none', border: 'none' }}>All →</button>} />
+                <SectionHeader title="Templates" action={<button onClick={() => navigate('templates')} style={{ fontSize: 11, color: colors.gold, cursor: 'pointer', fontWeight: 500, background: 'none', border: 'none' }}>All →</button>} />
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
                   {templates.map((t) => (
-                    <button key={t.name} onClick={() => setCurrentView('templates')}
+                    <button key={t.name} onClick={() => navigate('templates')}
                       style={{ display: 'flex', flexDirection: 'column', padding: '10px 12px', borderRadius: 10, background: '#161616', border: `1px solid ${colors.border}`, cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s' }}
                       onMouseEnter={(e) => e.currentTarget.style.borderColor = colors.goldBorder}
                       onMouseLeave={(e) => e.currentTarget.style.borderColor = colors.border}

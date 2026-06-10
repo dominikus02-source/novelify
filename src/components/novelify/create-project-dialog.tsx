@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { BookOpen, Loader2 } from 'lucide-react';
 import { useNovelifyStore } from '@/lib/store';
+import { useRouter } from 'next/navigation';
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,7 @@ const genreOptions = [
 ];
 
 export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogProps) {
+  const router = useRouter();
   const { setSelectedProject, setCurrentView, setProjects, projects } = useNovelifyStore();
 
   // Form state
@@ -129,7 +131,8 @@ export function CreateProjectDialog({ open, onOpenChange }: CreateProjectDialogP
 
         // Set the selected project and navigate
         setSelectedProject(newProject);
-        setCurrentView('project');
+        setCurrentView('writing');
+        router.push('/dashboard/writing/' + newProject.id);
 
         // Close and reset
         handleOpenChange(false);

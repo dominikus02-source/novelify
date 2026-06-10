@@ -51,7 +51,7 @@ const templates = [
 
 export function WritingStudio() {
   const {
-    selectedProject, setSelectedProject, setCurrentView,
+    selectedProject, setSelectedProject,
     selectedChapter, setSelectedChapter, selectedScene, setSelectedScene,
     writingMode, setWritingMode, studioTab, setStudioTab,
     bibleTab, setBibleTab, isAiWriting, setIsAiWriting,
@@ -260,18 +260,18 @@ export function WritingStudio() {
 
   if (!selectedProject) {
     return (
-      <div className="flex min-h-screen items-center justify-center" style={{ background: '#f5f0eb' }}>
-        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
-          className="flex flex-col items-center gap-6 text-center"
+      <div className="flex min-h-screen items-center justify-center" style={{ background: '#080808' }}>
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+          className="flex flex-col items-center gap-5 text-center" style={{ maxWidth: 360 }}
         >
-          <div className="flex size-20 items-center justify-center rounded-full" style={{ background: 'rgba(200,135,58,0.1)' }}>
-            <PenTool className="size-10" style={{ color: '#C8873A' }} />
+          <div className="flex size-16 items-center justify-center rounded-2xl" style={{ background: 'rgba(201,169,110,0.10)', border: '1px solid rgba(201,169,110,0.15)' }}>
+            <PenTool className="size-8" style={{ color: '#C9A96E' }} />
           </div>
-          <h2 className="text-2xl font-bold" style={{ color: '#1a1a1a' }}>Select a project first</h2>
-          <p className="max-w-sm" style={{ color: '#8E8E93' }}>Choose a project from the dashboard to start writing</p>
-          <Button onClick={() => setCurrentView('dashboard')}
-            className="bg-amber hover:bg-amber/90 text-ink font-semibold shadow-md"
-          >Go to Dashboard</Button>
+          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 600, color: '#F5F5F7', margin: 0 }}>Select a Novel</h2>
+          <p style={{ fontSize: 13, color: '#8E8E93', lineHeight: 1.5, margin: 0 }}>Choose a novel from your library to open the Writing Studio</p>
+          <button onClick={() => { const w = window; w.location.href = '/dashboard/novels'; }}
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #C9A96E, #E8C98A)', color: '#1a0f00', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(201,169,110,0.25)' }}
+          >Browse My Novels</button>
         </motion.div>
       </div>
     );
@@ -815,15 +815,16 @@ export function WritingStudio() {
                 <p className="text-[11px] font-medium mb-3" style={{ color: '#1a1a1a' }}>Export Options</p>
                 <div className="space-y-2">
                   {[
-                    { icon: BookOpen, label: 'EPUB', desc: 'Standard ebook format', view: 'export' as const },
+                    { icon: BookOpen, label: 'EPUB', desc: 'Standard ebook format', path: 'publishing' },
                     { icon: FileText, label: 'PDF', desc: 'Print-ready document' },
                     { icon: Download, label: 'DOCX', desc: 'Microsoft Word format' },
                     { icon: Globe, label: 'Google Docs', desc: 'Send to Google Drive' },
                   ].map((opt) => {
                     const Icon = opt.icon;
+                    const goPath = 'path' in opt ? (opt as any).path : null;
                     return (
                       <button key={opt.label}
-                        onClick={() => { if (opt.view) { setCurrentView('export'); } }}
+                        onClick={() => { if (goPath && selectedProject) { window.location.href = `/dashboard/${goPath}/${selectedProject.id}`; } }}
                         className="flex items-center gap-3 w-full p-2.5 rounded-lg text-left transition-all"
                         style={{ background: '#f5f5f5', border: '1px solid rgba(0,0,0,0.05)' }}
                       >

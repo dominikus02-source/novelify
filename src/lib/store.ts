@@ -1,30 +1,20 @@
 import { create } from "zustand";
 
-// View types for the single-page navigation
-export type AppView = 
-  | "hero" 
-  | "dashboard" 
-  | "project"
-  | "writing" 
-  | "translate" 
-  | "synopsis" 
-  | "cover" 
-  | "export"
-  | "settings"
-  // New command center views
+export type AppView =
+  | "hero"
+  | "dashboard"
   | "my-novels"
+  | "writing"
   | "story-bible"
   | "plot-board"
   | "ai-cowriter"
-  | "writing-goals"
   | "revision"
-  | "translation-studio"
+  | "translation"
   | "publishing"
-  | "cover-studio"
   | "templates"
-  | "research"
-  | "analytics"
-  | "marketing";
+  | "marketing"
+  | "settings"
+  | "project";
 
 export interface Project {
   id: string;
@@ -141,60 +131,73 @@ export interface TimelineEvent {
   updatedAt: string;
 }
 
+// Views that need a selected project to function
+export const PROJECT_VIEWS: AppView[] = [
+  'writing', 'story-bible', 'plot-board',
+  'revision', 'translation', 'publishing',
+];
+
+// Views that can resolve from the store without a project
+export function resolveActiveProject(
+  projects: Project[],
+  selectedProject: Project | null,
+  lastActiveProjectId: string | null,
+): Project | null {
+  if (selectedProject) return selectedProject;
+  if (lastActiveProjectId) {
+    const found = projects.find(p => p.id === lastActiveProjectId);
+    if (found) return found;
+  }
+  if (projects.length > 0) {
+    return projects.reduce((a, b) =>
+      new Date(a.updatedAt) > new Date(b.updatedAt) ? a : b
+    );
+  }
+  return null;
+}
+
 interface AppState {
-  // Navigation
   currentView: AppView;
   setCurrentView: (view: AppView) => void;
-  
-  // Project state
+
   projects: Project[];
   setProjects: (projects: Project[]) => void;
   selectedProject: Project | null;
   setSelectedProject: (project: Project | null) => void;
-  
-  // Chapter state
+  lastActiveProjectId: string | null;
+
   selectedChapter: Chapter | null;
   setSelectedChapter: (chapter: Chapter | null) => void;
-  
-  // Scene state
+
   scenes: Scene[];
   setScenes: (scenes: Scene[]) => void;
   selectedScene: Scene | null;
   setSelectedScene: (scene: Scene | null) => void;
-  
-  // Writing mode
+
   writingMode: 'chapter' | 'scene' | 'full' | 'focus';
   setWritingMode: (mode: 'chapter' | 'scene' | 'full' | 'focus') => void;
-  
-  // Studio panel tab
+
   studioTab: 'ai' | 'bible' | 'outline' | 'characters' | 'notes' | 'versions' | 'export';
   setStudioTab: (tab: 'ai' | 'bible' | 'outline' | 'characters' | 'notes' | 'versions' | 'export') => void;
-  
-  // Bible sub-tab
-  bibleTab: 'characters' | 'locations' | 'timeline' | 'worldbuilding';
-  setBibleTab: (tab: 'characters' | 'locations' | 'timeline' | 'worldbuilding') => void;
-  
-  // Versioning
+
+  bibleTab: 'characters' | 'locations' | 'timeline' | 'worldbuilding' | 'research';
+  setBibleTab: (tab: 'characters' | 'locations' | 'timeline' | 'worldbuilding' | 'research') => void;
+
   versions: ManuscriptVersion[];
   setVersions: (versions: ManuscriptVersion[]) => void;
-  
-  // Story Bible
+
   storyNotes: StoryNote[];
   setStoryNotes: (notes: StoryNote[]) => void;
   locations: Location[];
   setLocations: (locations: Location[]) => void;
   timelineEvents: TimelineEvent[];
   setTimelineEvents: (events: TimelineEvent[]) => void;
-  
-  // Goals
+
   writingGoals: WritingGoal[];
   setWritingGoals: (goals: WritingGoal[]) => void;
-  
-  // UI state
+
   sidebarOpen: boolean;
   setSidebarOpen: (open: boolean) => void;
-  dashboardTab: string;
-  setDashboardTab: (tab: string) => void;
   isAiWriting: boolean;
   setIsAiWriting: (writing: boolean) => void;
   isAiTranslating: boolean;
@@ -203,60 +206,51 @@ interface AppState {
   setIsAiGenerating: (generating: boolean) => void;
 }
 
-export const useNovelifyStore = create<AppState>((set) => ({
-  // Navigation
+export const useNovelifyStore = create<AppState>((set, get) => ({
   currentView: "hero",
   setCurrentView: (view) => set({ currentView: view }),
-  
-  // Projects
+
   projects: [],
   setProjects: (projects) => set({ projects }),
   selectedProject: null,
-  setSelectedProject: (project) => set({ selectedProject: project }),
-  
-  // Chapters
+  setSelectedProject: (project) => set({
+    selectedProject: project,
+    lastActiveProjectId: project?.id || null,
+  }),
+  lastActiveProjectId: null,
+
   selectedChapter: null,
   setSelectedChapter: (chapter) => set({ selectedChapter: chapter }),
-  
-  // Scenes
+
   scenes: [],
   setScenes: (scenes) => set({ scenes }),
   selectedScene: null,
   setSelectedScene: (scene) => set({ selectedScene: scene }),
-  
-  // Writing mode
+
   writingMode: 'chapter',
   setWritingMode: (mode) => set({ writingMode: mode }),
-  
-  // Studio panel tab
+
   studioTab: 'ai',
   setStudioTab: (tab) => set({ studioTab: tab }),
-  
-  // Bible sub-tab
+
   bibleTab: 'characters',
   setBibleTab: (tab) => set({ bibleTab: tab }),
-  
-  // Versions
+
   versions: [],
   setVersions: (versions) => set({ versions }),
-  
-  // Story Bible
+
   storyNotes: [],
   setStoryNotes: (notes) => set({ storyNotes: notes }),
   locations: [],
   setLocations: (locations) => set({ locations }),
   timelineEvents: [],
   setTimelineEvents: (events) => set({ timelineEvents: events }),
-  
-  // Goals
+
   writingGoals: [],
   setWritingGoals: (goals) => set({ writingGoals: goals }),
-  
-  // UI
+
   sidebarOpen: true,
   setSidebarOpen: (open) => set({ sidebarOpen: open }),
-  dashboardTab: 'overview',
-  setDashboardTab: (tab) => set({ dashboardTab: tab }),
   isAiWriting: false,
   setIsAiWriting: (writing) => set({ isAiWriting: writing }),
   isAiTranslating: false,

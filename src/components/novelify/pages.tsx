@@ -2,25 +2,59 @@
 
 import {
   BookOpen, FileText, Layout, Sparkles, Target, FileEdit, Languages,
-  Download, Image as ImageIcon, Layers, BookMarked, BarChart3, Megaphone,
-  Plus, Search, Clock, ArrowRight, CheckCircle2, PenTool, Globe,
-  Trash2, Lightbulb, Quote, Wand2, Award, Star, Users, Map,
-  FolderTree, ScrollText, MessageSquarePlus,
+  Download, Image as ImageIcon, Layers, BookMarked, Megaphone,
+  Plus, Search, Clock, PenTool, Globe,
+  Lightbulb, Quote, Wand2, Award, Star, Users, Map,
+  CheckCircle2, AlignLeft,
 } from 'lucide-react';
 import { useNovelifyStore, type Project } from '@/lib/store';
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import {
   colors, iconColors, MetricCard, SectionHeader, ProgressBar, StatusBadge,
   EmptyState, Card, FadeIn, QuickActionBtn, GlassButton, FeaturePlaceholder,
   PageHeader, fmtWords, timeAgo,
 } from './dashboard-components';
 
+function useNav() {
+  const router = useRouter();
+  const { setSelectedProject, setCurrentView, projects, selectedProject } = useNovelifyStore();
+
+  const go = (view: string, project?: Project | null) => {
+    if (project) setSelectedProject(project);
+    setCurrentView(view as any);
+    const base = '/dashboard';
+    const routes: Record<string, string> = {
+      'writing': `${base}/writing/${project?.id || selectedProject?.id}`,
+      'story-bible': `${base}/bible/${project?.id || selectedProject?.id}`,
+      'plot-board': `${base}/plot/${project?.id || selectedProject?.id}`,
+      'revision': `${base}/revision/${project?.id || selectedProject?.id}`,
+      'translation': `${base}/translation/${project?.id || selectedProject?.id}`,
+      'translation-studio': `${base}/translation/${project?.id || selectedProject?.id}`,
+      'publishing': `${base}/publishing/${project?.id || selectedProject?.id}`,
+      'my-novels': `${base}/novels`,
+      'ai-cowriter': `${base}/ai`,
+      'templates': `${base}/templates`,
+      'marketing': `${base}/marketing`,
+      'synopsis': `${base}/ai`,
+      'export': `${base}/publishing/${project?.id || selectedProject?.id}`,
+      'cover': `${base}/publishing/${project?.id || selectedProject?.id}`,
+      'translate': `${base}/translation/${project?.id || selectedProject?.id}`,
+      'project': `${base}/novels`,
+      'settings': `${base}/settings`,
+    };
+    router.push(routes[view] || base);
+  };
+
+  return { go, projects, selectedProject, setSelectedProject };
+}
+
 // ═══════════════════════════════════════════
 // My Novels
 // ═══════════════════════════════════════════
 export function MyNovelsPage() {
-  const { projects, setSelectedProject, setCurrentView } = useNovelifyStore();
+  const { go, projects, setSelectedProject } = useNav();
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState('all');
 
@@ -53,7 +87,7 @@ export function MyNovelsPage() {
           {filtered.map((project) => {
             const wc = project.chapters.reduce((s, c) => s + c.wordCount, 0);
             return (
-              <Card key={project.id} hover onClick={() => { setSelectedProject(project); setCurrentView('project'); }}>
+              <Card key={project.id} hover onClick={() => go('writing', project)}>
                 <div style={{ height: 120, background: project.coverImage ? `url(${project.coverImage}) center/cover` : 'linear-gradient(135deg, rgba(201,169,110,0.12), rgba(201,169,110,0.03))', position: 'relative' }}>
                   {!project.coverImage && <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}><BookOpen style={{ width: 32, height: 32, color: colors.gold, opacity: 0.5 }} /></div>}
                   <div style={{ position: 'absolute', top: 8, right: 8 }}><StatusBadge status={project.status} /></div>
@@ -74,11 +108,11 @@ export function MyNovelsPage() {
 }
 
 // ═══════════════════════════════════════════
-// Story Bible
+// Story Bible (with Research tab)
 // ═══════════════════════════════════════════
 export function StoryBiblePage() {
-  const { selectedProject, setSelectedProject, setCurrentView, projects } = useNovelifyStore();
-  const [tab, setTab] = useState<'characters' | 'locations' | 'timeline' | 'lore'>('characters');
+  const { go, projects, selectedProject, setSelectedProject } = useNav();
+  const [tab, setTab] = useState<'characters' | 'locations' | 'timeline' | 'lore' | 'research'>('characters');
 
   if (!selectedProject) {
     return (
@@ -89,11 +123,11 @@ export function StoryBiblePage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             {projects.map((p) => (
-              <Card key={p.id} hover onClick={() => { setSelectedProject(p); }}>
+              <Card key={p.id} hover onClick={() => go('story-bible', p)}>
                 <div style={{ padding: 16 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7' }}>{p.title}</div>
                   <div style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{p.chapters.length} chapters · {p.characters.length} characters</div>
-                  <GlassButton small onClick={() => { setSelectedProject(p); }} style={{ marginTop: 10 }}>Open Bible</GlassButton>
+                  <GlassButton small onClick={() => go('story-bible', p)} style={{ marginTop: 10 }}>Open Bible</GlassButton>
                 </div>
               </Card>
             ))}
@@ -107,10 +141,10 @@ export function StoryBiblePage() {
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title={`Story Bible: ${p.title}`} subtitle={`${p.characters.length} characters · ${p.chapters.length} chapters`}
-        action={<GlassButton onClick={() => setCurrentView('writing')}><PenTool style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton>}
+        action={<GlassButton onClick={() => go('writing', p)}><PenTool style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton>}
       />
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20 }}>
-        {(['characters', 'locations', 'timeline', 'lore'] as const).map((t) => (
+      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+        {(['characters', 'locations', 'timeline', 'lore', 'research'] as const).map((t) => (
           <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 20, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: `1px solid ${tab === t ? colors.goldBorder : colors.border}`, background: tab === t ? 'rgba(201,169,110,0.10)' : '#161616', color: tab === t ? colors.gold : '#8E8E93' }}>
             {t.charAt(0).toUpperCase() + t.slice(1)}
           </button>
@@ -140,9 +174,30 @@ export function StoryBiblePage() {
           )}
         </div>
       )}
-      {tab === 'locations' && <FeaturePlaceholder title="Locations" description="Map out the world your story lives in" features={['Track key locations across your story', 'Add descriptions, history, and significance', 'Link locations to specific chapters and scenes']} cta="Coming soon — start by adding notes in Story Bible" />}
-      {tab === 'timeline' && <FeaturePlaceholder title="Timeline" description="Keep your story's chronology straight" features={['Visual timeline of story events', 'Track character arcs across chapters', 'Avoid continuity errors with date tracking']} cta="Coming soon — your chapters are the foundation" />}
-      {tab === 'lore' && <FeaturePlaceholder title="Lore & Worldbuilding" description="Document the rules and history of your world" features={['Worldbuilding notes and rules', 'Magic systems, technology, and culture', 'History, politics, and geography']} cta="Coming soon — add worldbuilding notes from Writing Studio" />}
+      {tab === 'locations' && (
+        <FeaturePlaceholder title="Locations" description="Map out the world your story lives in"
+          features={['Track key locations across your story', 'Add descriptions, history, and significance', 'Link locations to specific chapters and scenes']}
+          cta="Start by adding locations from your Story Bible in Writing Studio"
+        />
+      )}
+      {tab === 'timeline' && (
+        <FeaturePlaceholder title="Timeline" description="Keep your story's chronology straight"
+          features={['Visual timeline of story events', 'Track character arcs across chapters', 'Avoid continuity errors with date tracking']}
+          cta="Your chapters already form the foundation of your timeline"
+        />
+      )}
+      {tab === 'lore' && (
+        <FeaturePlaceholder title="Lore & Worldbuilding" description="Document the rules and history of your world"
+          features={['Worldbuilding notes and rules', 'Magic systems, technology, and culture', 'History, politics, and geography']}
+          cta="Add worldbuilding notes from Writing Studio's Notes panel"
+        />
+      )}
+      {tab === 'research' && (
+        <FeaturePlaceholder title="Research" description="All your story research, organized"
+          features={['Save notes and research links per project', 'Character inspiration boards and reference images', 'Location research with maps and cultural notes', 'Historical facts and cultural references library', 'AI-powered summaries from your research notes']}
+          cta="Start adding research notes from your Writing Studio's Notes panel"
+        />
+      )}
     </div>
   );
 }
@@ -151,7 +206,7 @@ export function StoryBiblePage() {
 // Plot Board
 // ═══════════════════════════════════════════
 export function PlotBoardPage() {
-  const { selectedProject, setSelectedProject, setCurrentView, projects } = useNovelifyStore();
+  const { go, projects, selectedProject, setSelectedProject } = useNav();
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
@@ -160,11 +215,11 @@ export function PlotBoardPage() {
         projects.length > 0 ? (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
             {projects.map((p) => (
-              <Card key={p.id} hover onClick={() => { setSelectedProject(p); }}>
+              <Card key={p.id} hover onClick={() => go('plot-board', p)}>
                 <div style={{ padding: 16 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7' }}>{p.title}</div>
                   <div style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{p.chapters.length} chapters</div>
-                  <GlassButton small onClick={() => setSelectedProject(p)} style={{ marginTop: 10 }}>Open Plot Board</GlassButton>
+                  <GlassButton small onClick={() => go('plot-board', p)} style={{ marginTop: 10 }}>Open Plot Board</GlassButton>
                 </div>
               </Card>
             ))}
@@ -178,11 +233,10 @@ export function PlotBoardPage() {
           features={[
             'Drag-and-drop scene reordering',
             'Three-act structure visualization',
-            'Hero\'s journey beat sheet',
             'Chapter-by-chapter outline view',
             'Scene cards with status, POV, and word count',
           ]}
-          cta="This feature is coming soon — your chapters are already structured in Writing Studio"
+          cta="Your chapters are structured in Writing Studio — a full board view is coming soon"
         />
       )}
     </div>
@@ -193,24 +247,24 @@ export function PlotBoardPage() {
 // AI Co-Writer
 // ═══════════════════════════════════════════
 export function AICoWriterPage() {
-  const { setCurrentView, selectedProject, projects, setSelectedProject } = useNovelifyStore();
+  const { go, projects, selectedProject, setSelectedProject } = useNav();
 
   const aiTools = [
-    { icon: Lightbulb, label: 'Generate Novel Idea', desc: 'Get a fresh story concept with characters and plot', view: 'writing' as const },
-    { icon: PenTool, label: 'Continue Chapter', desc: 'AI continues your current chapter naturally', view: 'writing' as const },
-    { icon: Wand2, label: 'Rewrite Scene', desc: 'Rewrite a scene with new tone or perspective', view: 'writing' as const },
-    { icon: Quote, label: 'Improve Dialogue', desc: 'Make dialogue more natural and distinctive', view: 'writing' as const },
-    { icon: FileText, label: 'Fix Pacing', desc: 'Adjust scene pacing for better flow', view: 'writing' as const },
-    { icon: BookMarked, label: 'Check Continuity', desc: 'Find plot holes and consistency issues', view: 'writing' as const },
-    { icon: MessageSquarePlus, label: 'Generate Synopsis', desc: 'Create a compelling story synopsis', view: 'synopsis' as const },
-    { icon: Award, label: 'Generate Title', desc: 'AI suggests titles based on your story', view: 'synopsis' as const },
-    { icon: Globe, label: 'Translate Text', desc: 'Translate selected text to another language', view: 'translation-studio' as const },
+    { icon: Lightbulb, label: 'Generate Novel Idea', desc: 'Get a fresh story concept with characters and plot', view: 'ai-cowriter' },
+    { icon: PenTool, label: 'Continue Chapter', desc: 'AI continues your current chapter naturally', view: 'writing' },
+    { icon: Wand2, label: 'Rewrite Scene', desc: 'Rewrite a scene with new tone or perspective', view: 'writing' },
+    { icon: Quote, label: 'Improve Dialogue', desc: 'Make dialogue more natural and distinctive', view: 'writing' },
+    { icon: Globe, label: 'Fix Pacing', desc: 'Adjust scene pacing for better flow', view: 'writing' },
+    { icon: BookMarked, label: 'Check Continuity', desc: 'Find plot holes and consistency issues', view: 'writing' },
+    { icon: FileText, label: 'Generate Synopsis', desc: 'Create a compelling story synopsis', view: 'ai-cowriter' },
+    { icon: Award, label: 'Generate Title', desc: 'AI suggests titles based on your story', view: 'ai-cowriter' },
+    { icon: Languages, label: 'Translate Text', desc: 'Translate selected text to another language', view: 'translation' },
   ];
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="AI Co-Writer" subtitle="Your creative partner for every stage of writing"
-        action={<GlassButton onClick={() => { if (selectedProject) setCurrentView('writing'); }}><Sparkles style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton>}
+        action={selectedProject ? <GlassButton onClick={() => go('writing', selectedProject)}><Sparkles style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton> : undefined}
       />
       {!selectedProject && projects.length > 0 && (
         <div style={{ marginBottom: 20 }}>
@@ -226,7 +280,7 @@ export function AICoWriterPage() {
         {aiTools.map((tool) => {
           const Icon = tool.icon;
           return (
-            <Card key={tool.label} hover onClick={() => setCurrentView(tool.view)}>
+            <Card key={tool.label} hover onClick={() => go(tool.view, selectedProject)}>
               <div style={{ padding: 16, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon style={{ width: 18, height: 18, color: colors.gold }} />
@@ -245,49 +299,16 @@ export function AICoWriterPage() {
 }
 
 // ═══════════════════════════════════════════
-// Writing Goals
-// ═══════════════════════════════════════════
-export function WritingGoalsPage() {
-  const { projects } = useNovelifyStore();
-  const totalWords = projects.reduce((s, p) => s + p.chapters.reduce((cs, c) => cs + c.wordCount, 0), 0);
-  const totalChs = projects.reduce((s, p) => s + p.chapters.length, 0);
-  const dailyTarget = 1000;
-  const wordsToday = 0;
-
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Writing Goals" subtitle="Track your progress and build your writing habit" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
-        <MetricCard icon={Target} label="Daily Target" value={fmtWords(dailyTarget)} color="gold" />
-        <MetricCard icon={Clock} label="Today's Words" value={fmtWords(wordsToday)} sub={`${fmtWords(dailyTarget - wordsToday)} remaining`} color="amber" />
-        <MetricCard icon={Award} label="Total Achievement" value={fmtWords(totalWords)} sub={`Across ${totalChs} chapters`} color="teal" />
-      </div>
-      <FeaturePlaceholder title="Goal Settings & Streaks"
-        description="Set daily, weekly, and project-level word count goals"
-        features={[
-          'Custom daily word targets per project',
-          'Weekly writing goals with progress tracking',
-          'Writing streak calendar and statistics',
-          'Project deadlines with milestone tracking',
-          'Real-time progress notifications',
-        ]}
-        cta="Basic tracking is active — detailed goal features coming soon"
-      />
-    </div>
-  );
-}
-
-// ═══════════════════════════════════════════
 // Revision Room
 // ═══════════════════════════════════════════
 export function RevisionRoomPage() {
-  const { selectedProject, setSelectedProject, setCurrentView, projects } = useNovelifyStore();
+  const { go, projects, selectedProject } = useNav();
   const p = selectedProject || projects[0];
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="Revision Room" subtitle="Polish your manuscript to perfection"
-        action={p ? <GlassButton onClick={() => { setSelectedProject(p); setCurrentView('writing'); }}><PenTool style={{ width: 13, height: 13 }} /> Edit in Studio</GlassButton> : undefined}
+        action={p ? <GlassButton onClick={() => go('writing', p)}><PenTool style={{ width: 13, height: 13 }} /> Edit in Studio</GlassButton> : undefined}
       />
       {!p || p.chapters.length === 0 ? (
         <EmptyState icon={FileEdit} title="No chapters to revise" desc="Write some chapters first, then come here to polish them" />
@@ -303,7 +324,7 @@ export function RevisionRoomPage() {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <Card key={item.label} hover onClick={() => setCurrentView('writing')}>
+              <Card key={item.label} hover onClick={() => go('writing', p)}>
                 <div style={{ padding: 16, display: 'flex', gap: 14 }}>
                   <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <Icon style={{ width: 16, height: 16, color: colors.gold }} />
@@ -327,19 +348,18 @@ export function RevisionRoomPage() {
 // Translation Studio
 // ═══════════════════════════════════════════
 export function TranslationStudioPage() {
-  const { setCurrentView, selectedProject } = useNovelifyStore();
+  const { go, selectedProject } = useNav();
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="Translation Studio" subtitle="Translate your novel to reach global readers"
-        action={<GlassButton onClick={() => setCurrentView('translate')}><Languages style={{ width: 13, height: 13 }} /> Open Translator</GlassButton>}
+        action={selectedProject ? <GlassButton onClick={() => go('translate', selectedProject)}><Languages style={{ width: 13, height: 13 }} /> Open Translator</GlassButton> : undefined}
       />
-      {!selectedProject && (
+      {!selectedProject ? (
         <EmptyState icon={Languages} title="Select a project" desc="Choose a project from My Novels to translate" />
-      )}
-      {selectedProject && (
+      ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-          <Card hover onClick={() => setCurrentView('translate')}>
+          <Card hover onClick={() => go('translate', selectedProject)}>
             <div style={{ padding: 16 }}>
               <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Translate Chapter</div>
               <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>Translate individual chapters with AI</div>
@@ -357,16 +377,17 @@ export function TranslationStudioPage() {
 }
 
 // ═══════════════════════════════════════════
-// Publishing Center
+// Publishing Center (with Cover section)
 // ═══════════════════════════════════════════
 export function PublishingCenterPage() {
-  const { setCurrentView, selectedProject } = useNovelifyStore();
+  const { go, selectedProject } = useNav();
 
   const items = [
-    { icon: Download, label: 'EPUB Export', desc: 'Ebook for Apple Books, Google Play, Kobo', view: 'export' as const },
-    { icon: FileText, label: 'PDF Export', desc: 'Print-ready manuscript', view: 'export' as const },
+    { icon: Download, label: 'EPUB Export', desc: 'Ebook for Apple Books, Google Play, Kobo', view: 'export' },
+    { icon: FileText, label: 'PDF Export', desc: 'Print-ready manuscript', view: 'export' },
+    { icon: ImageIcon, label: 'Cover Art', desc: 'Upload and manage book covers', view: 'cover' },
     { icon: FileEdit, label: 'Front Matter', desc: 'Title page, copyright, dedication' },
-    { icon: User, label: 'Author Bio', desc: 'About the author page' },
+    { icon: Users, label: 'Author Bio', desc: 'About the author page' },
     { icon: BookMarked, label: 'Book Description', desc: 'KDP and retailer descriptions' },
     { icon: CheckCircle2, label: 'KDP Checklist', desc: 'Pre-publish quality checklist' },
   ];
@@ -379,7 +400,7 @@ export function PublishingCenterPage() {
           const Icon = item.icon;
           const v = 'view' in item ? item.view : undefined;
           return (
-            <Card key={item.label} hover onClick={() => v && setCurrentView(v)}>
+            <Card key={item.label} hover onClick={() => v && go(v, selectedProject)}>
               <div style={{ padding: 16, display: 'flex', gap: 14 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon style={{ width: 16, height: 16, color: colors.gold }} />
@@ -398,41 +419,6 @@ export function PublishingCenterPage() {
   );
 }
 
-// Import for Publishing
-const User = Users;
-
-// ═══════════════════════════════════════════
-// Cover Studio
-// ═══════════════════════════════════════════
-export function CoverStudioPage() {
-  const { setCurrentView } = useNovelifyStore();
-
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Cover Studio" subtitle="Design your book cover"
-        action={<GlassButton onClick={() => setCurrentView('cover')}><ImageIcon style={{ width: 13, height: 13 }} /> Open Cover Manager</GlassButton>}
-      />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-        <Card hover onClick={() => setCurrentView('cover')}>
-          <div style={{ padding: 16, display: 'flex', gap: 14, alignItems: 'center' }}>
-            <div style={{ width: 48, height: 48, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-              <ImageIcon style={{ width: 22, height: 22, color: colors.gold }} />
-            </div>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Upload Cover</div>
-              <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>Upload your Canva-designed cover</div>
-            </div>
-          </div>
-        </Card>
-        <FeaturePlaceholder title="Cover History" description="Track all your cover versions"
-          features={['Version history of all cover uploads', 'KDP dimension presets and guides', 'Cover mockup preview with your title']}
-          cta="Upload your first cover to get started"
-        />
-      </div>
-    </div>
-  );
-}
-
 // ═══════════════════════════════════════════
 // Templates
 // ═══════════════════════════════════════════
@@ -445,8 +431,8 @@ export function TemplatesPage() {
     { name: 'Young Adult', genre: 'YA', desc: 'Coming-of-age, voice-driven, emotional stakes', chapters: 28 },
     { name: 'Webnovel', genre: 'Webnovel', desc: 'Serialized format, short chapters, hooks', chapters: 50 },
     { name: 'Light Novel', genre: 'Light Novel', desc: 'Japanese-style, illustrations, shorter prose', chapters: 15 },
-    { name: 'Hero\'s Journey', genre: 'Adventure', desc: 'Campbell\'s 12-stage monomyth structure', chapters: 24 },
-    { name: 'Save the Cat', genre: 'General', desc: 'Blake Snyder\'s 15-beat story structure', chapters: 20 },
+    { name: "Hero's Journey", genre: 'Adventure', desc: "Campbell's 12-stage monomyth structure", chapters: 24 },
+    { name: 'Save the Cat', genre: 'General', desc: "Blake Snyder's 15-beat story structure", chapters: 20 },
     { name: 'Three-Act', genre: 'General', desc: 'Setup, confrontation, resolution classic', chapters: 24 },
   ];
 
@@ -470,87 +456,56 @@ export function TemplatesPage() {
 }
 
 // ═══════════════════════════════════════════
-// Research Vault
+// Writing Goals (no longer a standalone page, included for backward compat)
 // ═══════════════════════════════════════════
-export function ResearchVaultPage() {
+export function WritingGoalsPage() {
+  const { projects } = useNovelifyStore();
+  const totalWords = projects.reduce((s, p) => s + p.chapters.reduce((cs, c) => cs + c.wordCount, 0), 0);
+  const totalChs = projects.reduce((s, p) => s + p.chapters.length, 0);
+  const dailyTarget = 1000;
+  const wordsToday = 0;
+
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Research Vault" subtitle="Your story research, organized" />
-      <FeaturePlaceholder title="All Your Research in One Place"
-        description="Collect and organize research for your novels"
-        features={[
-          'Save notes and research links per project',
-          'Character inspiration boards and reference images',
-          'Location research with maps and cultural notes',
-          'Historical facts and cultural references library',
-          'AI-powered summaries from your research notes',
-        ]}
-        cta="Start adding research notes from your Writing Studio"
+      <PageHeader title="Writing Goals" subtitle="Track your progress and build your writing habit" />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginBottom: 24 }}>
+        <MetricCard icon={Target} label="Daily Target" value={fmtWords(dailyTarget)} color="gold" />
+        <MetricCard icon={Clock} label="Today's Words" value={fmtWords(wordsToday)} sub={`${fmtWords(dailyTarget - wordsToday)} remaining`} color="amber" />
+        <MetricCard icon={Award} label="Total Achievement" value={fmtWords(totalWords)} sub={`Across ${totalChs} chapters`} color="teal" />
+      </div>
+      <FeaturePlaceholder title="Goal Settings & Streaks"
+        description="Set daily, weekly, and project-level word count goals"
+        features={['Custom daily word targets per project', 'Weekly writing goals with progress tracking', 'Writing streak calendar and statistics', 'Project deadlines with milestone tracking']}
+        cta="Basic tracking is active — detailed goal features coming soon"
       />
     </div>
   );
 }
-
-// ═══════════════════════════════════════════
-// Analytics
-// ═══════════════════════════════════════════
-export function AnalyticsPage() {
-  const { projects } = useNovelifyStore();
-  const totalWords = projects.reduce((s, p) => s + p.chapters.reduce((cs, c) => cs + c.wordCount, 0), 0);
-  const totalChs = projects.reduce((s, p) => s + p.chapters.length, 0);
-  const avgCh = totalChs > 0 ? Math.round(totalWords / totalChs) : 0;
-  const readingTime = Math.ceil(totalWords / 250);
-
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Analytics" subtitle="Understand your writing patterns" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 24 }}>
-        <MetricCard icon={AlignLeft} label="Total Words" value={fmtWords(totalWords)} color="gold" />
-        <MetricCard icon={FileText} label="Total Chapters" value={totalChs} color="purple" />
-        <MetricCard icon={BookOpen} label="Avg Chapter" value={`${fmtWords(avgCh)} words`} color="teal" />
-        <MetricCard icon={Clock} label="Reading Time" value={`${readingTime} min`} color="amber" />
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-        <FeaturePlaceholder title="Writing Activity" description="Your writing patterns over time"
-          features={['Words written per day/week/month chart', 'Most productive days and times', 'Writing streak heatmap']}
-          cta="Data will populate as you write more"
-        />
-        <FeaturePlaceholder title="Story Analytics" description="Deep insights into your manuscript"
-          features={['Dialogue vs narration ratio analysis', 'Character appearance frequency', 'Chapter length distribution chart', 'Word frequency and readability score']}
-          cta="Coming soon — powered by AI analysis"
-        />
-      </div>
-    </div>
-  );
-}
-
-// Re-import for Analytics
-const AlignLeft2 = FileText;
 
 // ═══════════════════════════════════════════
 // Marketing Kit
 // ═══════════════════════════════════════════
 export function MarketingKitPage() {
-  const { setCurrentView } = useNovelifyStore();
+  const { go, selectedProject } = useNav();
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="Marketing Kit" subtitle="Everything you need to promote your novel"
-        action={<GlassButton onClick={() => setCurrentView('synopsis')}><FileText style={{ width: 13, height: 13 }} /> Generate Synopsis</GlassButton>}
+        action={<GlassButton onClick={() => go('synopsis', selectedProject)}><FileText style={{ width: 13, height: 13 }} /> Generate Synopsis</GlassButton>}
       />
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
         {[
-          { icon: BookMarked, label: 'Book Blurb', desc: 'Back-cover copy that sells', view: 'synopsis' as const },
-          { icon: Award, label: 'Tagline', desc: 'Memorable one-line hook', view: 'synopsis' as const },
-          { icon: FileText, label: 'Amazon Description', desc: 'KDP-optimized listing', view: 'synopsis' as const },
-          { icon: Megaphone, label: 'Social Captions', desc: 'For TikTok, IG, Twitter', view: 'marketing' as const },
+          { icon: BookMarked, label: 'Book Blurb', desc: 'Back-cover copy that sells', view: 'synopsis' },
+          { icon: Award, label: 'Tagline', desc: 'Memorable one-line hook', view: 'synopsis' },
+          { icon: FileText, label: 'Amazon Description', desc: 'KDP-optimized listing', view: 'synopsis' },
+          { icon: Megaphone, label: 'Social Captions', desc: 'For TikTok, IG, Twitter' },
           { icon: Star, label: 'Launch Announcement', desc: 'Coming-soon template' },
           { icon: Users, label: 'Author Bio', desc: 'About the author page' },
         ].map((item) => {
           const Icon = item.icon;
           const v = 'view' in item ? item.view : undefined;
           return (
-            <Card key={item.label} hover onClick={() => v && setCurrentView(v)}>
+            <Card key={item.label} hover onClick={() => v && go(v, selectedProject)}>
               <div style={{ padding: 16, display: 'flex', gap: 14 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon style={{ width: 16, height: 16, color: colors.gold }} />
