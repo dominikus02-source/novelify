@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server';
-
-const LRUCache = require('lru-cache');
+import LRUCache from 'lru-cache';
 
 interface RateLimitOptions {
   interval?: number;

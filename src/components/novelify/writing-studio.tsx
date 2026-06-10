@@ -9,6 +9,7 @@ import {
   ChevronDown, ChevronRight, CircleDot, Search, Settings2, ArrowLeft,
   Maximize2, Minimize2, Trash2, Quote, Eye, EyeOff,
 } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useNovelifyStore, type Project, type Chapter, type Scene } from '@/lib/store';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -50,6 +51,7 @@ const templates = [
 ];
 
 export function WritingStudio() {
+  const router = useRouter();
   const {
     selectedProject, setSelectedProject,
     selectedChapter, setSelectedChapter, selectedScene, setSelectedScene,
@@ -164,6 +166,10 @@ export function WritingStudio() {
     } catch { /* ignore */ }
   }, [selectedProject, setSelectedProject]);
 
+  useEffect(() => {
+    return () => { if (timeoutRef.current) clearTimeout(timeoutRef.current); };
+  }, []);
+
   const handleAddChapter = async () => {
     if (!selectedProject) return;
     setIsAddingChapter(true);
@@ -254,8 +260,25 @@ export function WritingStudio() {
     setAiSuggestion('');
   };
 
-  const handleApplyTemplate = (templateId: string) => {
+  const handleApplyTemplate = async (templateId: string) => {
     setShowTemplatePicker(false);
+    if (!selectedProject) return;
+    const tpl = templates.find(t => t.id === templateId);
+    if (!tpl) return;
+    const chapterCount = templateId === 'blank' ? 5 :
+      templateId === 'heros-journey' ? 12 :
+      templateId === 'three-act' ? 9 : 10;
+    try {
+      const existing = selectedProject.chapters.length;
+      for (let i = 0; i < chapterCount; i++) {
+        const num = existing + i + 1;
+        await fetch('/api/chapters', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ projectId: selectedProject.id, chapterNumber: num, title: `Chapter ${num}` }),
+        });
+      }
+      await refreshProject();
+    } catch { /* ignore */ }
   };
 
   if (!selectedProject) {
@@ -269,7 +292,7 @@ export function WritingStudio() {
           </div>
           <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 20, fontWeight: 600, color: '#F5F5F7', margin: 0 }}>Select a Novel</h2>
           <p style={{ fontSize: 13, color: '#8E8E93', lineHeight: 1.5, margin: 0 }}>Choose a novel from your library to open the Writing Studio</p>
-          <button onClick={() => { const w = window; w.location.href = '/dashboard/novels'; }}
+          <button onClick={() => router.push('/dashboard/novels')}
             style={{ display: 'inline-flex', alignItems: 'center', gap: 8, padding: '10px 20px', borderRadius: 10, border: 'none', background: 'linear-gradient(135deg, #C9A96E, #E8C98A)', color: '#1a0f00', fontSize: 13, fontWeight: 600, cursor: 'pointer', boxShadow: '0 2px 12px rgba(201,169,110,0.25)' }}
           >Browse My Novels</button>
         </motion.div>
@@ -296,8 +319,6 @@ export function WritingStudio() {
         </div>
       );
     }
-
-    const editorContentEl = (writingMode === 'scene' && selectedScene) ? selectedScene.content : selectedChapter.contentOriginal;
 
     return (
       <div className="flex flex-1 flex-col overflow-hidden">
@@ -824,7 +845,7 @@ export function WritingStudio() {
                     const goPath = 'path' in opt ? (opt as any).path : null;
                     return (
                       <button key={opt.label}
-                        onClick={() => { if (goPath && selectedProject) { window.location.href = `/dashboard/${goPath}/${selectedProject.id}`; } }}
+                        onClick={() => { if (goPath && selectedProject) { router.push(`/dashboard/${goPath}/${selectedProject.id}`); } }}
                         className="flex items-center gap-3 w-full p-2.5 rounded-lg text-left transition-all"
                         style={{ background: '#f5f5f5', border: '1px solid rgba(0,0,0,0.05)' }}
                       >

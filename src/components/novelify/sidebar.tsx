@@ -50,7 +50,7 @@ export function Sidebar() {
   const { data: session } = useSession();
   const {
     currentView, setCurrentView, sidebarOpen, setSidebarOpen,
-    selectedProject, setSelectedProject, projects,
+    selectedProject, setSelectedProject, projects, lastActiveProjectId,
   } = useNovelifyStore();
 
   const handleSignOut = async () => {
@@ -60,7 +60,7 @@ export function Sidebar() {
 
   const getRoute = (item: NavItemDef) => {
     if (PROJECT_VIEWS.includes(item.view)) {
-      const project = resolveActiveProject(projects, selectedProject, null);
+      const project = resolveActiveProject(projects, selectedProject, lastActiveProjectId);
       if (project) {
         return `${item.path}/${project.id}`;
       }
@@ -72,7 +72,7 @@ export function Sidebar() {
     setCurrentView(item.view);
 
     if (PROJECT_VIEWS.includes(item.view)) {
-      const project = resolveActiveProject(projects, selectedProject, null);
+      const project = resolveActiveProject(projects, selectedProject, lastActiveProjectId);
       if (project) {
         setSelectedProject(project);
         router.push(`${item.path}/${project.id}`);
