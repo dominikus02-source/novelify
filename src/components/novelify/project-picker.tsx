@@ -1,22 +1,24 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNovelifyStore, type Project } from '@/lib/store';
 import { BookOpen, PenTool, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { colors, Card } from './dashboard-components';
+import { CreateProjectDialog } from './create-project-dialog';
 
 interface ProjectPickerProps {
   title: string;
   description: string;
   targetRoute: string;
   createLabel?: string;
-  onCreate?: () => void;
 }
 
-export function ProjectPicker({ title, description, targetRoute, createLabel, onCreate }: ProjectPickerProps) {
+export function ProjectPicker({ title, description, targetRoute, createLabel }: ProjectPickerProps) {
   const router = useRouter();
   const { projects, setSelectedProject } = useNovelifyStore();
+  const [createOpen, setCreateOpen] = useState(false);
 
   const handleSelect = (project: Project) => {
     setSelectedProject(project);
@@ -50,7 +52,7 @@ export function ProjectPicker({ title, description, targetRoute, createLabel, on
             You don't have any novels yet. Create your first novel to get started.
           </p>
           <button
-            onClick={onCreate ? onCreate : () => router.push('/dashboard/novels')}
+            onClick={() => setCreateOpen(true)}
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 8,
               padding: '10px 20px', borderRadius: 10, cursor: 'pointer',
@@ -62,6 +64,7 @@ export function ProjectPicker({ title, description, targetRoute, createLabel, on
             <Plus style={{ width: 16, height: 16 }} />
             {createLabel || 'Create New Novel'}
           </button>
+          <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
         </motion.div>
       </div>
     );
