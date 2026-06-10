@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { translateSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
 import { createChatCompletion } from '@/lib/ai';
+import { getUserId, unauthorized } from '@/lib/session';
+import { checkWordLimit } from '@/lib/word-limit';
 
 const limiter = rateLimit({ interval: 60000, maxRequests: 10 });
 
@@ -10,6 +12,9 @@ export async function POST(request: NextRequest) {
   try {
     const limitCheck = limiter.check(request);
     if (limitCheck) return limitCheck;
+
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
 
     const body = await request.json();
     const parsed = translateSchema.safeParse(body);
@@ -21,6 +26,21 @@ export async function POST(request: NextRequest) {
     }
 
     const { sourceLanguage, targetLanguage, content } = parsed.data;
+
+    // Check word limit — translation costs source word count
+    const sourceWords = content.split(/\s+/).filter(Boolean).length;
+    const limitResult = await checkWordLimit(userId, sourceWords);
+    if ('error' in limitResult) {
+      return NextResponse.json({ error: limitResult.error }, { status: 500 });
+    }
+    if (!limitResult.allowed) {
+      return NextResponse.json({
+        error: 'Daily word limit reached',
+        limit: limitResult.limit,
+        used: limitResult.used,
+        remaining: limitResult.remaining,
+      }, { status: 429 });
+    }
 
     // Build the system prompt for literary translation
     const systemPrompt = `You are a professional literary translator specializing in novels. Translate the following literary text from ${sourceLanguage} to ${targetLanguage} at publishable quality.
@@ -41,7 +61,7 @@ RULES:
       { role: 'user', content },
     ]);
 
-    return NextResponse.json({ content: translatedText });
+    return NextResponse.json({ content: translatedText, remaining: limitResult.remaining });
   } catch (error) {
     console.error('Error in translation:', error);
     return NextResponse.json(

@@ -12,19 +12,21 @@ datasource db {
 }
 
 model User {
-  id            String    @id @default(cuid())
-  email         String    @unique
-  name          String?
-  password      String?
-  image         String?
-  emailVerified DateTime?
-  plan          String    @default("free")
-  wordCountUsed Int       @default(0)
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  projects      Project[]
-  accounts      Account[]
-  sessions      Session[]
+  id              String    @id @default(cuid())
+  email           String    @unique
+  name            String?
+  password        String?
+  image           String?
+  emailVerified   DateTime?
+  plan            String    @default("free")
+  wordCountUsed   Int       @default(0)
+  dailyWordCount  Int       @default(0)
+  dailyWordDate   String?   // YYYY-MM-DD, null = never used today
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  projects        Project[]
+  accounts        Account[]
+  sessions        Session[]
 }
 
 model Account {

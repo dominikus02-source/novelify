@@ -6,7 +6,7 @@ import { useNovelifyStore, type Project } from '@/lib/store';
 import { BookOpen, PenTool, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { colors, Card } from './dashboard-components';
-import { CreateProjectDialog } from './create-project-dialog';
+import { CreateNovelWizard } from './create-novel-wizard';
 
 interface ProjectPickerProps {
   title: string;
@@ -64,7 +64,7 @@ export function ProjectPicker({ title, description, targetRoute, createLabel }: 
             <Plus style={{ width: 16, height: 16 }} />
             {createLabel || 'Create New Novel'}
           </button>
-          <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+          {createOpen && <CreateNovelWizard onClose={() => setCreateOpen(false)} />}
         </motion.div>
       </div>
     );

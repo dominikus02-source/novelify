@@ -75,6 +75,7 @@ export function WritingStudio() {
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showBibleSearch, setShowBibleSearch] = useState(false);
   const [bibleSearch, setBibleSearch] = useState('');
+  const [wordLimitMsg, setWordLimitMsg] = useState('');
   const [newNoteTitle, setNewNoteTitle] = useState('');
   const [newNoteContent, setNewNoteContent] = useState('');
   const [newLocationName, setNewLocationName] = useState('');
@@ -226,6 +227,7 @@ export function WritingStudio() {
     if (!promptText) return;
     setIsAiWriting(true);
     setAiSuggestion('');
+    setWordLimitMsg('');
     try {
       const charactersDesc = selectedProject.characters.map((c) => `${c.name} (${c.role}): ${c.description}`).join('\n');
       const res = await fetch('/api/write', {
@@ -243,6 +245,13 @@ export function WritingStudio() {
       if (res.ok) {
         const data = await res.json();
         setAiSuggestion(data.content || '');
+        if (data.remaining !== undefined) {
+          setWordLimitMsg(`${data.remaining.toLocaleString()} words remaining today`);
+        }
+      } else if (res.status === 429) {
+        const data = await res.json();
+        setWordLimitMsg(`Daily limit reached (${(data.limit || 0).toLocaleString()} words). Upgrade to Pro for 10,000 words/day.`);
+        setAiSuggestion('');
       } else setAiSuggestion('Error generating content.');
     } catch { setAiSuggestion('Error: Failed to connect.'); }
     finally { setIsAiWriting(false); }
@@ -403,6 +412,14 @@ export function WritingStudio() {
           )}
         </AnimatePresence>
 
+        {/* Word limit message */}
+        {wordLimitMsg && (
+          <div className="flex items-center gap-2 px-6 py-1.5 text-[10px]" style={{ background: wordLimitMsg.includes('reached') ? 'rgba(248,113,113,0.08)' : 'rgba(52,211,153,0.06)', color: wordLimitMsg.includes('reached') ? '#F87171' : '#34D399', borderTop: `1px solid ${wordLimitMsg.includes('reached') ? 'rgba(248,113,113,0.15)' : 'rgba(52,211,153,0.15)'}` }}>
+            <span className="size-1.5 rounded-full" style={{ background: wordLimitMsg.includes('reached') ? '#F87171' : '#34D399' }} />
+            {wordLimitMsg}
+          </div>
+        )}
+
         {/* AI Input Bar */}
         <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', background: '#fff', padding: '10px 24px' }}>
           <div className="flex gap-2 mb-2">
@@ -439,6 +456,10 @@ export function WritingStudio() {
     <div className="flex h-full flex-col" style={{ background: '#1c1c1e', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
       {/* Project header */}
       <div style={{ borderBottom: '1px solid rgba(255,255,255,0.06)', padding: '16px' }}>
+        <button onClick={() => router.push('/dashboard')}
+          className="flex items-center gap-1.5 mb-3 text-[11px] font-medium transition-opacity hover:opacity-70"
+          style={{ color: '#8E8E93' }}
+        ><ArrowLeft className="size-3.5" /> Exit Writing Studio</button>
         <div className="flex items-center gap-2">
           <BookOpen className="size-4 shrink-0" style={{ color: '#C8873A' }} />
           <span className="text-sm font-semibold truncate" style={{ color: '#F5F5F7' }}>{project.title}</span>

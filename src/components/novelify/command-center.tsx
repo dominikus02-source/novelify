@@ -6,13 +6,13 @@ import {
   BookOpen, Plus, FileText, AlignLeft, Clock, Sparkles,
   Search, Bell, PenTool, Languages, Image, Download,
   CheckCircle2, Target, BookMarked,
-  FileEdit, Megaphone, Layers, Lightbulb,
+  FileEdit, Megaphone, Layers, Lightbulb, Upload,
   Quote, Wand2, TextSelect,
 } from 'lucide-react';
 import { useNovelifyStore, type Project } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { CreateProjectDialog } from '@/components/novelify/create-project-dialog';
+import { CreateNovelWizard } from '@/components/novelify/create-novel-wizard';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel,
   AlertDialogContent, AlertDialogDescription,
@@ -209,6 +209,11 @@ export function CommandCenter() {
                 <GlassButton onClick={() => setCreateOpen(true)}>
                   <Plus style={{ width: 13, height: 13 }} /> Create New Novel
                 </GlassButton>
+                <button onClick={() => router.push('/dashboard/import')}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', borderRadius: 20, border: `1px solid ${colors.border}`, background: '#161616', color: '#aeaeb2', fontSize: 12, fontWeight: 500, cursor: 'pointer', transition: 'background .15s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.background = '#1c1c1e'}
+                  onMouseLeave={(e) => e.currentTarget.style.background = '#161616'}
+                ><Upload style={{ width: 13, height: 13 }} /> Import Novel</button>
                 <button onClick={() => navigate('ai-cowriter')}
                   style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', borderRadius: 20, border: `1px solid ${colors.goldBorder}`, background: 'rgba(201,169,110,0.06)', color: colors.gold, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background .15s' }}
                   onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(201,169,110,0.12)'}
@@ -501,7 +506,7 @@ export function CommandCenter() {
         </div>
       </div>
 
-      <CreateProjectDialog open={createOpen} onOpenChange={setCreateOpen} />
+      {createOpen && <CreateNovelWizard onClose={() => setCreateOpen(false)} />}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>

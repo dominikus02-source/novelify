@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { aiWriteSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
 import { createChatCompletion } from '@/lib/ai';
+import { getUserId, unauthorized } from '@/lib/session';
+import { checkWordLimit } from '@/lib/word-limit';
 
 const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
@@ -10,6 +12,9 @@ export async function POST(request: NextRequest) {
   try {
     const limitCheck = limiter.check(request);
     if (limitCheck) return limitCheck;
+
+    const userId = await getUserId();
+    if (!userId) return unauthorized();
 
     const body = await request.json();
     const parsed = aiWriteSchema.safeParse(body);
@@ -22,6 +27,21 @@ export async function POST(request: NextRequest) {
 
     const { prompt, context } = parsed.data;
     const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage, projectTitle, genre } = context || {};
+
+    // Estimate words to generate (cap at 500 per request)
+    const estimatedWords = Math.min(500, prompt.split(/\s+/).filter(Boolean).length * 3);
+    const limitResult = await checkWordLimit(userId, estimatedWords);
+    if ('error' in limitResult) {
+      return NextResponse.json({ error: limitResult.error }, { status: 500 });
+    }
+    if (!limitResult.allowed) {
+      return NextResponse.json({
+        error: 'Daily word limit reached',
+        limit: limitResult.limit,
+        used: limitResult.used,
+        remaining: limitResult.remaining,
+      }, { status: 429 });
+    }
 
     // Build the system prompt — language-agnostic novel writing specialist
     const systemPrompt = `You are a professional novel-writing assistant. Your task is to continue the story or polish the user's prose. Detect the language of the user's content automatically and respond in the same language.
@@ -67,7 +87,14 @@ If the user submits existing text for polishing, treat it as a proofread/edit re
       { role: 'user', content: userMessage },
     ]);
 
-    return NextResponse.json({ content });
+    // Count actual generated words and adjust usage
+    const actualWords = content.split(/\s+/).filter(Boolean).length;
+    const diff = actualWords - estimatedWords;
+    if (diff > 0) {
+      await checkWordLimit(userId, diff);
+    }
+
+    return NextResponse.json({ content, wordCount: actualWords, remaining: limitResult.remaining });
   } catch (error) {
     console.error('Error in AI writing assistant:', error);
     return NextResponse.json(
