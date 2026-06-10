@@ -1,27 +1,15 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createProjectSchema } from '@/lib/validations';
+import { getUserId, unauthorized } from '@/lib/session';
 
-// Default user ID for the app (no auth)
-const DEFAULT_USER_ID = 'default-user';
-
-// GET /api/projects - Fetch all projects for the default user
+// GET /api/projects - Fetch all projects for the authenticated user
 export async function GET() {
   try {
-    // Ensure default user exists
-    let user = await db.user.findUnique({ where: { id: DEFAULT_USER_ID } });
-    if (!user) {
-      user = await db.user.create({
-        data: {
-          id: DEFAULT_USER_ID,
-          email: 'writer@novelify.app',
-          name: 'Writer',
-        },
-      });
-    }
+    const userId = await getUserId();
 
     const projects = await db.project.findMany({
-      where: { userId: DEFAULT_USER_ID },
+      where: { userId },
       include: {
         chapters: true,
         characters: true,
@@ -29,7 +17,6 @@ export async function GET() {
       orderBy: { updatedAt: 'desc' },
     });
 
-    // Serialize dates to ISO strings
     const serialized = projects.map((p) => ({
       ...p,
       createdAt: p.createdAt.toISOString(),
@@ -48,6 +35,9 @@ export async function GET() {
 
     return NextResponse.json(serialized);
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return unauthorized();
+    }
     console.error('Error fetching projects:', error);
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 });
   }
@@ -56,17 +46,7 @@ export async function GET() {
 // POST /api/projects - Create a new project
 export async function POST(request: NextRequest) {
   try {
-    // Ensure default user exists
-    let user = await db.user.findUnique({ where: { id: DEFAULT_USER_ID } });
-    if (!user) {
-      user = await db.user.create({
-        data: {
-          id: DEFAULT_USER_ID,
-          email: 'writer@novelify.app',
-          name: 'Writer',
-        },
-      });
-    }
+    const userId = await getUserId();
 
     const body = await request.json();
     const parsed = createProjectSchema.safeParse(body);
@@ -81,7 +61,7 @@ export async function POST(request: NextRequest) {
 
     const project = await db.project.create({
       data: {
-        userId: DEFAULT_USER_ID,
+        userId,
         title,
         genre: genre || null,
         sourceLanguage,
@@ -114,6 +94,9 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(serialized, { status: 201 });
   } catch (error) {
+    if (error instanceof Error && error.message === 'Unauthorized') {
+      return unauthorized();
+    }
     console.error('Error creating project:', error);
     return NextResponse.json({ error: 'Failed to create project' }, { status: 500 });
   }

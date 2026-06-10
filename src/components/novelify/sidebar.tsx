@@ -11,8 +11,11 @@ import {
   ChevronLeft,
   BookOpen,
   Settings as SettingsIcon,
+  LogOut,
 } from 'lucide-react';
 import { useNovelifyStore, type AppView } from '@/lib/store';
+import { signOut } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 
 const navItems: { icon: React.ElementType; label: string; view: AppView }[] = [
   { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard' },
@@ -25,6 +28,7 @@ const navItems: { icon: React.ElementType; label: string; view: AppView }[] = [
 ];
 
 export function Sidebar() {
+  const router = useRouter();
   const {
     currentView,
     setCurrentView,
@@ -33,6 +37,12 @@ export function Sidebar() {
     selectedProject,
     setSelectedProject,
   } = useNovelifyStore();
+
+  const handleSignOut = async () => {
+    await signOut({ redirect: false });
+    setCurrentView('hero');
+    router.refresh();
+  };
 
   const isActive = (view: AppView) => currentView === view;
 
@@ -127,6 +137,28 @@ export function Sidebar() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        {/* Sign out */}
+        <button
+          onClick={handleSignOut}
+          className="flex w-full items-center gap-3 px-4 py-2.5 rounded-lg cursor-pointer transition-all text-sm text-red-400/60 hover:text-red-400 hover:bg-red-500/10"
+          title={!sidebarOpen ? 'Sign out' : undefined}
+        >
+          <LogOut className="h-5 w-5 shrink-0" />
+          <AnimatePresence>
+            {sidebarOpen && (
+              <motion.span
+                initial={{ opacity: 0, width: 0 }}
+                animate={{ opacity: 1, width: 'auto' }}
+                exit={{ opacity: 0, width: 0 }}
+                transition={{ duration: 0.2 }}
+                className="overflow-hidden whitespace-nowrap"
+              >
+                Sign out
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </button>
 
         {/* Collapse / expand toggle */}
         <button

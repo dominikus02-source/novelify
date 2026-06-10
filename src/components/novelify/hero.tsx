@@ -1,6 +1,8 @@
 'use client';
 
 import { useEffect, useRef } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useNovelifyStore } from '@/lib/store';
 import {
   Globe2, Package, Sparkles, FileText, Lock, BarChart3, Target,
@@ -192,9 +194,19 @@ function scrollTo(id: string) {
 }
 
 export function Hero() {
+  const { data: session } = useSession();
+  const router = useRouter();
   const setCurrentView = useNovelifyStore((s) => s.setCurrentView);
   const typewriterRef = useTypewriter();
   useScrollReveal();
+
+  const goToApp = () => {
+    if (session) {
+      setCurrentView('dashboard');
+    } else {
+      router.push('/signup');
+    }
+  };
 
   return (
     <>
@@ -342,15 +354,24 @@ export function Hero() {
                 >{f.label}</button>
               </li>
             ))}
+            {!session && (
+              <li>
+                <button onClick={() => router.push('/login')}
+                  style={{ color: 'var(--lp-muted)', fontSize: 14, fontWeight: 500, padding: '6px 14px', borderRadius: 20, background: 'transparent', border: '1px solid var(--lp-border)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
+                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
+                >Sign in</button>
+              </li>
+            )}
             <li>
-              <button onClick={() => setCurrentView('dashboard')}
+              <button onClick={goToApp}
                 style={{ background: 'var(--lp-white)', color: '#000', fontWeight: 600, padding: '6px 16px', borderRadius: 20, border: 'none', fontSize: 14, cursor: 'pointer', transition: 'background .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,245,247,0.85)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-white)'; }}
-              >Start Free</button>
-            </li>
-          </ul>
-        </nav>
+              >{session ? 'Dashboard' : 'Start Free'}</button>
+             </li>
+           </ul>
+         </nav>
 
         {/* HERO */}
         <section className="lp-hero" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 80px', position: 'relative', overflow: 'hidden' }}>
@@ -368,7 +389,7 @@ export function Hero() {
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 40, animation: 'lp-fadeUp .7s .3s ease both', flexWrap: 'wrap', justifyContent: 'center' }}>
-            <button onClick={() => setCurrentView('dashboard')}
+            <button onClick={goToApp}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-white)', color: '#000', fontSize: 15, fontWeight: 600, padding: '14px 28px', borderRadius: 50, border: 'none', cursor: 'pointer', transition: 'transform .2s, box-shadow .2s, background .2s', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; e.currentTarget.style.background = '#e8e8ea'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}
@@ -619,13 +640,13 @@ export function Hero() {
                     ))}
                   </ul>
                   {plan.featured ? (
-                    <button onClick={() => setCurrentView('dashboard')}
+                    <button onClick={goToApp}
                       style={{ width: '100%', display: 'block', textAlign: 'center', padding: 13, borderRadius: 10, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, var(--lp-purple), #7C3AED)', color: '#fff', boxShadow: '0 4px 20px rgba(124,58,237,0.35)', transition: 'all .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 6px 28px rgba(124,58,237,0.5)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(124,58,237,0.35)'; e.currentTarget.style.transform = 'translateY(0)'; }}
                     >Start Author Plan</button>
                   ) : (
-                    <button onClick={() => setCurrentView('dashboard')}
+                    <button onClick={goToApp}
                       style={{ width: '100%', display: 'block', textAlign: 'center', padding: 13, borderRadius: 10, fontSize: 14, fontWeight: 600, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', background: 'var(--lp-glass)', color: 'var(--lp-white)', transition: 'all .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--lp-glass-hover)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-glass)'; }}
@@ -645,7 +666,7 @@ export function Hero() {
             <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 560, margin: '0 auto' }}>Your story deserves to be read — everywhere.</h2>
             <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 400, lineHeight: 1.65, margin: '16px auto 0' }}>Join 12,000+ writers who chose to go global with Novelify.</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 36, justifyContent: 'center', flexWrap: 'wrap' }}>
-              <button onClick={() => setCurrentView('dashboard')}
+              <button onClick={goToApp}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-white)', color: '#000', fontSize: 15, fontWeight: 600, padding: '14px 28px', borderRadius: 50, border: 'none', cursor: 'pointer', transition: 'transform .2s, box-shadow .2s, background .2s', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; e.currentTarget.style.background = '#e8e8ea'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}

@@ -1,128 +1,52 @@
 'use client';
 
 import { useState, useMemo } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
-  Download,
-  BookOpen,
-  CheckCircle2,
-  XCircle,
-  Loader2,
-  FileDown,
-  Clock,
-  AlertTriangle,
+  Download, BookOpen, FileText, FileDown, Loader2, CheckCircle2,
+  Settings2, BookMarked, Globe, Hash, User,
 } from 'lucide-react';
 import { useNovelifyStore } from '@/lib/store';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 
 const languageNames: Record<string, string> = {
   id: 'Indonesian', en: 'English', es: 'Spanish', fr: 'French', de: 'German',
   ja: 'Japanese', ko: 'Korean', zh: 'Chinese', ar: 'Arabic', pt: 'Portuguese', hi: 'Hindi',
 };
 
-const languageOptions = Object.entries(languageNames).map(([code, name]) => ({
-  value: code,
-  label: name,
-}));
-
-interface ExportRecord {
-  id: string;
-  date: string;
-  format: string;
-  status: string;
-  downloadUrl: string | null;
-}
+const formatOptions = [
+  { value: 'html', label: 'EPUB / HTML', icon: FileText, desc: 'Clean manuscript. KDP-ready formatting.' },
+  { value: 'pdf', label: 'PDF', icon: FileDown, desc: 'Print-ready PDF with page breaks.' },
+];
 
 export function EpubExport() {
   const { selectedProject, setCurrentView } = useNovelifyStore();
-
-  // Export settings
+  const [format, setFormat] = useState<'html' | 'pdf'>('html');
   const [includeOriginal, setIncludeOriginal] = useState(true);
-  const [includeTranslation, setIncludeTranslation] = useState(true);
-  const [authorName, setAuthorName] = useState('Anonymous');
-  const [bookLanguage, setBookLanguage] = useState(selectedProject?.sourceLanguage || 'en');
-
-  // Export state
+  const [includeTranslation, setIncludeTranslation] = useState(false);
+  const [authorName, setAuthorName] = useState('Author');
+  const [language, setLanguage] = useState('en');
   const [isExporting, setIsExporting] = useState(false);
-  const [downloadUrl, setDownloadUrl] = useState<string | null>(null);
-  const [exportHistory, setExportHistory] = useState<ExportRecord[]>([]);
+  const [exportDone, setExportDone] = useState(false);
+  const [exportError, setExportError] = useState('');
 
-  // No project selected
-  if (!selectedProject) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-paper">
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex flex-col items-center gap-4 text-center"
-        >
-          <div className="flex size-16 items-center justify-center rounded-full bg-amber/10">
-            <Download className="size-8 text-amber" />
-          </div>
-          <h2 className="text-xl font-bold text-ink">Select a project first</h2>
-          <p className="max-w-sm text-muted-foreground">
-            Choose a novel project to export
-          </p>
-          <Button
-            onClick={() => setCurrentView('dashboard')}
-            className="bg-amber hover:bg-amber/90 text-ink font-semibold"
-          >
-            Go to Dashboard
-          </Button>
-        </motion.div>
-      </div>
-    );
-  }
+  const chapterCount = selectedProject?.chapters.length || 0;
+  const wordCount = selectedProject?.chapters.reduce((sum, c) => sum + c.wordCount, 0) || 0;
+  const reviewCount = selectedProject?.chapters.filter((c) => c.status !== 'draft').length || 0;
 
-  const chapters = selectedProject.chapters.sort((a, b) => a.chapterNumber - b.chapterNumber);
-  const hasTranslations = chapters.some((c) => c.contentTranslated);
-  const needsTranslation = selectedProject.sourceLanguage !== selectedProject.targetLanguage;
-
-  // Pre-export checklist
-  const checklist = [
-    {
-      label: 'Has at least 1 chapter',
-      passed: chapters.length > 0,
-    },
-    {
-      label: 'All chapters have content',
-      passed: chapters.length > 0 && chapters.every((c) => c.contentOriginal.trim().length > 0),
-    },
-    {
-      label: 'Translations complete',
-      passed: !needsTranslation || chapters.every((c) => c.contentTranslated),
-      skipped: !needsTranslation,
-    },
-    {
-      label: 'Has a cover image',
-      passed: !!selectedProject.coverImage,
-    },
-    {
-      label: 'Has a genre set',
-      passed: !!selectedProject.genre,
-    },
-  ];
-
-  const allPassed = checklist.filter((c) => !c.skipped).every((c) => c.passed);
-  const failedItems = checklist.filter((c) => !c.skipped && !c.passed);
-
-  // Handle export
   const handleExport = async () => {
+    if (!selectedProject) return;
     setIsExporting(true);
-    setDownloadUrl(null);
+    setExportError('');
+    setExportDone(false);
 
     try {
       const res = await fetch('/api/export', {
@@ -130,356 +54,246 @@ export function EpubExport() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId: selectedProject.id,
-          options: {
-            includeOriginal,
-            includeTranslation: includeTranslation && hasTranslations,
-            authorName,
-            language: bookLanguage,
-          },
+          options: { includeOriginal, includeTranslation, authorName, language },
         }),
       });
 
-      if (res.ok) {
-        const data = await res.json();
-        const url = data.downloadUrl || data.url || data.filePath;
-        setDownloadUrl(url);
-
-        // Add to export history
-        setExportHistory((prev) => [
-          {
-            id: Date.now().toString(),
-            date: new Date().toISOString(),
-            format: 'EPUB',
-            status: 'completed',
-            downloadUrl: url,
-          },
-          ...prev,
-        ]);
-      } else {
-        console.error('Export failed:', await res.text());
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: 'Export failed' }));
+        setExportError(err.error || 'Export failed');
+        setIsExporting(false);
+        return;
       }
-    } catch (error) {
-      console.error('Export error:', error);
+
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${selectedProject.title.replace(/[^a-zA-Z0-9-]/g, '_')}-manuscript.${format === 'html' ? 'html' : 'pdf'}`;
+      a.click();
+      URL.revokeObjectURL(url);
+      setExportDone(true);
+    } catch {
+      setExportError('Failed to connect. Please try again.');
     } finally {
       setIsExporting(false);
+      setTimeout(() => setExportDone(false), 3000);
     }
   };
+
+  if (!selectedProject) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-paper">
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }}
+          className="flex flex-col items-center gap-6 text-center"
+        >
+          <div className="flex size-20 items-center justify-center rounded-full bg-amber/10">
+            <Download className="size-10 text-amber" />
+          </div>
+          <h2 className="text-2xl font-bold text-ink">Select a project first</h2>
+          <p className="max-w-sm text-muted-foreground">Choose a project to export</p>
+          <Button onClick={() => setCurrentView('dashboard')}
+            className="bg-amber hover:bg-amber/90 text-ink font-semibold shadow-md"
+          >Go to Dashboard</Button>
+        </motion.div>
+      </div>
+    );
+  }
+
+  const project = selectedProject;
 
   return (
     <div className="min-h-screen bg-paper">
       <div className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold tracking-tight text-ink">
-            Export to EPUB
-          </h1>
-          <div className="mt-1 flex items-center gap-2 text-muted-foreground">
-            <BookOpen className="size-4" />
-            <span className="font-medium text-ink">{selectedProject.title}</span>
-          </div>
+        <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }} className="mb-8">
+          <h1 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">Export</h1>
+          <p className="mt-1 text-muted-foreground">Format and download your manuscript</p>
         </motion.div>
 
-        <div className="space-y-6">
-          {/* Pre-export Checklist */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.1 }}
-          >
-            <Card className="overflow-hidden border-border/50 shadow-sm">
-              <CardHeader className="border-b border-border/50 bg-white px-6 py-4">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-base font-semibold text-ink">
-                    Pre-Export Checklist
-                  </CardTitle>
-                  <Badge
-                    variant="outline"
-                    className={`text-xs ${
-                      allPassed
-                        ? 'border-emerald-500/30 text-emerald-600 bg-emerald-50'
-                        : 'border-amber/30 text-amber bg-amber/5'
-                    }`}
-                  >
-                    {allPassed ? 'Ready to Export' : 'Not Ready'}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent className="p-6">
-                <ul className="space-y-3">
-                  {checklist.map((item) => (
-                    <li key={item.label} className="flex items-center gap-3">
-                      {item.skipped ? (
-                        <div className="flex size-5 items-center justify-center">
-                          <span className="text-xs text-muted-foreground">—</span>
-                        </div>
-                      ) : item.passed ? (
-                        <CheckCircle2 className="size-5 shrink-0 text-emerald-500" />
-                      ) : (
-                        <XCircle className="size-5 shrink-0 text-destructive/70" />
-                      )}
-                      <span
-                        className={`text-sm ${
-                          item.skipped
-                            ? 'text-muted-foreground/50 line-through'
-                            : item.passed
-                              ? 'text-ink'
-                              : 'text-ink/70'
-                        }`}
-                      >
-                        {item.label}
-                      </span>
-                      {item.skipped && (
-                        <span className="text-xs text-muted-foreground">(not needed)</span>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-
-                {!allPassed && failedItems.length > 0 && (
-                  <div className="mt-4 flex items-start gap-2 rounded-lg border border-amber/20 bg-amber/5 p-3">
-                    <AlertTriangle className="mt-0.5 size-4 shrink-0 text-amber" />
-                    <div>
-                      <p className="text-sm font-medium text-ink">Missing items:</p>
-                      <ul className="mt-1 space-y-0.5">
-                        {failedItems.map((item) => (
-                          <li key={item.label} className="text-xs text-muted-foreground">
-                            • {item.label}
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Export Settings */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.15 }}
-          >
-            <Card className="overflow-hidden border-border/50 shadow-sm">
-              <CardHeader className="border-b border-border/50 bg-white px-6 py-4">
-                <CardTitle className="text-base font-semibold text-ink">
-                  Export Settings
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-5 p-6">
-                <div className="flex items-center gap-6">
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="include-original"
-                      checked={includeOriginal}
-                      onCheckedChange={(checked) => setIncludeOriginal(checked === true)}
-                    />
-                    <Label htmlFor="include-original" className="text-sm text-ink cursor-pointer">
-                      Include original language
-                    </Label>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      id="include-translation"
-                      checked={includeTranslation}
-                      onCheckedChange={(checked) => setIncludeTranslation(checked === true)}
-                      disabled={!hasTranslations}
-                    />
-                    <Label
-                      htmlFor="include-translation"
-                      className={`text-sm cursor-pointer ${
-                        hasTranslations ? 'text-ink' : 'text-muted-foreground'
-                      }`}
-                    >
-                      Include translation
-                      {!hasTranslations && (
-                        <span className="ml-1 text-xs text-muted-foreground">(none available)</span>
-                      )}
-                    </Label>
-                  </div>
-                </div>
-
-                <Separator className="bg-border/50" />
-
-                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="author-name" className="text-sm font-medium text-ink">
-                      Author Name
-                    </Label>
-                    <Input
-                      id="author-name"
-                      value={authorName}
-                      onChange={(e) => setAuthorName(e.target.value)}
-                      placeholder="Anonymous"
-                      className="border-border/50 bg-white focus:border-amber/50 focus:ring-amber/20"
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="book-language" className="text-sm font-medium text-ink">
-                      Book Language (EPUB metadata)
-                    </Label>
-                    <Select value={bookLanguage} onValueChange={setBookLanguage}>
-                      <SelectTrigger className="bg-white border-border/50">
-                        <SelectValue placeholder="Select language" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {languageOptions.map((lang) => (
-                          <SelectItem key={lang.value} value={lang.value}>
-                            {lang.label}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Export Button & Download */}
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-          >
-            <Card className="overflow-hidden border-border/50 shadow-sm">
-              <CardContent className="p-6">
-                <div className="flex flex-col items-center gap-4 sm:flex-row sm:justify-between">
-                  <div>
-                    <h3 className="text-lg font-semibold text-ink">Generate EPUB</h3>
-                    <p className="text-sm text-muted-foreground">
-                      {chapters.length} chapter{chapters.length !== 1 ? 's' : ''} will be included
-                    </p>
-                  </div>
-
-                  <div className="flex items-center gap-3">
-                    <Button
-                      onClick={handleExport}
-                      disabled={isExporting || chapters.length === 0}
-                      className="bg-amber hover:bg-amber/90 text-ink font-semibold shadow-md transition-all hover:shadow-lg"
-                      size="lg"
-                    >
-                      {isExporting ? (
-                        <>
-                          <Loader2 className="size-5 animate-spin" />
-                          Generating...
-                        </>
-                      ) : (
-                        <>
-                          <Download className="size-5" />
-                          Generate EPUB
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </div>
-
-                {/* Download link */}
-                <AnimatePresence>
-                  {downloadUrl && (
-                    <motion.div
-                      initial={{ opacity: 0, height: 0 }}
-                      animate={{ opacity: 1, height: 'auto' }}
-                      exit={{ opacity: 0, height: 0 }}
-                      className="mt-4 overflow-hidden"
-                    >
-                      <div className="flex items-center justify-between rounded-lg border border-emerald-500/20 bg-emerald-50 p-4">
-                        <div className="flex items-center gap-3">
-                          <CheckCircle2 className="size-5 text-emerald-500" />
-                          <div>
-                            <p className="font-medium text-ink">Export complete!</p>
-                            <p className="text-sm text-muted-foreground">
-                              Your EPUB file is ready to download
-                            </p>
-                          </div>
-                        </div>
-                        <Button
-                          asChild
-                          className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+        <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
+          {/* Main export panel */}
+          <div className="lg:col-span-2 space-y-6">
+            {/* Format selection */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.05 }}>
+              <Card className="border-border/50 bg-white shadow-sm">
+                <CardContent className="p-5">
+                  <h2 className="text-sm font-semibold text-ink uppercase tracking-wider mb-4">Format</h2>
+                  <div className="grid grid-cols-2 gap-3">
+                    {formatOptions.map((fmt) => {
+                      const Icon = fmt.icon;
+                      const isActive = format === fmt.value;
+                      return (
+                        <button key={fmt.value} onClick={() => setFormat(fmt.value as 'html' | 'pdf')}
+                          className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
+                            isActive ? 'border-amber bg-amber/5 shadow-sm' : 'border-border/50 hover:border-amber/30 bg-white'
+                          }`}
                         >
-                          <a href={downloadUrl} download>
-                            <FileDown className="size-4" />
-                            Download
-                          </a>
-                        </Button>
-                      </div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </CardContent>
-            </Card>
-          </motion.div>
-
-          {/* Export History */}
-          {exportHistory.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.4, delay: 0.25 }}
-            >
-              <Card className="overflow-hidden border-border/50 shadow-sm">
-                <CardHeader className="border-b border-border/50 bg-white px-6 py-4">
-                  <CardTitle className="text-base font-semibold text-ink">
-                    Export History
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-0">
-                  <div className="divide-y divide-border/30">
-                    {exportHistory.map((exp) => (
-                      <div
-                        key={exp.id}
-                        className="flex items-center justify-between px-6 py-3"
-                      >
-                        <div className="flex items-center gap-3">
-                          <Clock className="size-4 text-muted-foreground" />
-                          <div>
-                            <p className="text-sm font-medium text-ink">
-                              {new Date(exp.date).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit',
-                              })}
-                            </p>
+                          <div className={`flex size-10 items-center justify-center rounded-lg ${isActive ? 'bg-amber/10' : 'bg-muted'}`}>
+                            <Icon className={`size-5 ${isActive ? 'text-amber' : 'text-muted-foreground'}`} />
                           </div>
-                        </div>
-                        <div className="flex items-center gap-3">
-                          <Badge variant="outline" className="text-xs border-border/50">
-                            {exp.format}
-                          </Badge>
-                          <Badge
-                            variant="outline"
-                            className={`text-xs ${
-                              exp.status === 'completed'
-                                ? 'border-emerald-500/30 text-emerald-600'
-                                : 'border-amber/30 text-amber'
-                            }`}
-                          >
-                            {exp.status}
-                          </Badge>
-                          {exp.downloadUrl && (
-                            <Button asChild variant="ghost" size="sm" className="text-amber hover:text-amber/80">
-                              <a href={exp.downloadUrl} download>
-                                <Download className="size-4" />
-                              </a>
-                            </Button>
-                          )}
-                        </div>
-                      </div>
-                    ))}
+                          <div>
+                            <p className={`text-sm font-semibold ${isActive ? 'text-amber' : 'text-ink'}`}>{fmt.label}</p>
+                            <p className="text-xs text-muted-foreground mt-0.5">{fmt.desc}</p>
+                          </div>
+                        </button>
+                      );
+                    })}
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
-          )}
+
+            {/* Content options */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.1 }}>
+              <Card className="border-border/50 bg-white shadow-sm">
+                <CardContent className="p-5">
+                  <h2 className="text-sm font-semibold text-ink uppercase tracking-wider mb-4">Content</h2>
+                  <div className="space-y-3">
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={includeOriginal}
+                        onChange={(e) => setIncludeOriginal(e.target.checked)}
+                        className="size-4 rounded border-border text-amber focus:ring-amber"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-ink">Original Language</p>
+                        <p className="text-xs text-muted-foreground">Include the source text</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center gap-3 cursor-pointer">
+                      <input type="checkbox" checked={includeTranslation}
+                        onChange={(e) => setIncludeTranslation(e.target.checked)}
+                        className="size-4 rounded border-border text-amber focus:ring-amber"
+                      />
+                      <div>
+                        <p className="text-sm font-medium text-ink">Translation</p>
+                        <p className="text-xs text-muted-foreground">Include translated text (if available)</p>
+                      </div>
+                    </label>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Metadata editor */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.15 }}>
+              <Card className="border-border/50 bg-white shadow-sm">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Settings2 className="size-4 text-amber" />
+                    <h2 className="text-sm font-semibold text-ink uppercase tracking-wider">Metadata</h2>
+                  </div>
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <BookMarked className="size-3" /> Title
+                      </Label>
+                      <Input value={project.title} disabled className="border-border/50 bg-muted/30" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <User className="size-3" /> Author
+                      </Label>
+                      <Input value={authorName} onChange={(e) => setAuthorName(e.target.value)}
+                        placeholder="Author name" className="border-border/50"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Globe className="size-3" /> Language
+                      </Label>
+                      <Select value={language} onValueChange={setLanguage}>
+                        <SelectTrigger className="border-border/50">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {Object.entries(languageNames).map(([code, name]) => (
+                            <SelectItem key={code} value={code}>{name}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                        <Hash className="size-3" /> Genre
+                      </Label>
+                      <Input value={project.genre || 'Not set'} disabled className="border-border/50 bg-muted/30" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            {/* Export button */}
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, delay: 0.2 }}>
+              <Button onClick={handleExport} disabled={isExporting || chapterCount === 0}
+                className="w-full bg-amber hover:bg-amber/90 text-ink font-semibold py-6 text-base shadow-md hover:shadow-lg transition-all"
+              >
+                {isExporting ? (
+                  <><Loader2 className="size-5 animate-spin" /> Generating {format === 'html' ? 'EPUB' : 'PDF'}...</>
+                ) : exportDone ? (
+                  <><CheckCircle2 className="size-5 text-emerald-700" /> Downloaded!</>
+                ) : (
+                  <><Download className="size-5" /> Export & Download {format === 'html' ? 'EPUB' : 'PDF'}</>
+                )}
+              </Button>
+              {exportError && (
+                <p className="mt-2 text-sm text-red-500 text-center">{exportError}</p>
+              )}
+            </motion.div>
+          </div>
+
+          {/* Sidebar - Project Summary */}
+          <div className="space-y-4">
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.1 }}>
+              <Card className="border-border/50 bg-white shadow-sm">
+                <CardContent className="p-5">
+                  <div className="flex items-center gap-2 mb-4">
+                    <BookOpen className="size-4 text-amber" />
+                    <h2 className="text-sm font-semibold text-ink uppercase tracking-wider">{project.title}</h2>
+                  </div>
+                  <div className="space-y-3 text-sm">
+                    <div className="flex justify-between"><span className="text-muted-foreground">Chapters</span><span className="text-ink font-medium">{chapterCount}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Words</span><span className="text-ink font-medium">{wordCount.toLocaleString()}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Reviewed</span><span className="text-ink font-medium">{reviewCount} / {chapterCount}</span></div>
+                    <div className="flex justify-between"><span className="text-muted-foreground">Language</span><span className="text-ink font-medium">{languageNames[project.sourceLanguage] || project.sourceLanguage}</span></div>
+                  </div>
+                  <Separator className="my-3" />
+                  <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="h-1.5 flex-1 rounded-full bg-gray-100 overflow-hidden">
+                      <div className="h-full rounded-full bg-amber" style={{ width: chapterCount ? `${(reviewCount / chapterCount) * 100}%` : '0%' }} />
+                    </div>
+                    <span>{chapterCount ? Math.round((reviewCount / chapterCount) * 100) : 0}%</span>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ duration: 0.4, delay: 0.15 }}>
+              <Card className="border-border/50 bg-white shadow-sm">
+                <CardContent className="p-5">
+                  <h2 className="text-sm font-semibold text-ink uppercase tracking-wider mb-3">KDP Tips</h2>
+                  <ul className="space-y-2 text-sm text-muted-foreground">
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                      <span>Use 12+ pt serif font for print</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                      <span>Include a Table of Contents</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                      <span>Add your author bio at the end</span>
+                    </li>
+                    <li className="flex items-start gap-2">
+                      <CheckCircle2 className="size-3.5 text-emerald-500 mt-0.5 shrink-0" />
+                      <span>Set correct language metadata</span>
+                    </li>
+                  </ul>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
         </div>
       </div>
     </div>

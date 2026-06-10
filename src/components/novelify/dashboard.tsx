@@ -3,44 +3,20 @@
 import { useEffect, useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
-  BookOpen,
-  Plus,
-  MoreVertical,
-  Trash2,
-  BookMarked,
-  FileText,
-  AlignLeft,
-  Languages,
-  Clock,
-  TrendingUp,
-  ArrowRight,
-  Sparkles,
-  BarChart3,
-  CheckCircle2,
-  History,
+  BookOpen, Plus, FileText, AlignLeft, Clock, Sparkles,
+  ArrowRight, MoreVertical, Trash2, Search, Bell,
+  LayoutDashboard, PenTool, Languages, Image, Download,
+  Settings, BookMarked, CheckCircle2, History, Globe,
+  Star, TrendingUp, Target,
 } from 'lucide-react';
 import { useNovelifyStore, type Project } from '@/lib/store';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Skeleton } from '@/components/ui/skeleton';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
+import { useSession } from 'next-auth/react';
 import { CreateProjectDialog } from '@/components/novelify/create-project-dialog';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 
 const languageNames: Record<string, string> = {
   id: 'Indonesian', en: 'English', es: 'Spanish', fr: 'French',
@@ -48,77 +24,33 @@ const languageNames: Record<string, string> = {
   ar: 'Arabic', pt: 'Portuguese', hi: 'Hindi',
 };
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  draft: { label: 'Draft', className: 'bg-gray-100 text-gray-700 border-gray-200' },
-  translating: { label: 'Translating', className: 'bg-amber-100 text-amber-800 border-amber-200' },
-  ready: { label: 'Ready', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
-  exported: { label: 'Exported', className: 'bg-emerald-100 text-emerald-800 border-emerald-200' },
+const statusStyle: Record<string, { label: string; cls: string }> = {
+  draft: { label: 'Draft', cls: 'ns-draft' },
+  translating: { label: 'Translating', cls: 'ns-active' },
+  ready: { label: 'Ready', cls: 'ns-review' },
+  exported: { label: 'Exported', cls: 'ns-active' },
 };
 
-function Sparkline({ data, color }: { data: number[]; color: string }) {
-  const h = 32; const w = 80;
-  const max = Math.max(...data, 1);
-  const pts = data.map((v, i) => `${(i / (data.length - 1)) * w},${h - (v / max) * h}`).join(' ');
-  return (
-    <svg width={w} height={h} viewBox={`0 0 ${w} ${h}`} className="shrink-0">
-      <polyline fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" points={pts} />
-      <polygon fill={`${color}15`} points={`0,${h} ${pts} ${w},${h}`} />
-    </svg>
-  );
-}
+const coverGradients = ['nc-gold', 'nc-purple', 'nc-teal'];
+const iconColors: Record<string, string> = {
+  gold: '#C9A96E', purple: '#A78BFA', teal: '#34D399', red: '#F87171',
+};
 
 function TimeAgo({ date }: { date: string }) {
   const diff = Date.now() - new Date(date).getTime();
   const mins = Math.floor(diff / 60000);
-  if (mins < 1) return <span>just now</span>;
-  if (mins < 60) return <span>{mins}m ago</span>;
+  if (mins < 1) return <>just now</>;
+  if (mins < 60) return <>{mins}m ago</>;
   const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return <span>{hrs}h ago</span>;
+  if (hrs < 24) return <>{hrs}h ago</>;
   const days = Math.floor(hrs / 24);
-  if (days < 7) return <span>{days}d ago</span>;
-  return <span>{new Date(date).toLocaleDateString()}</span>;
-}
-
-function ActivityHeatmap() {
-  const weeks = 12;
-  const days = weeks * 7;
-  const mockData = useMemo(() =>
-    Array.from({ length: days }, () => Math.random() > 0.6 ? Math.floor(Math.random() * 4) + 1 : 0)
-  , []);
-
-  const intensity = (v: number) => {
-    if (v === 0) return 'bg-zinc-800';
-    if (v <= 1) return 'bg-amber-900/40';
-    if (v <= 2) return 'bg-amber-700/50';
-    if (v <= 3) return 'bg-amber-600/60';
-    return 'bg-amber-500/70';
-  };
-
-  return (
-    <div className="flex gap-0.5">
-      {Array.from({ length: weeks }, (_, w) => (
-        <div key={w} className="flex flex-col gap-0.5">
-          {Array.from({ length: 7 }, (_, d) => {
-            const idx = d * weeks + w;
-            return (
-              <div
-                key={d}
-                className={`h-2.5 w-2.5 rounded-sm ${intensity(mockData[idx] || 0)}`}
-                title={`${mockData[idx] || 0} activities`}
-              />
-            );
-          })}
-        </div>
-      ))}
-    </div>
-  );
+  if (days < 7) return <>{days}d ago</>;
+  return <>{new Date(date).toLocaleDateString()}</>;
 }
 
 export function Dashboard() {
-  const {
-    projects, setProjects, setSelectedProject, setCurrentView,
-  } = useNovelifyStore();
-
+  const { data: session } = useSession();
+  const { projects, setProjects, setSelectedProject, setCurrentView } = useNovelifyStore();
   const [isLoading, setIsLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -133,49 +65,41 @@ export function Dashboard() {
         const data = await res.json();
         setProjects(data);
       }
-    } catch (error) {
-      console.error('Failed to fetch projects:', error);
+    } catch {
+      // ignore
     } finally {
       setIsLoading(false);
     }
   }, [setProjects]);
 
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
     fetchProjects();
   }, [fetchProjects]);
 
   const totalChapters = projects.reduce((sum, p) => sum + p.chapters.length, 0);
   const totalWords = projects.reduce((sum, p) => sum + p.chapters.reduce((cSum, c) => cSum + c.wordCount, 0), 0);
   const completedChapters = projects.reduce((sum, p) => sum + p.chapters.filter((c) => c.status !== 'draft').length, 0);
-
-  const mockChartData = useMemo(() =>
-    [3, 7, 4, 9, 12, 8, 15, 11, 14, 18, 13, 16, 20, 17], []
-  );
-  const mockWordData = useMemo(() =>
-    [120, 450, 300, 890, 1200, 750, 1600, 1100, 1400, 2000, 1500, 1800, 2200, 1900], []
-  );
+  const streak = 9;
 
   const sortedProjects = useMemo(() =>
     [...projects].sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()),
     [projects]
   );
-
-  const lastEditedProject = sortedProjects[0];
+  const lastEdited = sortedProjects[0];
 
   const handleOpenProject = (project: Project) => {
     setSelectedProject(project);
     setCurrentView('project');
   };
 
-  const handleDeleteProject = async () => {
+  const handleDelete = async () => {
     if (!projectToDelete) return;
     setIsDeleting(true);
     try {
       const res = await fetch(`/api/projects/${projectToDelete.id}`, { method: 'DELETE' });
       if (res.ok) await fetchProjects();
-    } catch (error) {
-      console.error('Failed to delete project:', error);
+    } catch {
+      // ignore
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
@@ -183,374 +107,399 @@ export function Dashboard() {
     }
   };
 
-  const formatWordCount = (count: number): string =>
-    count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count.toString();
+  const fmtWords = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+
+  const sidebarItems = [
+    { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard' as const, badge: null },
+    { icon: PenTool, label: 'Writing Studio', view: 'writing' as const, badge: totalChapters },
+    { icon: Languages, label: 'Translation', view: 'translate' as const, badge: null },
+    { icon: BookMarked, label: 'Synopsis', view: 'synopsis' as const, badge: null },
+    { icon: Image, label: 'Cover Art', view: 'cover' as const, badge: null },
+    { icon: Download, label: 'Export EPUB', view: 'export' as const, badge: null },
+    { icon: Target, label: 'KDP Publish', view: 'export' as const, badge: null },
+    { icon: Settings, label: 'Settings', view: 'settings' as const, badge: null },
+  ];
+
+  const formatLang = (p: Project) => {
+    const s = languageNames[p.sourceLanguage] || p.sourceLanguage;
+    const t = languageNames[p.targetLanguage] || p.targetLanguage;
+    return s === t ? s : `${s} → ${t}`;
+  };
 
   return (
-    <div className="min-h-screen bg-paper">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* ─── Header ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
-          className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between"
-        >
+    <div style={{ background: '#080808', color: '#F5F5F7', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", fontSize: 14, lineHeight: 1.5, minHeight: '100vh', display: 'flex' }}>
+      <style>{`
+        * { box-sizing: border-box; }
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+        .nc-gold   { background: linear-gradient(135deg, rgba(201,169,110,0.15), rgba(201,169,110,0.05)); }
+        .nc-purple { background: linear-gradient(135deg, rgba(167,139,250,0.15), rgba(167,139,250,0.05)); }
+        .nc-teal   { background: linear-gradient(135deg, rgba(52,211,153,0.12), rgba(52,211,153,0.04)); }
+        .ns-active  { background: rgba(52,211,153,0.12); color: #34D399; border: 1px solid rgba(52,211,153,0.2); }
+        .ns-draft   { background: rgba(142,142,147,0.1); color: #8E8E93; border: 1px solid rgba(255,255,255,0.11); }
+        .ns-review  { background: rgba(167,139,250,0.10); color: #A78BFA; border: 1px solid rgba(167,139,250,0.2); }
+      `}</style>
+
+      {/* ═══ SIDEBAR ═══ */}
+      <aside style={{ width: 228, minHeight: '100vh', background: '#111111', borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', padding: '20px 12px', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40, overflowY: 'auto' }}>
+        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px 24px', textDecoration: 'none' }}>
+          <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #C9A96E, #E8C98A)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#1a0f00', flexShrink: 0, boxShadow: '0 2px 8px rgba(201,169,110,0.3)' }}>N</div>
+          <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>Novelify</span>
+        </a>
+
+        <div style={{ fontSize: 10, fontWeight: 600, color: '#636366', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 10px', margin: '4px 0 6px' }}>Workspace</div>
+
+        {sidebarItems.slice(0, 4).map((item) => {
+          const Icon = item.icon;
+          const active = item.view === 'dashboard';
+          return (
+            <button key={item.label} onClick={() => setCurrentView(item.view)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 12, cursor: 'pointer', color: active ? '#E8C98A' : '#8E8E93', fontSize: 13, fontWeight: 500, background: active ? 'rgba(201,169,110,0.10)' : 'transparent', border: 'none', transition: 'background .15s', textAlign: 'left', width: '100%' }}
+              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; } }}
+              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; } }}
+            >
+              <Icon style={{ width: 18, height: 18, flexShrink: 0, opacity: active ? 1 : 0.7 }} />
+              {item.label}
+              {item.badge !== null && (
+                <span style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 600, color: '#8E8E93' }}>{item.badge}</span>
+              )}
+            </button>
+          );
+        })}
+
+        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '12px 0' }} />
+        <div style={{ fontSize: 10, fontWeight: 600, color: '#636366', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 10px', margin: '4px 0 6px' }}>Publish</div>
+
+        {sidebarItems.slice(4).map((item) => {
+          const Icon = item.icon;
+          return (
+            <button key={item.label} onClick={() => setCurrentView(item.view)}
+              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 12, cursor: 'pointer', color: '#8E8E93', fontSize: 13, fontWeight: 500, background: 'transparent', border: 'none', transition: 'background .15s', textAlign: 'left', width: '100%' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; }}
+            >
+              <Icon style={{ width: 18, height: 18, flexShrink: 0, opacity: 0.7 }} />
+              {item.label}
+            </button>
+          );
+        })}
+
+        <div style={{ marginTop: 'auto', padding: '10px', borderRadius: 12, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.07)', background: '#161616', display: 'flex', alignItems: 'center', gap: 10 }}>
+          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(201,169,110,0.10)', border: '1px solid rgba(201,169,110,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#C9A96E', flexShrink: 0 }}>
+            {session?.user?.name?.charAt(0)?.toUpperCase() || 'D'}
+          </div>
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-ink sm:text-4xl">My Novels</h1>
-            <p className="mt-1 text-muted-foreground">Your literary universe in one place</p>
+            <div style={{ fontSize: 13, fontWeight: 500, color: '#F5F5F7' }}>{session?.user?.name || 'Dominikus'}</div>
+            <div style={{ fontSize: 10, color: '#C9A96E', background: 'rgba(201,169,110,0.10)', borderRadius: 6, padding: '1px 6px', display: 'inline-block' }}>Author Plan</div>
           </div>
-          <Button onClick={() => setCreateDialogOpen(true)}
-            className="bg-amber hover:bg-amber/90 text-ink font-semibold shadow-md transition-all hover:shadow-lg" size="lg"
-          >
-            <Plus className="size-5" /> New Project
-          </Button>
-        </motion.div>
+          <div style={{ marginLeft: 'auto', color: '#636366' }}>
+            <svg fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.5" width="14" height="14"><circle cx="7" cy="3" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="11" r="1" fill="currentColor" stroke="none"/></svg>
+          </div>
+        </div>
+      </aside>
 
-        {/* ─── Stats Bar with Sparklines ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.1 }}
-          className="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-4"
-        >
-          <Card className="border-border/50 bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-amber/10">
-                    <BookMarked className="size-5 text-amber" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total Projects</p>
-                    <p className="text-xl font-bold text-ink">{isLoading ? <Skeleton className="inline-block h-6 w-10" /> : projects.length}</p>
-                  </div>
-                </div>
-                <Sparkline data={[2, 3, 1, 4, 5, 3, 6, 4, 5, 7, 6, 8, 9, 7]} color="#C8873A" />
-              </div>
-            </CardContent>
-          </Card>
+      {/* ═══ MAIN ═══ */}
+      <main style={{ marginLeft: 228, flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
 
-          <Card className="border-border/50 bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-amber/10">
-                    <FileText className="size-5 text-amber" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Chapters</p>
-                    <p className="text-xl font-bold text-ink">{isLoading ? <Skeleton className="inline-block h-6 w-10" /> : totalChapters}</p>
-                  </div>
-                </div>
-                <Sparkline data={mockChartData} color="#60A5FA" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-amber/10">
-                    <AlignLeft className="size-5 text-amber" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Total Words</p>
-                    <p className="text-xl font-bold text-ink">{isLoading ? <Skeleton className="inline-block h-6 w-16" /> : formatWordCount(totalWords)}</p>
-                  </div>
-                </div>
-                <Sparkline data={mockWordData} color="#34D399" />
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card className="border-border/50 bg-white shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="flex size-10 items-center justify-center rounded-xl bg-amber/10">
-                    <CheckCircle2 className="size-5 text-amber" />
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Completed</p>
-                    <p className="text-xl font-bold text-ink">
-                      {isLoading ? <Skeleton className="inline-block h-6 w-10" /> : completedChapters}
-                      <span className="text-sm text-muted-foreground font-normal"> / {totalChapters}</span>
-                    </p>
-                  </div>
-                </div>
-                <div className="flex flex-col items-end gap-1">
-                  <div className="h-2 w-16 rounded-full bg-gray-100 overflow-hidden">
-                    <div className="h-full rounded-full bg-amber" style={{ width: totalChapters ? `${(completedChapters / totalChapters) * 100}%` : '0%' }} />
-                  </div>
-                  <span className="text-[10px] text-muted-foreground">{totalChapters ? Math.round((completedChapters / totalChapters) * 100) : 0}%</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* ─── Quick Actions ─── */}
-        <motion.div
-          initial={{ opacity: 0, y: -10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15 }}
-          className="mb-8"
-        >
-          <h2 className="mb-3 text-sm font-semibold text-ink uppercase tracking-wider">Quick Actions</h2>
-          <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        {/* Topbar */}
+        <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
+          <div>
+            <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>My Novels</h1>
+            <p style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>Your literary universe in one place</p>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Search">
+              <Search style={{ width: 16, height: 16 }} />
+            </button>
+            <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Notifications">
+              <Bell style={{ width: 16, height: 16 }} />
+            </button>
             <button onClick={() => setCreateDialogOpen(true)}
-              className="group flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-amber/30"
+              style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#C9A96E', color: '#1a0f00', fontSize: 12, fontWeight: 600, padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .15s' }}
+              onMouseEnter={(e) => e.currentTarget.style.background = '#E8C98A'}
+              onMouseLeave={(e) => e.currentTarget.style.background = '#C9A96E'}
             >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-amber/10">
-                <Plus className="size-5 text-amber" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-ink group-hover:text-amber transition-colors">New Project</p>
-                <p className="text-xs text-muted-foreground">Start a new novel</p>
-              </div>
-              <ArrowRight className="ml-auto size-4 text-muted-foreground group-hover:text-amber transition-colors" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (lastEditedProject) {
-                  setSelectedProject(lastEditedProject);
-                  setCurrentView('writing');
-                }
-              }}
-              disabled={!lastEditedProject}
-              className="group flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-amber/30 disabled:opacity-40 disabled:pointer-events-none"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-amber/10">
-                <Sparkles className="size-5 text-amber" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-ink group-hover:text-amber transition-colors">Continue Writing</p>
-                <p className="text-xs text-muted-foreground">{lastEditedProject ? lastEditedProject.title : 'No projects yet'}</p>
-              </div>
-              <ArrowRight className="ml-auto size-4 text-muted-foreground group-hover:text-amber transition-colors" />
-            </button>
-
-            <button
-              onClick={() => {
-                if (lastEditedProject) {
-                  setSelectedProject(lastEditedProject);
-                  setCurrentView('project');
-                }
-              }}
-              disabled={!lastEditedProject}
-              className="group flex items-center gap-3 rounded-xl border border-border/50 bg-white p-4 shadow-sm transition-all hover:shadow-md hover:border-amber/30 disabled:opacity-40 disabled:pointer-events-none"
-            >
-              <div className="flex size-10 items-center justify-center rounded-lg bg-amber/10">
-                <History className="size-5 text-amber" />
-              </div>
-              <div className="text-left">
-                <p className="text-sm font-semibold text-ink group-hover:text-amber transition-colors">Recent Activity</p>
-                <p className="text-xs text-muted-foreground">{lastEditedProject ? <TimeAgo date={lastEditedProject.updatedAt} /> : 'No activity'}</p>
-              </div>
-              <ArrowRight className="ml-auto size-4 text-muted-foreground group-hover:text-amber transition-colors" />
+              <Plus style={{ width: 14, height: 14 }} /> New Project
             </button>
           </div>
-        </motion.div>
+        </header>
 
-        {/* ─── Activity Heatmap ─── */}
-        {!isLoading && projects.length > 0 && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4, delay: 0.2 }}
-            className="mb-8"
-          >
-            <Card className="border-border/50 bg-white shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <BarChart3 className="size-4 text-amber" />
-                    <span className="text-sm font-semibold text-ink">Writing Streak</span>
-                  </div>
-                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                    <span className="flex items-center gap-1">Less <span className="h-2.5 w-2.5 rounded-sm bg-zinc-800 inline-block" /></span>
-                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-amber-900/40 inline-block" /></span>
-                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-amber-700/50 inline-block" /></span>
-                    <span className="flex items-center gap-1"><span className="h-2.5 w-2.5 rounded-sm bg-amber-600/60 inline-block" /></span>
-                    <span className="flex items-center gap-1">More <span className="h-2.5 w-2.5 rounded-sm bg-amber-500/70 inline-block" /></span>
-                  </div>
-                </div>
-                <ActivityHeatmap />
-                <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
-                  <span>12 weeks</span>
-                  <span className="flex items-center gap-1"><TrendingUp className="size-3 text-emerald-500" /> 3-day streak</span>
-                </div>
-              </CardContent>
-            </Card>
-          </motion.div>
-        )}
+        {/* Page Body */}
+        <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
 
-        {/* ─── Project Grid ─── */}
-        {isLoading ? (
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <Card key={i} className="overflow-hidden border-border/50 bg-white">
-                <Skeleton className="h-40 w-full rounded-none" />
-                <div className="space-y-3 p-4">
-                  <Skeleton className="h-5 w-3/4" />
-                  <Skeleton className="h-4 w-1/2" />
-                  <Skeleton className="h-4 w-2/3" />
-                  <div className="flex gap-2"><Skeleton className="h-6 w-16" /><Skeleton className="h-6 w-20" /></div>
+          {/* Stats */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+            {[
+              { icon: BookMarked, color: 'gold', label: 'Total Projects', value: projects.length, delta: `+${Math.min(projects.length, 1)} this month` },
+              { icon: FileText, color: 'purple', label: 'Total Chapters', value: totalChapters, delta: `+${Math.min(totalChapters, 6)} this week` },
+              { icon: AlignLeft, color: 'teal', label: 'Total Words', value: fmtWords(totalWords), delta: '+1,240 today' },
+              { icon: Clock, color: 'red', label: 'Day Streak', value: streak, delta: 'Personal best!' },
+            ].map((stat, i) => {
+              const StatIcon = stat.icon;
+              const c = iconColors[stat.color];
+              return (
+                <div key={i} style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: 14, transition: 'border-color .2s' }}
+                  onMouseEnter={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.11)'}
+                  onMouseLeave={(e) => e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'}
+                >
+                  <div style={{ width: 38, height: 38, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: `${c}1A`, border: `1px solid ${c}33`, color: c }}>
+                    <StatIcon style={{ width: 18, height: 18 }} />
+                  </div>
+                  <div>
+                    <div style={{ fontFamily: "'Playfair Display',serif", fontSize: 26, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.02em', lineHeight: 1.1 }}>
+                      {isLoading ? '—' : stat.value}
+                    </div>
+                    <div style={{ fontSize: 11, color: '#8E8E93', marginTop: 3 }}>{stat.label}</div>
+                    <div style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 10, fontWeight: 600, marginTop: 6, padding: '2px 7px', borderRadius: 8, background: 'rgba(52,211,153,0.08)', color: '#34D399', border: '1px solid rgba(52,211,153,0.15)' }}>
+                      <TrendingUp style={{ width: 10, height: 10 }} /> {stat.delta}
+                    </div>
+                  </div>
                 </div>
-              </Card>
-            ))}
+              );
+            })}
           </div>
-        ) : projects.length === 0 ? (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-border bg-white/60 px-6 py-20 text-center"
-          >
-            <div className="mb-6 flex size-20 items-center justify-center rounded-full bg-amber/10">
-              <BookOpen className="size-10 text-amber" />
+
+          {/* Novels Grid */}
+          <div>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7', display: 'flex', alignItems: 'center', gap: 8 }}>
+                Active Projects
+                <span style={{ background: '#161616', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 8, fontSize: 10, fontWeight: 600, color: '#8E8E93', padding: '1px 7px' }}>{projects.length}</span>
+              </span>
+              <a href="#" style={{ fontSize: 12, color: '#C9A96E', cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}>View all →</a>
             </div>
-            <h2 className="mb-2 text-2xl font-bold text-ink">No novels yet</h2>
-            <p className="mb-8 max-w-sm text-muted-foreground">Create your first novel project to get started</p>
-            <Button onClick={() => setCreateDialogOpen(true)}
-              className="bg-amber hover:bg-amber/90 text-ink font-semibold shadow-md transition-all hover:shadow-lg" size="lg"
-            >
-              <Plus className="size-5" /> Create Novel
-            </Button>
-          </motion.div>
-        ) : (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.4, delay: 0.15 }}
-          >
-            <div className="mb-4 flex items-center justify-between">
-              <h2 className="text-sm font-semibold text-ink uppercase tracking-wider">All Novels</h2>
-              <span className="text-xs text-muted-foreground">{projects.length} project{projects.length !== 1 ? 's' : ''}</span>
-            </div>
-            <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-              <AnimatePresence mode="popLayout">
-                {projects.map((project, index) => {
-                  const status = statusConfig[project.status] || statusConfig.draft;
-                  const chapterCount = project.chapters.length;
-                  const wordCount = project.chapters.reduce((sum, c) => sum + c.wordCount, 0);
-                  const reviewedChapters = project.chapters.filter((c) => c.status !== 'draft').length;
-                  const progressPct = chapterCount ? Math.round((reviewedChapters / chapterCount) * 100) : 0;
-                  const srcLang = languageNames[project.sourceLanguage] || project.sourceLanguage;
-                  const tgtLang = languageNames[project.targetLanguage] || project.targetLanguage;
+
+            {isLoading ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
+                    <div style={{ height: 96, background: 'rgba(255,255,255,0.03)' }} />
+                    <div style={{ padding: '14px 16px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                      <div style={{ height: 14, width: '70%', background: 'rgba(255,255,255,0.06)', borderRadius: 4 }} />
+                      <div style={{ height: 11, width: '40%', background: 'rgba(255,255,255,0.04)', borderRadius: 4 }} />
+                      <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3 }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : projects.length === 0 ? (
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: '48px 24px', textAlign: 'center', gap: 12 }}>
+                <div style={{ width: 52, height: 52, background: 'rgba(201,169,110,0.10)', border: '1px solid rgba(201,169,110,0.20)', borderRadius: 16, display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#C9A96E' }}>
+                  <BookOpen style={{ width: 24, height: 24 }} />
+                </div>
+                <div style={{ fontSize: 15, fontWeight: 600, color: '#F5F5F7' }}>No novels yet</div>
+                <div style={{ fontSize: 12, color: '#8E8E93', maxWidth: 260, lineHeight: 1.6 }}>Create your first novel project to get started</div>
+                <button onClick={() => setCreateDialogOpen(true)}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: 7, background: '#C9A96E', color: '#1a0f00', fontSize: 12, fontWeight: 700, padding: '10px 20px', borderRadius: 20, border: 'none', cursor: 'pointer', marginTop: 4 }}
+                >
+                  <Plus style={{ width: 13, height: 13 }} /> Create Novel
+                </button>
+              </div>
+            ) : (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+                {sortedProjects.map((project, i) => {
+                  const st = statusStyle[project.status] || statusStyle.draft;
+                  const cc = project.chapters.length;
+                  const wc = project.chapters.reduce((s, c) => s + c.wordCount, 0);
+                  const rc = project.chapters.filter((c) => c.status !== 'draft').length;
+                  const pct = cc ? Math.round((rc / cc) * 100) : 0;
+                  const grad = coverGradients[i % coverGradients.length];
 
                   return (
-                    <motion.div
-                      key={project.id}
-                      layout
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      transition={{ duration: 0.3, delay: index * 0.05 }}
+                    <div key={project.id}
+                      style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden', cursor: 'pointer', transition: 'border-color .2s, transform .2s, box-shadow .2s', display: 'flex', flexDirection: 'column' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.11)'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
-                      <Card className="group cursor-pointer overflow-hidden border-border/50 bg-white shadow-sm transition-all duration-300 hover:shadow-lg hover:border-amber/30">
-                        <div className="relative h-40 w-full overflow-hidden" onClick={() => handleOpenProject(project)}>
-                          {project.coverImage ? (
-                            <img src={project.coverImage} alt={project.title} className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-amber/20 via-amber/10 to-paper">
-                              <BookOpen className="size-12 text-amber/40" />
-                            </div>
-                          )}
-                          {project.genre && (
-                            <div className="absolute left-3 top-3">
-                              <Badge variant="secondary" className="bg-white/90 text-ink backdrop-blur-sm shadow-sm">{project.genre}</Badge>
-                            </div>
-                          )}
-                          {/* Progress bar overlay */}
-                          <div className="absolute bottom-0 left-0 right-0 h-1 bg-black/10">
-                            <div className="h-full bg-amber transition-all" style={{ width: `${progressPct}%` }} />
-                          </div>
+                      <div className={grad} style={{ height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
+                        <div style={{ opacity: 0.7 }}>
+                          <BookOpen style={{ width: 36, height: 36, color: iconColors.gold }} />
                         </div>
+                        <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 8, letterSpacing: '0.04em', textTransform: 'uppercase', ...(() => { const s = st.cls; if (s === 'ns-active') return { background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.2)' }; if (s === 'ns-review') return { background: 'rgba(167,139,250,0.10)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }; return { background: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: '1px solid rgba(255,255,255,0.11)' }; })() }}>
+                          {st.label}
+                        </span>
+                      </div>
 
-                        <div className="p-4">
-                          <div className="mb-3" onClick={() => handleOpenProject(project)}>
-                            <h3 className="mb-1.5 text-lg font-bold text-ink line-clamp-1 group-hover:text-amber transition-colors">{project.title}</h3>
-                            <div className="mb-2 flex items-center gap-1.5 text-sm text-muted-foreground">
-                              <Languages className="size-3.5" />
-                              <span>{srcLang} → {tgtLang}</span>
-                            </div>
-                            <Badge variant="outline" className={`text-xs ${status.className}`}>{status.label}</Badge>
-                          </div>
-
-                          <div className="mb-3 flex items-center gap-4 text-sm text-muted-foreground">
-                            <span className="flex items-center gap-1">
-                              <FileText className="size-3.5" />
-                              {chapterCount} {chapterCount === 1 ? 'chapter' : 'chapters'}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <AlignLeft className="size-3.5" />
-                              {formatWordCount(wordCount)} words
-                            </span>
-                          </div>
-
-                          {/* Progress + Last edited */}
-                          <div className="mb-3">
-                            <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                              <span>Progress</span>
-                              <span>{progressPct}%</span>
-                            </div>
-                            <div className="h-1.5 rounded-full bg-gray-100 overflow-hidden">
-                              <div className="h-full rounded-full bg-amber transition-all" style={{ width: `${progressPct}%` }} />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center justify-between">
-                            <Button onClick={() => handleOpenProject(project)} variant="outline" size="sm"
-                              className="border-amber/30 text-amber hover:bg-amber/10 hover:text-amber"
-                            >Open</Button>
-                            <div className="flex items-center gap-2">
-                              <span className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                <Clock className="size-3" />
-                                <TimeAgo date={project.updatedAt} />
-                              </span>
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon" className="size-8 text-muted-foreground hover:text-ink"><MoreVertical className="size-4" /></Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem variant="destructive" onClick={() => { setProjectToDelete(project); setDeleteDialogOpen(true); }}>
-                                    <Trash2 className="size-4" /> Delete
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
-                            </div>
-                          </div>
+                      <div onClick={() => handleOpenProject(project)} style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                        <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{project.title}</div>
+                        <div style={{ fontSize: 11, color: '#8E8E93', marginBottom: 12 }}>{formatLang(project)}</div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#636366' }}>
+                            <FileText style={{ width: 11, height: 11 }} /> Ch. {cc}
+                          </span>
+                          <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#636366' }}>
+                            <Clock style={{ width: 11, height: 11 }} /> <TimeAgo date={project.updatedAt} />
+                          </span>
                         </div>
-                      </Card>
-                    </motion.div>
+                        <div style={{ height: 3, background: 'rgba(255,255,255,0.06)', borderRadius: 3, overflow: 'hidden', marginBottom: 6 }}>
+                          <div style={{ height: '100%', borderRadius: 3, background: 'linear-gradient(90deg, #C9A96E, #E8C98A)', transition: 'width .6s ease', width: `${pct}%` }} />
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 'auto' }}>
+                          <span style={{ fontSize: 10, color: '#636366' }}>{fmtWords(wc)} words</span>
+                          <span style={{ fontSize: 11, fontWeight: 600, color: '#C9A96E' }}>{pct}%</span>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', gap: 6, padding: '10px 16px', borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                        <button onClick={() => { setSelectedProject(project); setCurrentView('writing'); }}
+                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
+                        ><CheckCircle2 style={{ width: 11, height: 11 }} /> Write</button>
+                        <button onClick={() => { setSelectedProject(project); setCurrentView('translate'); }}
+                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
+                        ><Globe style={{ width: 11, height: 11 }} /> Translate</button>
+                        <button onClick={() => { setSelectedProject(project); setCurrentView('export'); }}
+                          style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
+                        ><Download style={{ width: 11, height: 11 }} /> Export</button>
+                        <button onClick={() => { setProjectToDelete(project); setDeleteDialogOpen(true); }}
+                          style={{ padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#F87171', fontSize: 10, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                        ><Trash2 style={{ width: 11, height: 11 }} /></button>
+                      </div>
+                    </div>
                   );
                 })}
-              </AnimatePresence>
-            </div>
-          </motion.div>
-        )}
+              </div>
+            )}
+          </div>
 
-        <CreateProjectDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
-        <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Novel</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete <span className="font-semibold text-ink">{projectToDelete?.title}</span>? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={handleDeleteProject} disabled={isDeleting}
-                className="bg-destructive text-white hover:bg-destructive/90"
-              >{isDeleting ? 'Deleting...' : 'Delete'}</AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      </div>
+          {/* Bottom Grid: Activity + Quick Actions */}
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 14 }}>
+            {/* Activity Feed */}
+            <div style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Recent Activity</span>
+                <a href="#" style={{ fontSize: 12, color: '#C9A96E', cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}>All →</a>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column' }}>
+                {[
+                  { icon: PenTool, color: 'gold', title: 'Chapter 14 saved', sub: 'Shadows of Batavia · 1,240 words added', time: '2m ago' },
+                  { icon: Languages, color: 'purple', title: 'Translation exported', sub: 'Last Cartographer · German (DE)', time: '1h ago' },
+                  { icon: Sparkles, color: 'teal', title: 'AI synopsis generated', sub: 'Shadows of Batavia · 3 variants', time: '3h ago' },
+                  { icon: Image, color: 'red', title: 'Cover art generated', sub: 'The Last Cartographer · 4 variants', time: 'Yesterday' },
+                  { icon: Download, color: 'gold', title: 'EPUB exported', sub: 'Shadows of Batavia · KDP ready', time: '2d ago' },
+                ].map((act, i) => {
+                  const c = iconColors[act.color];
+                  const ActIcon = act.icon;
+                  return (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 0', borderBottom: i < 4 ? '1px solid rgba(255,255,255,0.07)' : 'none' }}>
+                      <div style={{ width: 30, height: 30, borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: `${c}1A`, border: `1px solid ${c}33`, color: c }}>
+                        <ActIcon style={{ width: 14, height: 14 }} />
+                      </div>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ fontSize: 12, color: '#F5F5F7', fontWeight: 500 }}>{act.title}</div>
+                        <div style={{ fontSize: 11, color: '#8E8E93', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{act.sub}</div>
+                      </div>
+                      <div style={{ fontSize: 10, color: '#636366', whiteSpace: 'nowrap', flexShrink: 0 }}>{act.time}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Streak */}
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: '1px solid rgba(255,255,255,0.07)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
+                  <span style={{ fontSize: 11, color: '#8E8E93' }}>Writing streak</span>
+                  <span style={{ fontSize: 11, fontWeight: 600, color: '#C9A96E' }}>🔥 {streak} days</span>
+                </div>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(14, 1fr)', gap: 4 }}>
+                  {Array.from({ length: 14 }).map((_, i) => {
+                    const level = i < 8 ? Math.floor(Math.random() * 3) + 1 : 0;
+                    return (
+                      <div key={i} style={{
+                        aspectRatio: 1, borderRadius: 4,
+                        background: level === 3 ? '#C9A96E' : level === 2 ? 'rgba(201,169,110,0.50)' : level === 1 ? 'rgba(201,169,110,0.25)' : 'rgba(255,255,255,0.05)',
+                        border: `1px solid ${level === 3 ? '#E8C98A' : level > 0 ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                      }} />
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Right: Quick Actions + Goal */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+              {/* Quick Actions */}
+              <div style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Quick Actions</div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 16 }}>
+                  {[
+                    { icon: PenTool, color: 'gold', label: 'Continue writing', sub: lastEdited ? `${lastEdited.title} · Ch.${lastEdited.chapters.length}` : 'No projects yet' },
+                    { icon: Languages, color: 'purple', label: 'Translate a chapter', sub: '48+ languages available' },
+                    { icon: Image, color: 'teal', label: 'Generate cover art', sub: 'AI-powered, KDP ready' },
+                    { icon: Download, color: 'red', label: 'Export EPUB', sub: 'Direct to Amazon KDP' },
+                  ].map((qa, i) => {
+                    const c = iconColors[qa.color];
+                    const QaIcon = qa.icon;
+                    return (
+                      <button key={i}
+                        style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '11px 13px', borderRadius: 12, background: '#161616', border: '1px solid rgba(255,255,255,0.07)', cursor: 'pointer', textAlign: 'left', transition: 'background .15s, border-color .15s' }}
+                        onMouseEnter={(e) => { e.currentTarget.style.background = '#1c1c1e'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.11)'; }}
+                        onMouseLeave={(e) => { e.currentTarget.style.background = '#161616'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; }}
+                      >
+                        <div style={{ width: 32, height: 32, borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0, background: `${c}1A`, border: `1px solid ${c}33`, color: c }}>
+                          <QaIcon style={{ width: 15, height: 15 }} />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <div style={{ fontSize: 12, fontWeight: 500, color: '#F5F5F7' }}>{qa.label}</div>
+                          <div style={{ fontSize: 10, color: '#8E8E93', marginTop: 1 }}>{qa.sub}</div>
+                        </div>
+                        <div style={{ color: '#636366' }}>
+                          <ArrowRight style={{ width: 13, height: 13 }} />
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Daily Goal */}
+              <div style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
+                <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>Today&apos;s Goal</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginTop: 14 }}>
+                  <div style={{ position: 'relative', width: 64, height: 64, flexShrink: 0 }}>
+                    <svg width="64" height="64" viewBox="0 0 64 64">
+                      <circle cx="32" cy="32" r="26" fill="none" stroke="rgba(255,255,255,0.06)" strokeWidth="5" />
+                      <circle cx="32" cy="32" r="26" fill="none" stroke="#C9A96E" strokeWidth="5" strokeLinecap="round" strokeDasharray="163" strokeDashoffset="49" style={{ transform: 'rotate(-90deg)', transformOrigin: '32px 32px' }} />
+                    </svg>
+                    <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#C9A96E' }}>70%</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: 13, fontWeight: 500, color: '#F5F5F7' }}>700 / 1,000 words</div>
+                    <div style={{ fontSize: 11, color: '#8E8E93', marginTop: 3 }}>300 words to hit your daily target</div>
+                  </div>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 12 }}>
+                  {[{ num: streak, sub: 'Day streak' }, { num: fmtWords(totalWords), sub: 'Total words' }, { num: '42', sub: 'Days active' }].map((g, i) => (
+                    <div key={i} style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 16, fontWeight: 600, color: '#F5F5F7', fontFamily: "'Playfair Display',serif" }}>{g.num}</div>
+                      <div style={{ fontSize: 10, color: '#8E8E93', marginTop: 1 }}>{g.sub}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </main>
+
+      <CreateProjectDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Novel</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <span style={{ fontWeight: 600, color: '#F5F5F7' }}>{projectToDelete?.title}</span>? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isDeleting}
+              style={{ background: '#F87171', color: '#fff' }}
+            >{isDeleting ? 'Deleting...' : 'Delete'}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

@@ -1,5 +1,8 @@
 'use client';
 
+import { useEffect } from 'react';
+import { useSession } from 'next-auth/react';
+import { useRouter } from 'next/navigation';
 import { useNovelifyStore } from '@/lib/store';
 import { Hero } from '@/components/novelify/hero';
 import { Sidebar } from '@/components/novelify/sidebar';
@@ -14,9 +17,34 @@ import { SettingsPage } from '@/components/novelify/settings';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
-  const { currentView, sidebarOpen } = useNovelifyStore();
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const { currentView, sidebarOpen, setCurrentView } = useNovelifyStore();
 
-  // Hero view is standalone (no sidebar)
+  const authenticated = status === 'authenticated';
+
+  // Redirect non-hero views to login if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated' && currentView !== 'hero') {
+      setCurrentView('hero');
+    }
+  }, [status, currentView, setCurrentView]);
+
+  // Loading state
+  if (status === 'loading') {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[#0D0D0D]">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C8873A] border-t-transparent" />
+      </div>
+    );
+  }
+
+  // Unauthenticated — show hero always
+  if (!authenticated) {
+    return <Hero />;
+  }
+
+  // Hero view standalone
   if (currentView === 'hero') {
     return (
       <AnimatePresence mode="wait">
@@ -33,7 +61,7 @@ export default function Home() {
     );
   }
 
-  // All other views have the sidebar
+  // All other authenticated views
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
