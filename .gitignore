@@ -50,5 +50,33 @@ test
 prompt
 
 server.log
+
 # Skills directory
 /skills/
+
+# Database
+/db/
+
+# Screenshots
+screenshot-*.png
+
+# Generated exports
+/public/exports/
+
+# Generated covers
+/public/images/covers/
+
+# Upload directory
+/upload/
+
+# Agent context
+/agent-ctx/
+
+# Z scripts
+/.zscripts/
+
+# Mini services
+/mini-services/
+
+# Download directory
+/download/
