@@ -222,7 +222,7 @@ Chapters: ${chapters.map(c => `${c.chapterNumber}. ${c.title}`).join('\n')}`;
                 <div style={{ padding: 16 }}>
                   <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7' }}>{p.title}</div>
                   <div style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{p.chapters.length} chapters</div>
-                  <GlassButton small onClick={() => { setSelectedProject(p); router.push(`/dashboard/plot/${p.id}`); }} style={{ marginTop: 10 }}>Open Plot Board</GlassButton>
+                  <div style={{ marginTop: 10 }}><GlassButton small onClick={() => { setSelectedProject(p); router.push(`/dashboard/plot/${p.id}`); }}>Open Plot Board</GlassButton></div>
                 </div>
               </Card>
             ))}

@@ -251,47 +251,9 @@ export function TranslationStudioPage() {
 }
 
 // ═══════════════════════════════════════════
-// Publishing Center (with Cover section)
+// Publishing Center (full implementation)
 // ═══════════════════════════════════════════
-export function PublishingCenterPage() {
-  const { go, selectedProject } = useNav();
-
-  const items = [
-    { icon: Download, label: 'EPUB Export', desc: 'Ebook for Apple Books, Google Play, Kobo', view: 'export' },
-    { icon: FileText, label: 'PDF Export', desc: 'Print-ready manuscript', view: 'export' },
-    { icon: ImageIcon, label: 'Cover Art', desc: 'Upload and manage book covers', view: 'cover' },
-    { icon: FileEdit, label: 'Front Matter', desc: 'Title page, copyright, dedication' },
-    { icon: Users, label: 'Author Bio', desc: 'About the author page' },
-    { icon: BookMarked, label: 'Book Description', desc: 'KDP and retailer descriptions' },
-    { icon: CheckCircle2, label: 'KDP Checklist', desc: 'Pre-publish quality checklist' },
-  ];
-
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Publishing Center" subtitle="Prepare your manuscript for the world" />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-        {items.map((item) => {
-          const Icon = item.icon;
-          const v = 'view' in item ? item.view : undefined;
-          return (
-            <Card key={item.label} hover onClick={() => v && go(v, selectedProject)}>
-              <div style={{ padding: 16, display: 'flex', gap: 14 }}>
-                <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <Icon style={{ width: 16, height: 16, color: colors.gold }} />
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>{item.label}</div>
-                  <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>{item.desc}</div>
-                  {v ? <div style={{ fontSize: 9, color: colors.gold, marginTop: 4 }}>Open →</div> : <div style={{ fontSize: 9, color: '#636366', marginTop: 4, fontStyle: 'italic' }}>Coming soon</div>}
-                </div>
-              </div>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
-  );
-}
+export { PublishingCenterPage } from './publishing-center';
 
 // ═══════════════════════════════════════════
 // Templates

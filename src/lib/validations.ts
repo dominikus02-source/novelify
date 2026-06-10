@@ -206,13 +206,89 @@ export const updateCharacterSchema = z.object({
 
 export const exportSchema = z.object({
   projectId: z.string().min(1),
-  format: z.enum(['epub', 'pdf']).default('epub'),
+  format: z.enum(['epub', 'pdf', 'docx', 'markdown']).default('epub'),
   options: z.object({
-    includeOriginal: z.boolean().default(true),
-    includeTranslation: z.boolean().default(false),
+    includeScenes: z.boolean().default(false),
     authorName: z.string().default('Author'),
     language: z.string().default('en'),
+    coverImage: z.string().optional().nullable(),
   }).optional(),
+});
+
+export const updatePublishingMetadataSchema = z.object({
+  bookTitle: z.string().optional().nullable(),
+  subtitle: z.string().optional().nullable(),
+  seriesTitle: z.string().optional().nullable(),
+  seriesNumber: z.number().int().optional().nullable(),
+  authorName: z.string().optional().nullable(),
+  publisherName: z.string().optional().nullable(),
+  language: z.string().optional().nullable(),
+  genre: z.string().optional().nullable(),
+  subgenre: z.string().optional().nullable(),
+  keywordsJson: z.string().optional().nullable(),
+  targetAudience: z.string().optional().nullable(),
+  ageRange: z.string().optional().nullable(),
+  isbn: z.string().optional().nullable(),
+  copyrightYear: z.number().int().optional().nullable(),
+  copyrightHolder: z.string().optional().nullable(),
+  shortDescription: z.string().optional().nullable(),
+  longDescription: z.string().optional().nullable(),
+  logline: z.string().optional().nullable(),
+  tagline: z.string().optional().nullable(),
+  synopsis: z.string().optional().nullable(),
+  blurb: z.string().optional().nullable(),
+  amazonDescription: z.string().optional().nullable(),
+  goodreadsDescription: z.string().optional().nullable(),
+  authorBio: z.string().optional().nullable(),
+  authorWebsite: z.string().optional().nullable(),
+  authorSocialJson: z.string().optional().nullable(),
+});
+
+export const updateFrontMatterSchema = z.object({
+  includeTitlePage: z.boolean().optional(),
+  includeCopyrightPage: z.boolean().optional(),
+  copyrightNotice: z.string().optional().nullable(),
+  includeDedication: z.boolean().optional(),
+  dedication: z.string().optional().nullable(),
+  includeEpigraph: z.boolean().optional(),
+  epigraph: z.string().optional().nullable(),
+  includeForeword: z.boolean().optional(),
+  foreword: z.string().optional().nullable(),
+  includePreface: z.boolean().optional(),
+  preface: z.string().optional().nullable(),
+  includeAcknowledgments: z.boolean().optional(),
+  acknowledgments: z.string().optional().nullable(),
+  includeTableOfContents: z.boolean().optional(),
+  alsoByAuthor: z.string().optional().nullable(),
+});
+
+export const updateBackMatterSchema = z.object({
+  includeAboutAuthor: z.boolean().optional(),
+  aboutAuthor: z.string().optional().nullable(),
+  includeAuthorWebsite: z.boolean().optional(),
+  authorWebsite: z.string().optional().nullable(),
+  includeReviewRequest: z.boolean().optional(),
+  reviewRequest: z.string().optional().nullable(),
+  includeNewsletterSignup: z.boolean().optional(),
+  newsletterSignup: z.string().optional().nullable(),
+  includeThankYou: z.boolean().optional(),
+  thankYouNote: z.string().optional().nullable(),
+  includeNextBookTeaser: z.boolean().optional(),
+  nextBookTeaser: z.string().optional().nullable(),
+  includeAlsoByAuthor: z.boolean().optional(),
+  alsoByAuthor: z.string().optional().nullable(),
+});
+
+export const updateChecklistSchema = z.object({
+  metadataComplete: z.boolean().optional(),
+  coverReady: z.boolean().optional(),
+  synopsisReady: z.boolean().optional(),
+  blurbReady: z.boolean().optional(),
+  frontMatterReady: z.boolean().optional(),
+  backMatterReady: z.boolean().optional(),
+  manuscriptReady: z.boolean().optional(),
+  revisionReady: z.boolean().optional(),
+  exportReady: z.boolean().optional(),
 });
 
 export const createPlotBeatSchema = z.object({

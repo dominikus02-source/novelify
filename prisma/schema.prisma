@@ -25,6 +25,7 @@ model User {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   projects        Project[]
+  exportJobs      ExportJob[]
   accounts        Account[]
   sessions        Session[]
   settings        UserSettings?
@@ -180,7 +181,7 @@ model Project {
   updatedAt      DateTime   @updatedAt
   chapters       Chapter[]
   characters     Character[]
-  exports        Export[]
+  exportJobs     ExportJob[]
   writingGoals   WritingGoal[]
   versions       ManuscriptVersion[]
   storyNotes     StoryNote[]
@@ -189,7 +190,11 @@ model Project {
   comments       Comment[]
   plotBeats      PlotBeat[]
   relationships  Relationship[]
-  researchItems  ResearchItem[]
+  researchItems      ResearchItem[]
+  publishingMetadata  PublishingMetadata?
+  frontMatter         FrontMatter?
+  backMatter          BackMatter?
+  publishingChecklist PublishingChecklist?
 
   @@index([userId])
 }
@@ -389,14 +394,132 @@ model Character {
   @@index([projectId])
 }
 
-model Export {
+model ExportJob {
   id          String   @id @default(cuid())
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  format      String   @default("epub") // epub | pdf
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  format      String   @default("epub") // epub | pdf | docx | markdown
+  status      String   @default("pending") // pending | generating | completed | failed
+  fileName    String?
+  fileUrl     String?
   filePath    String?
-  status      String   @default("pending") // pending | completed | failed
+  fileSize    Int      @default(0)
+  errorMessage String?
+  optionsJson String?
+  completedAt DateTime?
   createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+  @@index([userId])
+}
+
+model PublishingMetadata {
+  id              String   @id @default(cuid())
+  projectId       String   @unique
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  bookTitle       String?
+  subtitle        String?
+  seriesTitle     String?
+  seriesNumber    Int?
+  authorName      String?
+  publisherName   String?
+  language        String?
+  genre           String?
+  subgenre        String?
+  keywordsJson    String?
+  targetAudience  String?
+  ageRange        String?
+  isbn            String?
+  copyrightYear   Int?
+  copyrightHolder String?
+  shortDescription String?
+  longDescription String?
+  logline         String?
+  tagline         String?
+  synopsis        String?
+  blurb           String?
+  amazonDescription String?
+  goodreadsDescription String?
+  authorBio       String?
+  authorWebsite   String?
+  authorSocialJson String?
+  coverImageUrl   String?
+  coverAssetId    String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model FrontMatter {
+  id                      String   @id @default(cuid())
+  projectId               String   @unique
+  project                 Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  includeTitlePage        Boolean  @default(true)
+  includeCopyrightPage    Boolean  @default(true)
+  copyrightNotice         String?
+  includeDedication       Boolean  @default(false)
+  dedication              String?
+  includeEpigraph         Boolean  @default(false)
+  epigraph                String?
+  includeForeword         Boolean  @default(false)
+  foreword                String?
+  includePreface          Boolean  @default(false)
+  preface                 String?
+  includeAcknowledgments  Boolean  @default(false)
+  acknowledgments         String?
+  includeTableOfContents  Boolean  @default(true)
+  alsoByAuthor            String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model BackMatter {
+  id                      String   @id @default(cuid())
+  projectId               String   @unique
+  project                 Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  includeAboutAuthor      Boolean  @default(true)
+  aboutAuthor             String?
+  includeAuthorWebsite    Boolean  @default(false)
+  authorWebsite           String?
+  includeReviewRequest    Boolean  @default(false)
+  reviewRequest           String?
+  includeNewsletterSignup Boolean  @default(false)
+  newsletterSignup        String?
+  includeThankYou         Boolean  @default(false)
+  thankYouNote            String?
+  includeNextBookTeaser   Boolean  @default(false)
+  nextBookTeaser          String?
+  includeAlsoByAuthor     Boolean  @default(false)
+  alsoByAuthor            String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model PublishingChecklist {
+  id                String   @id @default(cuid())
+  projectId         String   @unique
+  project           Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  metadataComplete  Boolean  @default(false)
+  coverReady        Boolean  @default(false)
+  synopsisReady     Boolean  @default(false)
+  blurbReady        Boolean  @default(false)
+  frontMatterReady  Boolean  @default(false)
+  backMatterReady   Boolean  @default(false)
+  manuscriptReady   Boolean  @default(false)
+  revisionReady     Boolean  @default(false)
+  exportReady       Boolean  @default(false)
+  readinessScore    Int      @default(0)
+  lastCheckedAt     DateTime?
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   @@index([projectId])
 }
