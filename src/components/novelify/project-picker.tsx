@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useNovelifyStore, type Project } from '@/lib/store';
 import { BookOpen, PenTool, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { colors, Card } from './dashboard-components';
-import { CreateNovelWizard } from './create-novel-wizard';
 
 interface ProjectPickerProps {
   title: string;
@@ -64,7 +63,7 @@ export function ProjectPicker({ title, description, targetRoute, createLabel }: 
             <Plus style={{ width: 16, height: 16 }} />
             {createLabel || 'Create New Novel'}
           </button>
-          {createOpen && <CreateNovelWizard onClose={() => setCreateOpen(false)} />}
+          {createOpen && <RedirectTo to="/dashboard/projects/new" />}
         </motion.div>
       </div>
     );
@@ -115,4 +114,10 @@ export function ProjectPicker({ title, description, targetRoute, createLabel }: 
       </div>
     </div>
   );
+}
+
+function RedirectTo({ to }: { to: string }) {
+  const router = useRouter();
+  useEffect(() => { router.push(to); }, [router, to]);
+  return null;
 }

@@ -22,6 +22,8 @@ import {
   MetricCard, SectionHeader, ProgressBar, StatusBadge, EmptyState,
   Card, FadeIn, QuickActionBtn, GlassButton, colors, iconColors, fmtWords, timeAgo, progressPct,
 } from './dashboard-components';
+import { ActivationScreen } from './activation-screen';
+
 
 const languageNames: Record<string, string> = {
   id: 'Indonesian', en: 'English', es: 'Spanish', fr: 'French',
@@ -184,6 +186,7 @@ export function CommandCenter() {
         </div>
       </header>
 
+      {totalProjects === 0 && !isLoading ? <ActivationScreen /> : (
       <div style={{ padding: '24px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
         {/* ─── A. Welcome + Quick Actions ─── */}
@@ -505,8 +508,9 @@ export function CommandCenter() {
           </div>
         </div>
       </div>
+      )}
 
-      {createOpen && <CreateNovelWizard onClose={() => setCreateOpen(false)} />}
+      {createOpen && <RedirectTo to="/dashboard/projects/new" />}
       <AlertDialog open={deleteOpen} onOpenChange={setDeleteOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -525,4 +529,10 @@ export function CommandCenter() {
       </AlertDialog>
     </div>
   );
+}
+
+function RedirectTo({ to }: { to: string }) {
+  const router = useRouter();
+  useEffect(() => { router.push(to); }, [router, to]);
+  return null;
 }

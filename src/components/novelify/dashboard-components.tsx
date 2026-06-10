@@ -126,21 +126,20 @@ export function ProgressBar({ pct, height = 3 }: { pct: number; height?: number 
 }
 
 // ─── Status Badge ───
-const statusBadges: Record<string, { bg: string; color: string; border: string }> = {
-  drafting: { bg: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.2)' },
-  revising: { bg: 'rgba(167,139,250,0.10)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' },
-  ready: { bg: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.2)' },
-  published: { bg: 'rgba(201,169,110,0.15)', color: '#C9A96E', border: '1px solid rgba(201,169,110,0.25)' },
+const statusConfig: Record<string, { label: string; cls: string }> = {
+  draft: { label: 'Draft', cls: 'bg-amber-100 text-amber-700 border-amber-200' },
+  translating: { label: 'Translating', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
+  ready: { label: 'Ready', cls: 'bg-green-100 text-green-700 border-green-200' },
+  exported: { label: 'Exported', cls: 'bg-purple-100 text-purple-700 border-purple-200' },
 };
 
 export function StatusBadge({ status }: { status: string }) {
-  const s = statusBadges[status] || { bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: `1px solid ${colors.borderLight}` };
+  const s = statusConfig[status] || { label: status, cls: 'bg-zinc-100 text-zinc-700 border-zinc-200' };
   return (
-    <span style={{
+    <span className={s.cls} style={{
       fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 8,
       letterSpacing: '0.04em', textTransform: 'uppercase',
-      background: s.bg, color: s.color, border: s.border,
-    }}>{status}</span>
+    }}>{s.label}</span>
   );
 }
 

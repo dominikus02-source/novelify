@@ -64,6 +64,10 @@ export function Sidebar() {
       if (project) {
         return `${item.path}/${project.id}`;
       }
+      if (projects.length > 0) {
+        return `${item.path}/${projects[0].id}`;
+      }
+      return '/dashboard/projects/new';
     }
     return item.path;
   };
@@ -78,6 +82,14 @@ export function Sidebar() {
         router.push(`${item.path}/${project.id}`);
         return;
       }
+      if (projects.length > 0) {
+        const firstProject = projects[0];
+        setSelectedProject(firstProject);
+        router.push(`${item.path}/${firstProject.id}`);
+        return;
+      }
+      router.push('/dashboard/projects/new');
+      return;
     }
 
     router.push(item.path);

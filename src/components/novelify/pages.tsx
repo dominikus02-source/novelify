@@ -260,17 +260,19 @@ export { PublishingCenterPage } from './publishing-center';
 // ═══════════════════════════════════════════
 export function TemplatesPage() {
   const templates = [
-    { name: 'Blank Novel', genre: 'General', desc: 'Start from scratch with empty structure', chapters: 20 },
-    { name: 'Romance', genre: 'Romance', desc: 'Meet-cute, conflict, dark moment, happy ending', chapters: 30 },
-    { name: 'Fantasy', genre: 'Fantasy', desc: 'World-building, mentor, quest, epic climax', chapters: 35 },
-    { name: 'Mystery', genre: 'Mystery', desc: 'Crime, clues, investigation, twist reveal', chapters: 25 },
-    { name: 'Young Adult', genre: 'YA', desc: 'Coming-of-age, voice-driven, emotional stakes', chapters: 28 },
-    { name: 'Webnovel', genre: 'Webnovel', desc: 'Serialized format, short chapters, hooks', chapters: 50 },
-    { name: 'Light Novel', genre: 'Light Novel', desc: 'Japanese-style, illustrations, shorter prose', chapters: 15 },
-    { name: "Hero's Journey", genre: 'Adventure', desc: "Campbell's 12-stage monomyth structure", chapters: 24 },
-    { name: 'Save the Cat', genre: 'General', desc: "Blake Snyder's 15-beat story structure", chapters: 20 },
-    { name: 'Three-Act', genre: 'General', desc: 'Setup, confrontation, resolution classic', chapters: 24 },
+    { id: 'blank', name: 'Blank Novel', genre: 'General', desc: 'Start from scratch with empty structure', chapters: 20 },
+    { id: 'romance', name: 'Romance', genre: 'Romance', desc: 'Meet-cute, conflict, dark moment, happy ending', chapters: 30 },
+    { id: 'fantasy', name: 'Fantasy', genre: 'Fantasy', desc: 'World-building, mentor, quest, epic climax', chapters: 35 },
+    { id: 'mystery', name: 'Mystery', genre: 'Mystery', desc: 'Crime, clues, investigation, twist reveal', chapters: 25 },
+    { id: 'ya', name: 'Young Adult', genre: 'YA', desc: 'Coming-of-age, voice-driven, emotional stakes', chapters: 28 },
+    { id: 'webnovel', name: 'Webnovel', genre: 'Webnovel', desc: 'Serialized format, short chapters, hooks', chapters: 50 },
+    { id: 'light-novel', name: 'Light Novel', genre: 'Light Novel', desc: 'Japanese-style, illustrations, shorter prose', chapters: 15 },
+    { id: 'heros-journey', name: "Hero's Journey", genre: 'Adventure', desc: "Campbell's 12-stage monomyth structure", chapters: 24 },
+    { id: 'save-the-cat', name: 'Save the Cat', genre: 'General', desc: "Blake Snyder's 15-beat story structure", chapters: 20 },
+    { id: 'three-act', name: 'Three-Act', genre: 'General', desc: 'Setup, confrontation, resolution classic', chapters: 24 },
   ];
+
+  const router = useRouter();
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
@@ -283,6 +285,16 @@ export function TemplatesPage() {
               <StatusBadge status={t.genre} />
               <div style={{ fontSize: 10, color: colors.muted, marginTop: 6, lineHeight: 1.4 }}>{t.desc}</div>
               <div style={{ fontSize: 9, color: '#636366', marginTop: 6 }}>{t.chapters} chapters</div>
+              <div style={{ marginTop: 12 }}>
+                <button onClick={() => router.push(`/dashboard/projects/new?template=${t.id}`)}
+                  style={{
+                    display: 'inline-flex', alignItems: 'center', gap: 6,
+                    padding: '7px 14px', borderRadius: 20,
+                    background: colors.gold, color: '#1a0f00',
+                    fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
+                  }}
+                >Use Template</button>
+              </div>
             </div>
           </Card>
         ))}
