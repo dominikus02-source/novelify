@@ -28,6 +28,9 @@ export default function Home() {
     if (status === 'unauthenticated' && currentView !== 'hero') {
       setCurrentView('hero');
     }
+    if (status === 'authenticated' && currentView === 'hero') {
+      setCurrentView('dashboard');
+    }
   }, [status, currentView, setCurrentView]);
 
   // Loading state
@@ -44,24 +47,7 @@ export default function Home() {
     return <Hero />;
   }
 
-  // Hero view standalone
-  if (currentView === 'hero') {
-    return (
-      <AnimatePresence mode="wait">
-        <motion.div
-          key="hero"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: 0.3 }}
-        >
-          <Hero />
-        </motion.div>
-      </AnimatePresence>
-    );
-  }
-
-  // All other authenticated views
+  // All authenticated views
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
