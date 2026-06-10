@@ -1,8 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
-import { Check, X, Star, Zap, Crown, Sparkles } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { toast } from 'sonner';
+import { Loader2, Check, X, Star, Zap, Crown, Sparkles } from 'lucide-react';
 import { PLANS, FEATURES, hasFeature, type PlanTier } from '@/lib/billing/plans';
 
 const GROUP_LABELS: Record<string, string> = {
@@ -26,8 +28,83 @@ const TIERS: PlanTier[] = ['free', 'starter', 'pro', 'studio'];
 
 export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
+  const [loading, setLoading] = useState<PlanTier | null>(null);
+  const [message, setMessage] = useState<string | null>(null);
   const { data: session } = useSession();
+  const router = useRouter();
   const userPlan: PlanTier = (session?.user as any)?.plan ?? 'free';
+
+  const handleCheckout = useCallback(async (plan: PlanTier) => {
+    if (plan === 'free') return;
+
+    if (!session?.user) {
+      router.push('/login?callbackUrl=/pricing');
+      return;
+    }
+
+    setLoading(plan);
+
+    try {
+      const res = await fetch('/api/billing/lemonsqueezy/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ plan, interval: yearly ? 'yearly' : 'monthly' }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        if (data.error === 'PAYMENT_NOT_CONFIGURED') {
+          toast.error('Checkout is not configured yet.');
+        } else {
+          toast.error(data.error || 'Something went wrong. Please try again.');
+        }
+        return;
+      }
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl;
+      }
+    } catch {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setLoading(null);
+    }
+  }, [session, yearly, router]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const cancelled = params.get('checkout');
+    const success = params.get('billing');
+
+    if (cancelled === 'cancelled') {
+      setMessage('Checkout was cancelled. You can try again anytime.');
+    } else if (success === 'success') {
+      setMessage('Payment received! Your subscription is being confirmed. This may take a few moments.');
+
+      let attempts = 0;
+      const maxAttempts = 30;
+      const interval = setInterval(async () => {
+        attempts++;
+        try {
+          const res = await fetch('/api/billing/status');
+          const data = await res.json();
+          if (data.plan !== 'free' && data.subscriptionStatus === 'active') {
+            setMessage(null);
+            clearInterval(interval);
+            window.location.reload();
+          }
+        } catch {
+          // keep polling
+        }
+        if (attempts >= maxAttempts) {
+          clearInterval(interval);
+        }
+      }, 1000);
+
+      return () => clearInterval(interval);
+    }
+  }, []);
 
   return (
     <div
@@ -64,6 +141,25 @@ export default function PricingPage() {
             Choose the plan that fits your writing journey
           </p>
         </div>
+
+        {/* Message Banner */}
+        {message && (
+          <div
+            style={{
+              maxWidth: 720,
+              margin: '0 auto 32px',
+              padding: '14px 20px',
+              borderRadius: 10,
+              background: 'rgba(201, 169, 110, 0.1)',
+              border: '1px solid rgba(201, 169, 110, 0.3)',
+              color: '#C9A96E',
+              fontSize: 14,
+              textAlign: 'center',
+            }}
+          >
+            {message}
+          </div>
+        )}
 
         {/* Toggle */}
         <div
@@ -144,6 +240,7 @@ export default function PricingPage() {
             const plan = PLANS[tier];
             const price = yearly ? plan.yearlyPrice / 12 : plan.monthlyPrice;
             const isCurrent = userPlan === tier;
+            const isLoading = loading === tier;
             const IconComponent = PLAN_ICONS[tier];
 
             return (
@@ -295,6 +392,8 @@ export default function PricingPage() {
                   </div>
                 ) : (
                   <button
+                    onClick={() => handleCheckout(tier)}
+                    disabled={isLoading}
                     style={{
                       width: '100%',
                       padding: '12px 0',
@@ -304,17 +403,33 @@ export default function PricingPage() {
                       border: plan.highlighted ? 'none' : '1px solid rgba(201, 169, 110, 0.4)',
                       color: plan.highlighted ? '#080808' : '#C9A96E',
                       background: plan.highlighted ? '#C9A96E' : 'transparent',
-                      cursor: 'pointer',
+                      cursor: isLoading ? 'not-allowed' : 'pointer',
+                      opacity: isLoading ? 0.6 : 1,
                       transition: 'opacity 0.2s',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: 8,
                     }}
                     onMouseEnter={(e) => {
-                      e.currentTarget.style.opacity = '0.85';
+                      if (!isLoading) e.currentTarget.style.opacity = '0.85';
                     }}
                     onMouseLeave={(e) => {
-                      e.currentTarget.style.opacity = '1';
+                      if (!isLoading) e.currentTarget.style.opacity = '1';
                     }}
                   >
-                    {tier === 'pro' ? 'Get Started' : tier === 'free' ? 'Start Free' : `Choose ${plan.name}`}
+                    {isLoading ? (
+                      <>
+                        <Loader2 size={16} className="animate-spin" />
+                        Redirecting...
+                      </>
+                    ) : tier === 'pro' ? (
+                      'Get Started'
+                    ) : tier === 'free' ? (
+                      'Start Free'
+                    ) : (
+                      `Choose ${plan.name}`
+                    )}
                   </button>
                 )}
               </div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Crown, Lock, ArrowRight, X, Check } from 'lucide-react';
+import { Crown, Lock, ArrowRight, X, Check, Loader2 } from 'lucide-react';
 import { getPlanConfig, FEATURES, PLAN_TIERS, type PlanTier } from '@/lib/billing/plans';
 
 interface UpgradeModalProps {
@@ -35,10 +35,24 @@ export function UpgradeModal({
   usage,
 }: UpgradeModalProps) {
   const [visible, setVisible] = useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly')
+  const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen) {
       requestAnimationFrame(() => setVisible(true))
+      setError(null)
+      const params = new URLSearchParams(window.location.search)
+      const checkout = params.get('checkout')
+      if (checkout === 'cancelled') {
+        setCheckoutMessage('Checkout was cancelled. You can try again whenever you\'re ready.')
+      } else if (checkout === 'success') {
+        setCheckoutMessage('Payment successful! Your plan will be upgraded shortly.')
+      } else {
+        setCheckoutMessage(null)
+      }
     } else {
       setVisible(false)
     }
@@ -52,10 +66,51 @@ export function UpgradeModal({
   const displayFeatureName = featureName || matchedFeature?.label || featureKey
   const isSamePlan = requiredPlan === currentPlan
   const unlockableFeatures = isSamePlan ? getUnlockableFeatures(currentPlan, PLAN_TIERS[PLAN_TIERS.indexOf(currentPlan as PlanTier) + 1] || requiredPlan) : getUnlockableFeatures(currentPlan, requiredPlan)
-  const priceDiff = targetConfig.monthlyPrice - currentConfig.monthlyPrice
+  const priceDiff = targetConfig[billingInterval === 'monthly' ? 'monthlyPrice' : 'yearlyPrice'] - currentConfig[billingInterval === 'monthly' ? 'monthlyPrice' : 'yearlyPrice']
   const usagePct = usage && usage.limit !== 'unlimited'
     ? Math.min(100, Math.round((usage.used / usage.limit) * 100))
     : 0
+  const yearlyMonthly = Math.round((targetConfig.yearlyPrice / 12) * 100) / 100
+  const yearlySavings = targetConfig.monthlyPrice * 12 - targetConfig.yearlyPrice
+
+  const handleCheckout = async () => {
+    setIsLoading(true)
+    setError(null)
+
+    try {
+      const res = await fetch('/api/billing/lemonsqueezy/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          plan: requiredPlan.toLowerCase(),
+          interval: billingInterval,
+        }),
+      })
+
+      const data = await res.json()
+
+      if (!res.ok) {
+        if (data.error === 'PAYMENT_NOT_CONFIGURED') {
+          alert('Checkout is not configured yet.')
+          return
+        }
+        setError(data.error || data.message || 'Something went wrong. Please try again.')
+        return
+      }
+
+      if (data.checkoutUrl) {
+        window.location.href = data.checkoutUrl
+      }
+    } catch {
+      setError('Failed to connect. Please check your internet connection and try again.')
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const displayPrice = billingInterval === 'monthly'
+    ? `$${targetConfig.monthlyPrice}/mo`
+    : `$${targetConfig.yearlyPrice}/yr`
 
   return (
     <div
@@ -163,6 +218,95 @@ export function UpgradeModal({
             : `Upgrade from ${currentConfig.name} to ${targetConfig.name} to unlock ${displayFeatureName} and more.`}
         </p>
 
+        {/* Checkout message banner */}
+        {checkoutMessage && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: 10,
+              marginBottom: 16,
+              fontSize: 12,
+              lineHeight: 1.5,
+              background: checkoutMessage.includes('successful')
+                ? 'rgba(52,211,153,0.10)'
+                : 'rgba(245,158,11,0.10)',
+              border: `1px solid ${checkoutMessage.includes('successful') ? 'rgba(52,211,153,0.20)' : 'rgba(245,158,11,0.20)'}`,
+              color: checkoutMessage.includes('successful') ? '#34D399' : '#F59E0B',
+            }}
+          >
+            {checkoutMessage}
+          </div>
+        )}
+
+        {/* Billing interval toggle */}
+        {targetConfig.yearlyPrice > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: 0,
+              background: '#0a0a0a',
+              borderRadius: 10,
+              padding: 3,
+              marginBottom: 16,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <button
+              onClick={() => setBillingInterval('monthly')}
+              style={{
+                flex: 1,
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: billingInterval === 'monthly' ? '#C9A96E' : 'transparent',
+                color: billingInterval === 'monthly' ? '#1a0f00' : '#8E8E93',
+              }}
+            >
+              Monthly
+            </button>
+            <button
+              onClick={() => setBillingInterval('yearly')}
+              style={{
+                flex: 1,
+                padding: '8px 16px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: billingInterval === 'yearly' ? '#C9A96E' : 'transparent',
+                color: billingInterval === 'yearly' ? '#1a0f00' : '#8E8E93',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+              }}
+            >
+              Yearly
+              {yearlySavings > 0 && (
+                <span
+                  style={{
+                    fontSize: 9,
+                    fontWeight: 700,
+                    color: '#34D399',
+                    background: 'rgba(52,211,153,0.15)',
+                    padding: '1px 5px',
+                    borderRadius: 4,
+                    lineHeight: '16px',
+                  }}
+                >
+                  Save ${yearlySavings}
+                </span>
+              )}
+            </button>
+          </div>
+        )}
+
         {/* Plan comparison */}
         <div
           style={{
@@ -184,7 +328,9 @@ export function UpgradeModal({
               {currentConfig.name}
             </div>
             <div style={{ fontSize: 13, color: '#8E8E93', marginTop: 2 }}>
-              ${currentConfig.monthlyPrice}/mo
+              {billingInterval === 'monthly'
+                ? `$${currentConfig.monthlyPrice}/mo`
+                : `$${currentConfig.yearlyPrice}/yr`}
             </div>
           </div>
 
@@ -210,13 +356,18 @@ export function UpgradeModal({
               {targetConfig.name}
             </div>
             <div style={{ fontSize: 13, color: '#C9A96E', marginTop: 2 }}>
-              ${targetConfig.monthlyPrice}/mo
+              {displayPrice}
               {priceDiff > 0 && (
                 <span style={{ color: '#34D399', marginLeft: 6, fontSize: 11 }}>
-                  +${priceDiff}/mo
+                  +${priceDiff}/{billingInterval === 'monthly' ? 'mo' : 'yr'}
                 </span>
               )}
             </div>
+            {billingInterval === 'yearly' && yearlyMonthly < targetConfig.monthlyPrice && (
+              <div style={{ fontSize: 10, color: '#34D399', marginTop: 1 }}>
+                ${yearlyMonthly}/mo when billed yearly
+              </div>
+            )}
           </div>
         </div>
 
@@ -278,8 +429,28 @@ export function UpgradeModal({
           </div>
         )}
 
+        {/* Error message */}
+        {error && (
+          <div
+            style={{
+              padding: '10px 14px',
+              borderRadius: 10,
+              marginBottom: 12,
+              fontSize: 12,
+              lineHeight: 1.5,
+              background: 'rgba(239,68,68,0.10)',
+              border: '1px solid rgba(239,68,68,0.20)',
+              color: '#EF4444',
+            }}
+          >
+            {error}
+          </div>
+        )}
+
         {/* CTA button */}
         <button
+          onClick={handleCheckout}
+          disabled={isLoading}
           style={{
             width: '100%',
             display: 'flex',
@@ -289,19 +460,34 @@ export function UpgradeModal({
             padding: '13px 24px',
             borderRadius: 12,
             border: 'none',
-            background: '#C9A96E',
+            background: isLoading ? '#8E8E93' : '#C9A96E',
             color: '#1a0f00',
             fontSize: 14,
             fontWeight: 600,
-            cursor: 'pointer',
+            cursor: isLoading ? 'not-allowed' : 'pointer',
             transition: 'background 0.15s, transform 0.15s',
             marginBottom: 12,
+            opacity: isLoading ? 0.7 : 1,
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.background = '#E8C98A'; e.currentTarget.style.transform = 'translateY(-1px)' }}
-          onMouseLeave={(e) => { e.currentTarget.style.background = '#C9A96E'; e.currentTarget.style.transform = 'translateY(0)' }}
+          onMouseEnter={(e) => {
+            if (!isLoading) {
+              e.currentTarget.style.background = '#E8C98A'
+              e.currentTarget.style.transform = 'translateY(-1px)'
+            }
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.background = isLoading ? '#8E8E93' : '#C9A96E'
+            e.currentTarget.style.transform = 'translateY(0)'
+          }}
         >
-          <Crown style={{ width: 16, height: 16 }} />
-          Upgrade to {targetConfig.name} — ${targetConfig.monthlyPrice}/mo
+          {isLoading ? (
+            <Loader2 style={{ width: 16, height: 16, animation: 'spin 1s linear infinite' }} />
+          ) : (
+            <Crown style={{ width: 16, height: 16 }} />
+          )}
+          {isLoading
+            ? 'Creating checkout...'
+            : `Upgrade to ${targetConfig.name} — ${displayPrice}`}
         </button>
 
         {/* Maybe later */}
@@ -328,6 +514,9 @@ export function UpgradeModal({
         <p style={{ fontSize: 10, color: '#5c5c5e', textAlign: 'center', margin: '8px 0 0' }}>
           No commitment. Cancel anytime.
         </p>
+
+        {/* Inline style for spin animation */}
+        <style>{`@keyframes spin { to { transform: rotate(360deg) } }`}</style>
       </div>
     </div>
   )

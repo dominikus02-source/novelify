@@ -119,10 +119,11 @@ model Subscription {
   userId               String    @unique
   user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan                 String    @default("free")
-  status               String    @default("free") // free | trialing | active | past_due | canceled | expired
-  provider             String?   // midtrans | stripe | manual
+  status               String    @default("free") // free | trialing | active | past_due | canceled | expired | paused
+  provider             String?   // lemonsqueezy | midtrans | stripe | manual
   providerCustomerId   String?
   providerSubscriptionId String?
+  providerVariantId    String?
   currentPeriodStart   DateTime?
   currentPeriodEnd     DateTime?
   cancelAtPeriodEnd    Boolean   @default(false)
@@ -131,6 +132,27 @@ model Subscription {
   updatedAt            DateTime  @updatedAt
 
   @@index([userId])
+  @@index([providerSubscriptionId])
+}
+
+model BillingEvent {
+  id                String   @id @default(cuid())
+  userId            String?
+  provider          String   // lemonsqueezy | midtrans | stripe
+  providerEventId   String?  @unique
+  type              String   // subscription_created | subscription_updated | subscription_cancelled | subscription_resumed | subscription_expired | subscription_paused | subscription_unpaused | subscription_payment_success | subscription_payment_failed | subscription_payment_recovered | order_created | checkout_created | unknown
+  rawType           String?  // original event name from provider
+  status            String?  // active | past_due | canceled | expired | trialing | paused
+  plan              String?  // free | starter | pro | studio
+  amount            Int?
+  currency          String?
+  metadataJson      String?
+  processedAt       DateTime @default(now())
+  createdAt         DateTime @default(now())
+
+  @@index([userId])
+  @@index([providerEventId])
+  @@index([createdAt])
 }
 
 model UsageTracking {
