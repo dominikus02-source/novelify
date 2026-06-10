@@ -10,6 +10,7 @@ import {
   Download,
   ChevronLeft,
   BookOpen,
+  Settings as SettingsIcon,
 } from 'lucide-react';
 import { useNovelifyStore, type AppView } from '@/lib/store';
 
@@ -20,6 +21,7 @@ const navItems: { icon: React.ElementType; label: string; view: AppView }[] = [
   { icon: FileText, label: 'Synopsis', view: 'synopsis' },
   { icon: Image, label: 'Cover Art', view: 'cover' },
   { icon: Download, label: 'Export', view: 'export' },
+  { icon: SettingsIcon, label: 'Settings', view: 'settings' },
 ];
 
 export function Sidebar() {

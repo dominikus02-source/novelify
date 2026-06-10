@@ -1,7 +1,10 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNovelifyStore } from '@/lib/store';
+import {
+  Globe2, Package, Sparkles, FileText, Lock, BarChart3, Target,
+} from 'lucide-react';
 
 const features = [
   { key: 'features', label: 'Features' },
@@ -433,7 +436,9 @@ export function Hero() {
             <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14, marginTop: 56 }}>
               {/* Translation */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 7', background: 'linear-gradient(135deg, var(--lp-surface2) 0%, #0f0f14 100%)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>🌐</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
+                  <Globe2 size={20} style={{ color: 'var(--lp-gold)' }} />
+                </div>
                 <h3 className="lp-serif" style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Literary Translation</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Not machine translation — AI that understands tone, idiom, and narrative voice. Publish in multiple languages without losing your soul.</p>
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 20 }}>
@@ -448,7 +453,9 @@ export function Hero() {
 
               {/* KDP */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 5', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>📦</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
+                  <Package size={20} style={{ color: '#34D399' }} />
+                </div>
                 <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>One-Click KDP Publish</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Export perfect EPUB files and publish directly to Amazon KDP — formatted, optimized, and ready for global readers.</p>
                 <div style={{ marginTop: 20, display: 'inline-flex', alignItems: 'center', gap: 8, background: 'rgba(255,153,0,0.08)', border: '1px solid rgba(255,153,0,0.18)', borderRadius: 10, padding: '10px 14px', fontSize: 13, fontWeight: 500, color: '#FF9900' }}>
@@ -459,7 +466,9 @@ export function Hero() {
 
               {/* AI Co-Pilot */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 5', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>✨</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
+                  <Sparkles size={20} style={{ color: 'var(--lp-purple)' }} />
+                </div>
                 <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>AI Writing Co-Pilot</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Get contextual suggestions, continue scenes, and overcome writer&apos;s block without leaving your creative flow.</p>
                 <div style={{ marginTop: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -482,24 +491,36 @@ export function Hero() {
 
               {/* EPUB */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 7', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
-                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 18, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)' }}>📄</div>
+                <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(96,165,250,0.1)', border: '1px solid rgba(96,165,250,0.18)' }}>
+                  <FileText size={20} style={{ color: '#60A5FA' }} />
+                </div>
                 <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Professional EPUB Export</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Beautifully typeset EPUB files, auto-chapter splitting, cover integration, and metadata — all in one export. Readers expect quality; Novelify delivers it.</p>
               </div>
 
               {/* Bottom row */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 12', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s', display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'center' }}>
-                {[
-                  { icon: '🔒', bg: 'rgba(201,169,110,0.12)', border: 'rgba(201,169,110,0.2)', title: 'Your Voice, Your Rights', desc: 'All content you create stays yours. Novelify never trains on your writing, and you retain full copyright over every word.' },
-                  { icon: '📊', bg: 'rgba(167,139,250,0.1)', border: 'rgba(167,139,250,0.18)', title: 'Royalty Intelligence', desc: 'Track estimated royalties across markets and languages before you publish. Know your earning potential before the launch.' },
-                  { icon: '🎯', bg: 'rgba(52,211,153,0.1)', border: 'rgba(52,211,153,0.18)', title: 'Genre Targeting', desc: 'AI-assisted genre positioning and keyword optimization so your book reaches the right readers on Amazon and beyond.' },
-                ].map((item, idx) => (
-                  <div key={item.title} style={{ flex: 1, minWidth: 220, ...(idx > 0 ? { borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 } : {}) }}>
-                    <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18, marginBottom: 18, background: item.bg, border: `1px solid ${item.border}` }}>{item.icon}</div>
-                    <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>{item.title}</h3>
-                    <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>{item.desc}</p>
+                <div style={{ flex: 1, minWidth: 220 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
+                    <Lock size={20} style={{ color: 'var(--lp-gold)' }} />
                   </div>
-                ))}
+                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Your Voice, Your Rights</h3>
+                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>All content you create stays yours. Novelify never trains on your writing, and you retain full copyright over every word.</p>
+                </div>
+                <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
+                    <BarChart3 size={20} style={{ color: 'var(--lp-purple)' }} />
+                  </div>
+                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Royalty Intelligence</h3>
+                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Track estimated royalties across markets and languages before you publish. Know your earning potential before the launch.</p>
+                </div>
+                <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}>
+                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
+                    <Target size={20} style={{ color: '#34D399' }} />
+                  </div>
+                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Genre Targeting</h3>
+                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>AI-assisted genre positioning and keyword optimization so your book reaches the right readers on Amazon and beyond.</p>
+                </div>
               </div>
             </div>
           </div>

@@ -10,6 +10,7 @@ import { Translation } from '@/components/novelify/translation';
 import { Synopsis } from '@/components/novelify/synopsis';
 import { CoverGenerator } from '@/components/novelify/cover-generator';
 import { EpubExport } from '@/components/novelify/epub-export';
+import { SettingsPage } from '@/components/novelify/settings';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -49,6 +50,8 @@ export default function Home() {
         return <CoverGenerator />;
       case 'export':
         return <EpubExport />;
+      case 'settings':
+        return <SettingsPage />;
       default:
         return <Dashboard />;
     }

@@ -9,7 +9,8 @@ export type AppView =
   | "translate" 
   | "synopsis" 
   | "cover" 
-  | "export";
+  | "export"
+  | "settings";
 
 export interface Project {
   id: string;
