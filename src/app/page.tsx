@@ -87,10 +87,10 @@ export default function Home() {
 
   return (
     <div className="min-h-screen bg-paper">
-      {currentView !== 'dashboard' && <Sidebar />}
+      <Sidebar />
       <main
         className="transition-all duration-300"
-        style={{ marginLeft: currentView !== 'dashboard' ? (sidebarOpen ? 256 : 64) : 0 }}
+        style={{ marginLeft: sidebarOpen ? 256 : 64 }}
       >
         <AnimatePresence mode="wait">
           <motion.div

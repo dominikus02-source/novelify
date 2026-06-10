@@ -109,27 +109,9 @@ export function Dashboard() {
 
   const fmtWords = (n: number) => n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
 
-  const sidebarItems = [
-    { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard' as const, badge: null },
-    { icon: PenTool, label: 'Writing Studio', view: 'writing' as const, badge: totalChapters },
-    { icon: Languages, label: 'Translation', view: 'translate' as const, badge: null },
-    { icon: BookMarked, label: 'Synopsis', view: 'synopsis' as const, badge: null },
-    { icon: Image, label: 'Cover Art', view: 'cover' as const, badge: null },
-    { icon: Download, label: 'Export EPUB', view: 'export' as const, badge: null },
-    { icon: Target, label: 'KDP Publish', view: 'export' as const, badge: null },
-    { icon: Settings, label: 'Settings', view: 'settings' as const, badge: null },
-  ];
-
-  const formatLang = (p: Project) => {
-    const s = languageNames[p.sourceLanguage] || p.sourceLanguage;
-    const t = languageNames[p.targetLanguage] || p.targetLanguage;
-    return s === t ? s : `${s} → ${t}`;
-  };
-
   return (
-    <div style={{ background: '#080808', color: '#F5F5F7', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", fontSize: 14, lineHeight: 1.5, minHeight: '100vh', display: 'flex' }}>
+    <div style={{ background: '#080808', color: '#F5F5F7', fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,sans-serif", fontSize: 14, lineHeight: 1.5, minHeight: '100vh' }}>
       <style>{`
-        * { box-sizing: border-box; }
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
@@ -141,89 +123,28 @@ export function Dashboard() {
         .ns-review  { background: rgba(167,139,250,0.10); color: #A78BFA; border: 1px solid rgba(167,139,250,0.2); }
       `}</style>
 
-      {/* ═══ SIDEBAR ═══ */}
-      <aside style={{ width: 228, minHeight: '100vh', background: '#111111', borderRight: '1px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', padding: '20px 12px', position: 'fixed', top: 0, left: 0, bottom: 0, zIndex: 40, overflowY: 'auto' }}>
-        <a href="#" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '4px 8px 24px', textDecoration: 'none' }}>
-          <div style={{ width: 30, height: 30, background: 'linear-gradient(135deg, #C9A96E, #E8C98A)', borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 14, fontWeight: 700, color: '#1a0f00', flexShrink: 0, boxShadow: '0 2px 8px rgba(201,169,110,0.3)' }}>N</div>
-          <span style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>Novelify</span>
-        </a>
-
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#636366', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 10px', margin: '4px 0 6px' }}>Workspace</div>
-
-        {sidebarItems.slice(0, 4).map((item) => {
-          const Icon = item.icon;
-          const active = item.view === 'dashboard';
-          return (
-            <button key={item.label} onClick={() => setCurrentView(item.view)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 12, cursor: 'pointer', color: active ? '#E8C98A' : '#8E8E93', fontSize: 13, fontWeight: 500, background: active ? 'rgba(201,169,110,0.10)' : 'transparent', border: 'none', transition: 'background .15s', textAlign: 'left', width: '100%' }}
-              onMouseEnter={(e) => { if (!active) { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; } }}
-              onMouseLeave={(e) => { if (!active) { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; } }}
-            >
-              <Icon style={{ width: 18, height: 18, flexShrink: 0, opacity: active ? 1 : 0.7 }} />
-              {item.label}
-              {item.badge !== null && (
-                <span style={{ marginLeft: 'auto', background: 'rgba(255,255,255,0.07)', border: '1px solid rgba(255,255,255,0.11)', borderRadius: 10, padding: '1px 7px', fontSize: 10, fontWeight: 600, color: '#8E8E93' }}>{item.badge}</span>
-              )}
-            </button>
-          );
-        })}
-
-        <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '12px 0' }} />
-        <div style={{ fontSize: 10, fontWeight: 600, color: '#636366', letterSpacing: '0.08em', textTransform: 'uppercase', padding: '0 10px', margin: '4px 0 6px' }}>Publish</div>
-
-        {sidebarItems.slice(4).map((item) => {
-          const Icon = item.icon;
-          return (
-            <button key={item.label} onClick={() => setCurrentView(item.view)}
-              style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 12, cursor: 'pointer', color: '#8E8E93', fontSize: 13, fontWeight: 500, background: 'transparent', border: 'none', transition: 'background .15s', textAlign: 'left', width: '100%' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; }}
-            >
-              <Icon style={{ width: 18, height: 18, flexShrink: 0, opacity: 0.7 }} />
-              {item.label}
-            </button>
-          );
-        })}
-
-        <div style={{ marginTop: 'auto', padding: '10px', borderRadius: 12, cursor: 'pointer', border: '1px solid rgba(255,255,255,0.07)', background: '#161616', display: 'flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 32, height: 32, borderRadius: '50%', background: 'rgba(201,169,110,0.10)', border: '1px solid rgba(201,169,110,0.20)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 600, color: '#C9A96E', flexShrink: 0 }}>
-            {session?.user?.name?.charAt(0)?.toUpperCase() || 'D'}
-          </div>
-          <div>
-            <div style={{ fontSize: 13, fontWeight: 500, color: '#F5F5F7' }}>{session?.user?.name || 'Dominikus'}</div>
-            <div style={{ fontSize: 10, color: '#C9A96E', background: 'rgba(201,169,110,0.10)', borderRadius: 6, padding: '1px 6px', display: 'inline-block' }}>Author Plan</div>
-          </div>
-          <div style={{ marginLeft: 'auto', color: '#636366' }}>
-            <svg fill="none" viewBox="0 0 14 14" stroke="currentColor" strokeWidth="1.5" width="14" height="14"><circle cx="7" cy="3" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="7" r="1" fill="currentColor" stroke="none"/><circle cx="7" cy="11" r="1" fill="currentColor" stroke="none"/></svg>
-          </div>
+      {/* Topbar */}
+      <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+        <div>
+          <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>My Novels</h1>
+          <p style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>Your literary universe in one place</p>
         </div>
-      </aside>
-
-      {/* ═══ MAIN ═══ */}
-      <main style={{ marginLeft: 228, flex: 1, minHeight: '100vh', display: 'flex', flexDirection: 'column', background: '#080808' }}>
-
-        {/* Topbar */}
-        <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)', flexShrink: 0 }}>
-          <div>
-            <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>My Novels</h1>
-            <p style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>Your literary universe in one place</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Search">
-              <Search style={{ width: 16, height: 16 }} />
-            </button>
-            <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Notifications">
-              <Bell style={{ width: 16, height: 16 }} />
-            </button>
-            <button onClick={() => setCreateDialogOpen(true)}
-              style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#C9A96E', color: '#1a0f00', fontSize: 12, fontWeight: 600, padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .15s' }}
-              onMouseEnter={(e) => e.currentTarget.style.background = '#E8C98A'}
-              onMouseLeave={(e) => e.currentTarget.style.background = '#C9A96E'}
-            >
-              <Plus style={{ width: 14, height: 14 }} /> New Project
-            </button>
-          </div>
-        </header>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Search">
+            <Search style={{ width: 16, height: 16 }} />
+          </button>
+          <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: '#8E8E93', flexShrink: 0 }} title="Notifications">
+            <Bell style={{ width: 16, height: 16 }} />
+          </button>
+          <button onClick={() => setCreateDialogOpen(true)}
+            style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#C9A96E', color: '#1a0f00', fontSize: 12, fontWeight: 600, padding: '8px 16px', borderRadius: 20, border: 'none', cursor: 'pointer', whiteSpace: 'nowrap', transition: 'background .15s' }}
+            onMouseEnter={(e) => e.currentTarget.style.background = '#E8C98A'}
+            onMouseLeave={(e) => e.currentTarget.style.background = '#C9A96E'}
+          >
+            <Plus style={{ width: 14, height: 14 }} /> New Project
+          </button>
+        </div>
+      </header>
 
         {/* Page Body */}
         <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
@@ -323,7 +244,7 @@ export function Dashboard() {
 
                       <div onClick={() => handleOpenProject(project)} style={{ padding: '14px 16px 16px', flex: 1, display: 'flex', flexDirection: 'column' }}>
                         <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', marginBottom: 3 }}>{project.title}</div>
-                        <div style={{ fontSize: 11, color: '#8E8E93', marginBottom: 12 }}>{formatLang(project)}</div>
+                        <div style={{ fontSize: 11, color: '#8E8E93', marginBottom: 12 }}>{languageNames[project.sourceLanguage] || project.sourceLanguage}{project.sourceLanguage !== project.targetLanguage ? ` → ${languageNames[project.targetLanguage] || project.targetLanguage}` : ''}</div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 10 }}>
                           <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 10, color: '#636366' }}>
                             <FileText style={{ width: 11, height: 11 }} /> Ch. {cc}
@@ -481,7 +402,6 @@ export function Dashboard() {
             </div>
           </div>
         </div>
-      </main>
 
       <CreateProjectDialog open={createDialogOpen} onOpenChange={setCreateDialogOpen} />
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
