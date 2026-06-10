@@ -1,7 +1,7 @@
 'use client';
 
 import { useParams } from 'next/navigation';
-import { TranslationStudioPage } from '@/components/novelify/pages';
+import { TranslationStudio } from '@/components/novelify/translation-studio';
 import { useProject } from '@/lib/use-project';
 
 export default function TranslationProjectPage() {
@@ -16,5 +16,5 @@ export default function TranslationProjectPage() {
     );
   }
 
-  return <TranslationStudioPage />;
+  return <TranslationStudio />;
 }
