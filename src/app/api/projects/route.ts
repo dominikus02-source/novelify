@@ -2,6 +2,8 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createProjectSchema } from '@/lib/validations';
 import { getUserId, unauthorized } from '@/lib/session';
+import { requireUsageLimit } from '@/lib/billing/feature-gates';
+import { trackUsage } from '@/lib/billing/usage';
 
 // GET /api/projects - Fetch all projects for the authenticated user
 export async function GET() {
@@ -59,6 +61,11 @@ export async function POST(request: NextRequest) {
 
     const { title, genre, sourceLanguage, targetLanguage, plotOutline, styleGuide } = parsed.data;
 
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+
+    await requireUsageLimit(userId, userPlan, 'project_created', 1, 'max_projects');
+
     const project = await db.project.create({
       data: {
         userId,
@@ -91,6 +98,8 @@ export async function POST(request: NextRequest) {
         updatedAt: ch.updatedAt.toISOString(),
       })),
     };
+
+    await trackUsage(userId, userPlan, 'project_created', 1);
 
     return NextResponse.json(serialized, { status: 201 });
   } catch (error) {

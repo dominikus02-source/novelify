@@ -19,6 +19,7 @@ model User {
   image           String?
   emailVerified   DateTime?
   plan            String    @default("free")
+  subscriptionStatus String @default("free") // free | trialing | active | past_due | canceled | expired
   wordCountUsed   Int       @default(0)
   dailyWordCount  Int       @default(0)
   dailyWordDate   String?
@@ -29,6 +30,8 @@ model User {
   accounts        Account[]
   sessions        Session[]
   settings        UserSettings?
+  subscription    Subscription?
+  usageTracking   UsageTracking[]
 }
 
 model UserSettings {
@@ -109,6 +112,59 @@ model UserSettings {
 
   createdAt                        DateTime @default(now())
   updatedAt                        DateTime @updatedAt
+}
+
+model Subscription {
+  id                   String    @id @default(cuid())
+  userId               String    @unique
+  user                 User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                 String    @default("free")
+  status               String    @default("free") // free | trialing | active | past_due | canceled | expired
+  provider             String?   // midtrans | stripe | manual
+  providerCustomerId   String?
+  providerSubscriptionId String?
+  currentPeriodStart   DateTime?
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean   @default(false)
+  trialEndsAt          DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([userId])
+}
+
+model UsageTracking {
+  id                    String   @id @default(cuid())
+  userId                String
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  periodStart           DateTime @default(now())
+  periodEnd             DateTime
+  aiCreditsUsed         Int      @default(0)
+  starterOutlinesUsed   Int      @default(0)
+  revisionChecksUsed    Int      @default(0)
+  fullRevisionChecksUsed Int     @default(0)
+  translationWordsUsed  Int      @default(0)
+  exportsUsed           Int      @default(0)
+  marketingAssetsUsed   Int      @default(0)
+  projectsCreated       Int      @default(0)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  @@index([userId])
+  @@index([periodStart, periodEnd])
+}
+
+model UsageEvent {
+  id            String   @id @default(cuid())
+  userId        String
+  projectId     String?
+  type          String   // ai_credit | starter_outline | revision_check | full_revision_check | translation_word | export | marketing_asset | project_created
+  amount        Int      @default(1)
+  metadataJson  String?
+  createdAt     DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
 }
 
 model Account {

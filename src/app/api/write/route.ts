@@ -6,6 +6,7 @@ import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { checkWordLimit } from '@/lib/word-limit';
 import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
+import { trackUsage } from '@/lib/billing/usage';
 
 const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
@@ -49,6 +50,9 @@ export async function POST(request: NextRequest) {
       if (!project || project.userId !== userId) return new Response(null, { status: 403 });
     }
 
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+
     // Resolve language context
     const language = await resolveLanguageContext(userId, parsed.data.projectId);
     const systemPrompt = buildNovelSystemPrompt('writer', language, genre);
@@ -59,6 +63,8 @@ export async function POST(request: NextRequest) {
     if (styleGuide) userMessage += `Style Guide:\n${styleGuide}\n\n`;
     if (chapterContent) userMessage += `Current Chapter Content:\n${chapterContent}\n\n`;
     userMessage += `Writer's Request: ${prompt}`;
+
+    await trackUsage(userId, userPlan, 'ai_credit', Math.max(1, Math.ceil(estimatedWords / 100)));
 
     const content = await createChatCompletion([
       { role: 'assistant', content: systemPrompt },

@@ -5,6 +5,8 @@ import { generateEpubFromAssembly } from '@/lib/epub';
 import { generatePdfFromAssembly } from '@/lib/pdf';
 import { generateDocxFromAssembly } from '@/lib/docx';
 import { getUserId } from '@/lib/session';
+import { requireFeature, requireUsageLimit } from '@/lib/billing/feature-gates';
+import { trackUsage } from '@/lib/billing/usage';
 
 export async function POST(request: NextRequest) {
   try {
@@ -29,6 +31,17 @@ export async function POST(request: NextRequest) {
 
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     if (project.userId !== userId) return new Response(null, { status: 403 });
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+
+    if (format === 'pdf') {
+      await requireFeature(userId, userPlan, 'export_pdf');
+    } else if (format === 'docx') {
+      await requireFeature(userId, userPlan, 'export_docx');
+    }
+
+    await requireUsageLimit(userId, userPlan, 'export', 1, 'exports');
 
     const exportJob = await db.exportJob.create({
       data: { projectId, userId, format, status: 'generating', optionsJson: JSON.stringify(options || {}) },

@@ -11,6 +11,7 @@ import { useSession } from 'next-auth/react';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { colors } from './dashboard-components';
+import { PlanBadge } from './plan-badge';
 
 interface NavItemDef {
   icon: React.ElementType;
@@ -182,6 +183,10 @@ export function Sidebar() {
       ))}
 
       <div style={{ flex: 1 }} />
+
+      <div style={{ padding: '0 6px', marginBottom: 4 }}>
+        <PlanBadge />
+      </div>
 
       <div style={{ padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 4 }}>
         <AnimatePresence>

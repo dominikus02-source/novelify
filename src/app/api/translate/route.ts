@@ -6,6 +6,7 @@ import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { checkWordLimit } from '@/lib/word-limit';
 import { resolveLanguageContext, buildLanguageInstruction } from '@/lib/language-resolver';
+import { trackUsage } from '@/lib/billing/usage';
 
 const limiter = rateLimit({ interval: 60000, maxRequests: 10 });
 
@@ -48,6 +49,9 @@ export async function POST(request: NextRequest) {
       if (!project || project.userId !== userId) return new Response(null, { status: 403 });
     }
 
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+
     // Resolve language for user settings context
     const language = await resolveLanguageContext(userId, parsed.data.projectId);
     // Override aiOutputLanguage with the form's explicit target language
@@ -69,6 +73,8 @@ RULES:
 - The output should read as if originally written in ${targetLanguage}
 
 CRITICAL: You are translating FROM ${sourceLanguage} TO ${targetLanguage}. The output MUST be in ${targetLanguage} only.`;
+
+    await trackUsage(userId, userPlan, 'translation_word', sourceWords);
 
     const translatedText = await createChatCompletion([
       { role: 'assistant', content: systemPrompt },

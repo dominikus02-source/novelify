@@ -2,6 +2,7 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId } from '@/lib/session';
 import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
+import { trackUsage } from '@/lib/billing/usage';
 
 const SYNOPSIS_TYPES = ['blurb', 'amazon', 'logline', 'tagline'] as const;
 
@@ -68,6 +69,10 @@ export async function POST(request: NextRequest) {
     if (!project || project.userId !== userId) {
       return new Response(null, { status: 403 });
     }
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+    await trackUsage(userId, userPlan, 'ai_credit', 1);
 
     const language = await resolveLanguageContext(userId, projectId);
 

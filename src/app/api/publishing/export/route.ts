@@ -1,6 +1,8 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { getUserId } from '@/lib/session';
+import { requireFeature } from '@/lib/billing/feature-gates';
+import { trackUsage } from '@/lib/billing/usage';
 import { getOrderedManuscript } from '@/lib/manuscript';
 import { generateEpubFromAssembly } from '@/lib/epub';
 import { generatePdfFromAssembly } from '@/lib/pdf';
@@ -78,6 +80,17 @@ export async function POST(request: NextRequest) {
     if (!project || project.userId !== userId) {
       return new Response(null, { status: 403 });
     }
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+    
+    if (format === 'pdf') {
+      await requireFeature(userId, userPlan, 'export_pdf');
+    } else if (format === 'docx') {
+      await requireFeature(userId, userPlan, 'export_docx');
+    }
+    
+    await trackUsage(userId, userPlan, 'export', 1);
 
     exportJob = await db.exportJob.create({
       data: {

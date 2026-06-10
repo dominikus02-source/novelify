@@ -4,6 +4,8 @@ import { getUserId, unauthorized } from '@/lib/session';
 import { resolveLanguageContext } from '@/lib/language-resolver';
 import { createChatCompletion } from '@/lib/ai';
 import { getStructureBeats } from '@/lib/templates';
+import { db } from '@/lib/db';
+import { trackUsage } from '@/lib/billing/usage';
 
 const starterOutlineSchema = z.object({
   storyType: z.string(),
@@ -31,6 +33,10 @@ const starterOutlineSchema = z.object({
 export async function POST(request: NextRequest) {
   try {
     const userId = await getUserId();
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
+    await trackUsage(userId, userPlan, 'starter_outline', 1);
 
     const body = await request.json();
     const parsed = starterOutlineSchema.safeParse(body);

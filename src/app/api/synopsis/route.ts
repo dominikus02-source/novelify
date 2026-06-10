@@ -5,6 +5,7 @@ import { rateLimit } from '@/lib/rate-limit';
 import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
+import { trackUsage } from '@/lib/billing/usage';
 
 const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
@@ -33,6 +34,9 @@ export async function POST(request: NextRequest) {
       const project = await db.project.findUnique({ where: { id: parsed.data.projectId }, select: { userId: true } });
       if (!project || project.userId !== userId) return new Response(null, { status: 403 });
     }
+
+    const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
+    const userPlan = user?.plan || 'free';
 
     // Resolve language from project or user settings
     const language = await resolveLanguageContext(userId, parsed.data.projectId);
@@ -73,6 +77,8 @@ RULES:
     let userMessage = `Novel Title: ${title}\n`;
     if (genre) userMessage += `Genre: ${genre}\n`;
     if (plotOutline) userMessage += `Plot Outline:\n${plotOutline}\n`;
+
+    await trackUsage(userId, userPlan, 'ai_credit', 1);
 
     const generatedText = await createChatCompletion([
       { role: 'assistant', content: systemPrompt },
