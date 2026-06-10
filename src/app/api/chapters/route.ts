@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { createChapterSchema } from '@/lib/validations';
 
 // GET /api/chapters?projectId=xxx - Fetch all chapters for a project
 export async function GET(request: NextRequest) {
@@ -39,28 +40,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, chapterNumber, title } = body;
-
-    if (!projectId) {
+    const parsed = createChapterSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'projectId is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    if (!chapterNumber) {
-      return NextResponse.json(
-        { error: 'chapterNumber is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!title || title.trim() === '') {
-      return NextResponse.json(
-        { error: 'title is required' },
-        { status: 400 }
-      );
-    }
+    const { projectId, chapterNumber, title } = parsed.data;
 
     // Verify the project exists
     const project = await db.project.findUnique({ where: { id: projectId } });
@@ -74,8 +62,8 @@ export async function POST(request: NextRequest) {
     const chapter = await db.chapter.create({
       data: {
         projectId,
-        chapterNumber: Number(chapterNumber),
-        title: title.trim(),
+        chapterNumber,
+        title,
         contentOriginal: '',
         wordCount: 0,
         status: 'draft',

@@ -175,6 +175,7 @@ export function ProjectWorkspace() {
 
   // Re-fetch on mount
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refreshProject();
   }, [refreshProject]);
 

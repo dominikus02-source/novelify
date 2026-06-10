@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { createCharacterSchema } from '@/lib/validations';
 
 // GET /api/characters?projectId=xxx - Fetch all characters for a project
 export async function GET(request: NextRequest) {
@@ -39,21 +40,15 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, description, role } = body;
-
-    if (!projectId) {
+    const parsed = createCharacterSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'projectId is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    if (!name || name.trim() === '') {
-      return NextResponse.json(
-        { error: 'name is required' },
-        { status: 400 }
-      );
-    }
+    const { projectId, name, description, role } = parsed.data;
 
     // Verify the project exists
     const project = await db.project.findUnique({ where: { id: projectId } });
@@ -67,9 +62,9 @@ export async function POST(request: NextRequest) {
     const character = await db.character.create({
       data: {
         projectId,
-        name: name.trim(),
-        description: description || '',
-        role: role || 'supporting',
+        name,
+        description,
+        role,
       },
     });
 

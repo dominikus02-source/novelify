@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { updateChapterSchema } from '@/lib/validations';
 
 // PATCH /api/chapters/[id] - Update a chapter
 export async function PATCH(
@@ -18,19 +19,17 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { contentOriginal, contentTranslated, title, wordCount, status } = body;
-
-    // Build update data with only provided fields
-    const updateData: Record<string, unknown> = {};
-    if (contentOriginal !== undefined) updateData.contentOriginal = contentOriginal;
-    if (contentTranslated !== undefined) updateData.contentTranslated = contentTranslated;
-    if (title !== undefined) updateData.title = title;
-    if (wordCount !== undefined) updateData.wordCount = Number(wordCount);
-    if (status !== undefined) updateData.status = status;
+    const parsed = updateChapterSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const updatedChapter = await db.chapter.update({
       where: { id },
-      data: updateData,
+      data: parsed.data,
     });
 
     // Serialize dates

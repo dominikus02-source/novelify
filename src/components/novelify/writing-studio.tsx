@@ -57,6 +57,7 @@ export function WritingStudio() {
   // Sync editor content with selected chapter
   useEffect(() => {
     if (selectedChapter) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setEditorContent(selectedChapter.contentOriginal || '');
     } else {
       setEditorContent('');
@@ -74,49 +75,45 @@ export function WritingStudio() {
   }, [editingTitle]);
 
   // Debounced auto-save
-  const debouncedSave = useMemo(() => {
-    let timeout: NodeJS.Timeout;
-    return (content: string, chapterId: string) => {
-      clearTimeout(timeout);
-      setSaveStatus('idle');
-      timeout = setTimeout(async () => {
-        const wordCount = content.split(/\s+/).filter(Boolean).length;
-        setSaveStatus('saving');
-        try {
-          const res = await fetch(`/api/chapters/${chapterId}`, {
-            method: 'PATCH',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ contentOriginal: content, wordCount }),
-          });
-          if (res.ok) {
-            setSaveStatus('saved');
-            // Update the chapter in selectedProject
-            if (selectedProject) {
-              const updatedChapters = selectedProject.chapters.map((c) =>
-                c.id === chapterId
-                  ? { ...c, contentOriginal: content, wordCount, updatedAt: new Date().toISOString() }
-                  : c
-              );
-              setSelectedProject({ ...selectedProject, chapters: updatedChapters });
-              // Update selectedChapter too
-              if (selectedChapter && selectedChapter.id === chapterId) {
-                setSelectedChapter({
-                  ...selectedChapter,
-                  contentOriginal: content,
-                  wordCount,
-                  updatedAt: new Date().toISOString(),
-                });
-              }
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const debouncedSave = useCallback((content: string, chapterId: string) => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current);
+    setSaveStatus('idle');
+    timeoutRef.current = setTimeout(async () => {
+      const wordCount = content.split(/\s+/).filter(Boolean).length;
+      setSaveStatus('saving');
+      try {
+        const res = await fetch(`/api/chapters/${chapterId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contentOriginal: content, wordCount }),
+        });
+        if (res.ok) {
+          setSaveStatus('saved');
+          if (selectedProject) {
+            const updatedChapters = selectedProject.chapters.map((c) =>
+              c.id === chapterId
+                ? { ...c, contentOriginal: content, wordCount, updatedAt: new Date().toISOString() }
+                : c
+            );
+            setSelectedProject({ ...selectedProject, chapters: updatedChapters });
+            if (selectedChapter && selectedChapter.id === chapterId) {
+              setSelectedChapter({
+                ...selectedChapter,
+                contentOriginal: content,
+                wordCount,
+                updatedAt: new Date().toISOString(),
+              });
             }
-            // Clear saved indicator after a moment
-            setTimeout(() => setSaveStatus('idle'), 2000);
           }
-        } catch (error) {
-          console.error('Failed to save:', error);
-          setSaveStatus('idle');
+          setTimeout(() => setSaveStatus('idle'), 2000);
         }
-      }, 2000);
-    };
+      } catch (error) {
+        console.error('Failed to save:', error);
+        setSaveStatus('idle');
+      }
+    }, 2000);
   }, [selectedProject, selectedChapter, setSelectedProject, setSelectedChapter]);
 
   // Handle editor change

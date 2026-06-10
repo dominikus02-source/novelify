@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { createProjectSchema } from '@/lib/validations';
 
 // Default user ID for the app (no auth)
 const DEFAULT_USER_ID = 'default-user';
@@ -68,19 +69,23 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { title, genre, sourceLanguage, targetLanguage, plotOutline, styleGuide } = body;
-
-    if (!title || title.trim() === '') {
-      return NextResponse.json({ error: 'Title is required' }, { status: 400 });
+    const parsed = createProjectSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
     }
+
+    const { title, genre, sourceLanguage, targetLanguage, plotOutline, styleGuide } = parsed.data;
 
     const project = await db.project.create({
       data: {
         userId: DEFAULT_USER_ID,
-        title: title.trim(),
+        title,
         genre: genre || null,
-        sourceLanguage: sourceLanguage || 'id',
-        targetLanguage: targetLanguage || 'en',
+        sourceLanguage,
+        targetLanguage,
         plotOutline: plotOutline || null,
         styleGuide: styleGuide || null,
         status: 'draft',

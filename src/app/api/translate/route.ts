@@ -1,32 +1,20 @@
 import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { translateSchema } from '@/lib/validations';
 
 // POST /api/translate - Literary translation
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, chapterId, sourceLanguage, targetLanguage, content } = body;
-
-    if (!sourceLanguage) {
+    const parsed = translateSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'sourceLanguage is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    if (!targetLanguage) {
-      return NextResponse.json(
-        { error: 'targetLanguage is required' },
-        { status: 400 }
-      );
-    }
-
-    if (!content || content.trim() === '') {
-      return NextResponse.json(
-        { error: 'content is required' },
-        { status: 400 }
-      );
-    }
+    const { sourceLanguage, targetLanguage, content } = parsed.data;
 
     // Build the system prompt for literary translation
     const systemPrompt = `You are a professional literary translator. Translate the following text from ${sourceLanguage} to ${targetLanguage}.

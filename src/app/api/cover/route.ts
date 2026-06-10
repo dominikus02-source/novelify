@@ -1,27 +1,21 @@
+import { db } from '@/lib/db';
 import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { coverSchema } from '@/lib/validations';
 
 // POST /api/cover - Cover image generation
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, prompt, style } = body;
-
-    if (!projectId) {
+    const parsed = coverSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'projectId is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    if (!prompt || prompt.trim() === '') {
-      return NextResponse.json(
-        { error: 'prompt is required' },
-        { status: 400 }
-      );
-    }
+    const { projectId, prompt, style } = parsed.data;
 
     // Build image prompt combining style and user prompt
     const imagePrompt = `Book cover design for a novel, ${style || 'modern'} style, ${prompt}, professional quality, dramatic lighting`;
@@ -40,23 +34,16 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Save the image to public/images/covers
-    const timestamp = Date.now();
-    const filename = `${projectId}-${timestamp}.png`;
-    const filePath = path.join(process.cwd(), 'public', 'images', 'covers', filename);
-
-    // Convert base64 to buffer and save
-    const buffer = Buffer.from(imageBase64, 'base64');
-    await writeFile(filePath, buffer);
+    // Store as data URL (works on Vercel serverless)
+    const dataUrl = `data:image/png;base64,${imageBase64}`;
 
     // Update the project's coverImage field
-    const { db } = await import('@/lib/db');
     await db.project.update({
       where: { id: projectId },
-      data: { coverImage: `/images/covers/${filename}` },
+      data: { coverImage: dataUrl },
     });
 
-    return NextResponse.json({ imageUrl: `/images/covers/${filename}` });
+    return NextResponse.json({ imageUrl: dataUrl });
   } catch (error) {
     console.error('Error generating cover image:', error);
     return NextResponse.json(

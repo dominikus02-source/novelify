@@ -1,22 +1,21 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import path from 'path';
+import { exportSchema } from '@/lib/validations';
 
 // POST /api/export - Export project as HTML manuscript
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, options } = body;
-
-    if (!projectId) {
+    const parsed = exportSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'projectId is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    const { includeOriginal = true, includeTranslation = false, authorName = 'Author', language = 'en' } = options || {};
+    const { projectId, options } = parsed.data;
+    const { includeOriginal, includeTranslation, authorName, language } = options || {};
 
     // Fetch project with all chapters
     const project = await db.project.findUnique({
@@ -43,25 +42,21 @@ export async function POST(request: NextRequest) {
       language,
     });
 
-    // Save the HTML file
-    const filename = `${projectId}-manuscript.html`;
-    const filePath = path.join(process.cwd(), 'public', 'exports', filename);
-
-    await writeFile(filePath, html, 'utf-8');
-
     // Create an Export record in the database
     await db.export.create({
       data: {
         projectId,
         format: 'html',
-        filePath: `/exports/${filename}`,
         status: 'completed',
       },
     });
 
-    return NextResponse.json({
-      downloadUrl: `/exports/${filename}`,
-      format: 'html',
+    // Return HTML as a downloadable file
+    return new NextResponse(html, {
+      headers: {
+        'Content-Type': 'text/html; charset=utf-8',
+        'Content-Disposition': `attachment; filename="${project.title.replace(/[^a-zA-Z0-9-]/g, '_')}-manuscript.html"`,
+      },
     });
   } catch (error) {
     console.error('Error exporting project:', error);

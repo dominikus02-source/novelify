@@ -39,6 +39,8 @@ model Project {
   chapters       Chapter[]
   characters     Character[]
   exports        Export[]
+
+  @@index([userId])
 }
 
 model Chapter {

@@ -1,5 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
+import { updateProjectSchema } from '@/lib/validations';
 
 // PATCH /api/projects/[id] - Update a project
 export async function PATCH(
@@ -15,20 +16,17 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const { title, genre, status, coverImage, plotOutline, styleGuide } = body;
-
-    // Build update data with only provided fields
-    const updateData: Record<string, unknown> = {};
-    if (title !== undefined) updateData.title = title;
-    if (genre !== undefined) updateData.genre = genre;
-    if (status !== undefined) updateData.status = status;
-    if (coverImage !== undefined) updateData.coverImage = coverImage;
-    if (plotOutline !== undefined) updateData.plotOutline = plotOutline;
-    if (styleGuide !== undefined) updateData.styleGuide = styleGuide;
+    const parsed = updateProjectSchema.safeParse(body);
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: parsed.error.flatten().fieldErrors },
+        { status: 400 }
+      );
+    }
 
     const updatedProject = await db.project.update({
       where: { id },
-      data: updateData,
+      data: parsed.data,
       include: {
         chapters: true,
         characters: true,

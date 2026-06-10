@@ -1,19 +1,20 @@
 import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { aiWriteSchema } from '@/lib/validations';
 
 // POST /api/write - AI writing assistant
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, chapterId, prompt, context } = body;
-
-    if (!prompt || prompt.trim() === '') {
+    const parsed = aiWriteSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'prompt is required' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
+    const { prompt, context } = parsed.data;
     const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage } = context || {};
 
     // Build the system prompt

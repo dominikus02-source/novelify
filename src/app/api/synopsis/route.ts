@@ -1,27 +1,21 @@
 import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
+import { synopsisSchema } from '@/lib/validations';
 
 // POST /api/synopsis - Synopsis/description generator
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, type, context } = body;
-
-    if (!type || (type !== 'blurb' && type !== 'amazon')) {
+    const parsed = synopsisSchema.safeParse(body);
+    if (!parsed.success) {
       return NextResponse.json(
-        { error: 'type must be "blurb" or "amazon"' },
+        { error: parsed.error.flatten().fieldErrors },
         { status: 400 }
       );
     }
 
-    const { title, genre, plotOutline } = context || {};
-
-    if (!title) {
-      return NextResponse.json(
-        { error: 'title is required in context' },
-        { status: 400 }
-      );
-    }
+    const { type, context } = parsed.data;
+    const { title, genre, plotOutline } = context;
 
     // Build the appropriate system prompt based on type
     let systemPrompt: string;
