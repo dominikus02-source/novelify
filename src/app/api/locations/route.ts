@@ -1,12 +1,19 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createLocationSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 export async function GET(request: NextRequest) {
   try {
+    const userId = await getUserId();
     const projectId = request.nextUrl.searchParams.get('projectId');
     if (!projectId) {
       return NextResponse.json({ error: 'projectId query parameter is required' }, { status: 400 });
+    }
+
+    const project = await db.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const locations = await db.location.findMany({
@@ -29,6 +36,7 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId();
     const body = await request.json();
     const parsed = createLocationSchema.safeParse(body);
     if (!parsed.success) {
@@ -37,9 +45,9 @@ export async function POST(request: NextRequest) {
 
     const { projectId, name, description, importance } = parsed.data;
 
-    const project = await db.project.findUnique({ where: { id: projectId } });
-    if (!project) {
-      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    const project = await db.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const location = await db.location.create({

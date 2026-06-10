@@ -1,6 +1,6 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
-import { updateTimelineEventSchema } from '@/lib/validations';
+import { updatePlotBeatSchema } from '@/lib/validations';
 import { getUserId } from '@/lib/session';
 
 export async function PATCH(
@@ -11,9 +11,9 @@ export async function PATCH(
     const userId = await getUserId();
     const { id } = await params;
 
-    const existing = await db.timelineEvent.findUnique({ where: { id } });
+    const existing = await db.plotBeat.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: 'Timeline event not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Plot beat not found' }, { status: 404 });
     }
 
     const project = await db.project.findUnique({ where: { id: existing.projectId }, select: { userId: true } });
@@ -22,12 +22,12 @@ export async function PATCH(
     }
 
     const body = await request.json();
-    const parsed = updateTimelineEventSchema.safeParse(body);
+    const parsed = updatePlotBeatSchema.safeParse(body);
     if (!parsed.success) {
       return NextResponse.json({ error: parsed.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const updated = await db.timelineEvent.update({
+    const updated = await db.plotBeat.update({
       where: { id },
       data: parsed.data,
     });
@@ -40,8 +40,8 @@ export async function PATCH(
 
     return NextResponse.json(serialized);
   } catch (error) {
-    console.error('Error updating timeline event:', error);
-    return NextResponse.json({ error: 'Failed to update timeline event' }, { status: 500 });
+    console.error('Error updating plot beat:', error);
+    return NextResponse.json({ error: 'Failed to update plot beat' }, { status: 500 });
   }
 }
 
@@ -53,9 +53,9 @@ export async function DELETE(
     const userId = await getUserId();
     const { id } = await params;
 
-    const existing = await db.timelineEvent.findUnique({ where: { id } });
+    const existing = await db.plotBeat.findUnique({ where: { id } });
     if (!existing) {
-      return NextResponse.json({ error: 'Timeline event not found' }, { status: 404 });
+      return NextResponse.json({ error: 'Plot beat not found' }, { status: 404 });
     }
 
     const project = await db.project.findUnique({ where: { id: existing.projectId }, select: { userId: true } });
@@ -63,11 +63,11 @@ export async function DELETE(
       return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
-    await db.timelineEvent.delete({ where: { id } });
+    await db.plotBeat.delete({ where: { id } });
 
     return NextResponse.json({ success: true });
   } catch (error) {
-    console.error('Error deleting timeline event:', error);
-    return NextResponse.json({ error: 'Failed to delete timeline event' }, { status: 500 });
+    console.error('Error deleting plot beat:', error);
+    return NextResponse.json({ error: 'Failed to delete plot beat' }, { status: 500 });
   }
 }

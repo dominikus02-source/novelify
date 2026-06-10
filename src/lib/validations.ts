@@ -55,6 +55,24 @@ export const createCharacterSchema = z.object({
   name: z.string().trim().min(1, 'Name is required').max(200),
   description: z.string().default(''),
   role: z.enum(['protagonist', 'antagonist', 'supporting']).default('supporting'),
+  age: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  occupation: z.string().optional().nullable(),
+  physicalDescription: z.string().optional().nullable(),
+  personality: z.string().optional().nullable(),
+  motivation: z.string().optional().nullable(),
+  fear: z.string().optional().nullable(),
+  secret: z.string().optional().nullable(),
+  flaw: z.string().optional().nullable(),
+  strength: z.string().optional().nullable(),
+  backstory: z.string().optional().nullable(),
+  characterArc: z.string().optional().nullable(),
+  relationshipToProtagonist: z.string().optional().nullable(),
+  firstAppearanceChapter: z.string().optional().nullable(),
+  status: z.string().default('alive'),
+  notes: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  colorTag: z.string().optional().nullable(),
 });
 
 export const aiWriteSchema = z.object({
@@ -166,6 +184,24 @@ export const updateCharacterSchema = z.object({
   name: z.string().trim().min(1).max(200).optional(),
   description: z.string().optional(),
   role: z.enum(['protagonist', 'antagonist', 'supporting']).optional(),
+  age: z.string().optional().nullable(),
+  gender: z.string().optional().nullable(),
+  occupation: z.string().optional().nullable(),
+  physicalDescription: z.string().optional().nullable(),
+  personality: z.string().optional().nullable(),
+  motivation: z.string().optional().nullable(),
+  fear: z.string().optional().nullable(),
+  secret: z.string().optional().nullable(),
+  flaw: z.string().optional().nullable(),
+  strength: z.string().optional().nullable(),
+  backstory: z.string().optional().nullable(),
+  characterArc: z.string().optional().nullable(),
+  relationshipToProtagonist: z.string().optional().nullable(),
+  firstAppearanceChapter: z.string().optional().nullable(),
+  status: z.string().optional(),
+  notes: z.string().optional().nullable(),
+  imageUrl: z.string().optional().nullable(),
+  colorTag: z.string().optional().nullable(),
 });
 
 export const exportSchema = z.object({
@@ -177,4 +213,114 @@ export const exportSchema = z.object({
     authorName: z.string().default('Author'),
     language: z.string().default('en'),
   }).optional(),
+});
+
+export const createPlotBeatSchema = z.object({
+  projectId: z.string().min(1),
+  template: z.string().default('three-act'),
+  act: z.string().default('act1'),
+  order: z.number().default(0),
+  title: z.string().trim().min(1, 'Title is required'),
+  description: z.string().default(''),
+  status: z.string().default('idea'),
+  linkedChapterId: z.string().optional().nullable(),
+  linkedSceneId: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
+export const updatePlotBeatSchema = z.object({
+  template: z.string().optional(),
+  act: z.string().optional(),
+  order: z.number().optional(),
+  title: z.string().trim().min(1).max(200).optional(),
+  description: z.string().optional(),
+  status: z.string().optional(),
+  linkedChapterId: z.string().optional().nullable(),
+  linkedSceneId: z.string().optional().nullable(),
+  notes: z.string().optional().nullable(),
+});
+
+export const createRelationshipSchema = z.object({
+  projectId: z.string().min(1),
+  characterAId: z.string().min(1),
+  characterBId: z.string().min(1),
+  type: z.string().default('complicated'),
+  description: z.string().optional().default(''),
+  conflict: z.string().optional().nullable(),
+  evolution: z.string().optional().nullable(),
+});
+
+export const updateRelationshipSchema = z.object({
+  type: z.string().optional(),
+  description: z.string().optional(),
+  conflict: z.string().optional().nullable(),
+  evolution: z.string().optional().nullable(),
+});
+
+export const createResearchItemSchema = z.object({
+  projectId: z.string().min(1),
+  title: z.string().trim().min(1, 'Title is required'),
+  sourceUrl: z.string().optional().nullable(),
+  summary: z.string().optional().default(''),
+  notes: z.string().optional().nullable(),
+  relevance: z.string().default('moderate'),
+  linkedCharacterId: z.string().optional().nullable(),
+  linkedLocationId: z.string().optional().nullable(),
+  linkedChapterId: z.string().optional().nullable(),
+});
+
+export const updateResearchItemSchema = z.object({
+  title: z.string().trim().min(1).max(200).optional(),
+  sourceUrl: z.string().optional().nullable(),
+  summary: z.string().optional(),
+  notes: z.string().optional().nullable(),
+  relevance: z.string().optional(),
+  linkedCharacterId: z.string().optional().nullable(),
+  linkedLocationId: z.string().optional().nullable(),
+  linkedChapterId: z.string().optional().nullable(),
+});
+
+export const updateProjectOverviewSchema = z.object({
+  premise: z.string().optional().nullable(),
+  logline: z.string().optional().nullable(),
+  theme: z.string().optional().nullable(),
+  targetAudience: z.string().optional().nullable(),
+  pov: z.string().optional().nullable(),
+  tense: z.string().optional().nullable(),
+  tone: z.string().optional().nullable(),
+  centralConflict: z.string().optional().nullable(),
+  stakes: z.string().optional().nullable(),
+  endingIdea: z.string().optional().nullable(),
+});
+
+export const createBulkChaptersSchema = z.object({
+  projectId: z.string().min(1),
+  count: z.number().int().positive().default(5),
+  titlePrefix: z.string().default('Chapter'),
+});
+
+export const reorderScenesSchema = z.object({
+  items: z.array(z.object({
+    id: z.string().min(1),
+    order: z.number().int().positive(),
+  })),
+});
+
+export const reorderChaptersSchema = z.object({
+  items: z.array(z.object({
+    id: z.string().min(1),
+    order: z.number().int().positive(),
+  })),
+});
+
+export const convertBeatToChapterSchema = z.object({
+  beatId: z.string().min(1),
+  title: z.string().optional(),
+});
+
+export const createChapterWithSceneSchema = z.object({
+  projectId: z.string().min(1),
+  chapterNumber: z.number().int().positive(),
+  chapterTitle: z.string().optional(),
+  sceneTitle: z.string().optional(),
 });

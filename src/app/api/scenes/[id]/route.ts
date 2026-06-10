@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { updateSceneSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // PATCH /api/scenes/[id] - Update a scene
 export async function PATCH(
@@ -8,6 +9,7 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const scene = await db.scene.findUnique({ where: { id } });
@@ -16,6 +18,11 @@ export async function PATCH(
         { error: 'Scene not found' },
         { status: 404 }
       );
+    }
+
+    const chapter = await db.chapter.findUnique({ where: { id: scene.chapterId }, select: { project: { select: { userId: true } } } });
+    if (!chapter || chapter.project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -54,6 +61,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const scene = await db.scene.findUnique({ where: { id } });
@@ -62,6 +70,11 @@ export async function DELETE(
         { error: 'Scene not found' },
         { status: 404 }
       );
+    }
+
+    const chapter = await db.chapter.findUnique({ where: { id: scene.chapterId }, select: { project: { select: { userId: true } } } });
+    if (!chapter || chapter.project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     await db.scene.delete({ where: { id } });

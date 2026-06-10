@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createCharacterSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // GET /api/characters?projectId=xxx - Fetch all characters for a project
 export async function GET(request: NextRequest) {
@@ -39,6 +40,7 @@ export async function GET(request: NextRequest) {
 // POST /api/characters - Create a new character
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId();
     const body = await request.json();
     const parsed = createCharacterSchema.safeParse(body);
     if (!parsed.success) {
@@ -48,13 +50,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { projectId, name, description, role } = parsed.data;
+    const { projectId, name, description, role, age, gender, occupation, physicalDescription, personality, motivation, fear, secret, flaw, strength, backstory, characterArc, relationshipToProtagonist, firstAppearanceChapter, status, notes, imageUrl, colorTag } = parsed.data;
 
-    // Verify the project exists
-    const project = await db.project.findUnique({ where: { id: projectId } });
-    if (!project) {
+    // Verify the project exists and belongs to user
+    const project = await db.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
       return NextResponse.json(
-        { error: 'Project not found' },
+        { error: 'Not found' },
         { status: 404 }
       );
     }
@@ -65,6 +67,24 @@ export async function POST(request: NextRequest) {
         name,
         description,
         role,
+        age,
+        gender,
+        occupation,
+        physicalDescription,
+        personality,
+        motivation,
+        fear,
+        secret,
+        flaw,
+        strength,
+        backstory,
+        characterArc,
+        relationshipToProtagonist,
+        firstAppearanceChapter,
+        status,
+        notes,
+        imageUrl,
+        colorTag,
       },
     });
 

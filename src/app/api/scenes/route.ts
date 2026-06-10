@@ -1,10 +1,12 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createSceneSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // GET /api/scenes?chapterId=xxx - Fetch all scenes for a chapter
 export async function GET(request: NextRequest) {
   try {
+    const userId = await getUserId();
     const chapterId = request.nextUrl.searchParams.get('chapterId');
 
     if (!chapterId) {
@@ -12,6 +14,11 @@ export async function GET(request: NextRequest) {
         { error: 'chapterId query parameter is required' },
         { status: 400 }
       );
+    }
+
+    const chapter = await db.chapter.findUnique({ where: { id: chapterId }, select: { project: { select: { userId: true } } } });
+    if (!chapter || chapter.project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const scenes = await db.scene.findMany({
@@ -38,6 +45,7 @@ export async function GET(request: NextRequest) {
 // POST /api/scenes - Create a new scene
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId();
     const body = await request.json();
     const parsed = createSceneSchema.safeParse(body);
     if (!parsed.success) {
@@ -49,12 +57,9 @@ export async function POST(request: NextRequest) {
 
     const { chapterId, sceneNumber, title } = parsed.data;
 
-    const chapter = await db.chapter.findUnique({ where: { id: chapterId } });
-    if (!chapter) {
-      return NextResponse.json(
-        { error: 'Chapter not found' },
-        { status: 404 }
-      );
+    const chapter = await db.chapter.findUnique({ where: { id: chapterId }, select: { project: { select: { userId: true } } } });
+    if (!chapter || chapter.project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const scene = await db.scene.create({

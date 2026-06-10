@@ -29,6 +29,16 @@ export interface Project {
   wordTarget: number;
   chaptersTarget: number;
   templateId: string | null;
+  premise: string | null;
+  logline: string | null;
+  theme: string | null;
+  targetAudience: string | null;
+  pov: string | null;
+  tense: string | null;
+  tone: string | null;
+  centralConflict: string | null;
+  stakes: string | null;
+  endingIdea: string | null;
   createdAt: string;
   updatedAt: string;
   chapters: Chapter[];
@@ -67,12 +77,74 @@ export interface Chapter {
   scenes: Scene[];
 }
 
+export interface PlotBeat {
+  id: string;
+  projectId: string;
+  template: string;
+  act: string;
+  order: number;
+  title: string;
+  description: string;
+  status: string;
+  linkedChapterId: string | null;
+  linkedSceneId: string | null;
+  notes: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface Relationship {
+  id: string;
+  projectId: string;
+  characterAId: string;
+  characterBId: string;
+  type: string;
+  description: string;
+  conflict: string | null;
+  evolution: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ResearchItem {
+  id: string;
+  projectId: string;
+  title: string;
+  sourceUrl: string | null;
+  summary: string;
+  notes: string | null;
+  relevance: string;
+  linkedCharacterId: string | null;
+  linkedLocationId: string | null;
+  linkedChapterId: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Character {
   id: string;
   projectId: string;
   name: string;
   description: string;
   role: string;
+  age: string | null;
+  gender: string | null;
+  occupation: string | null;
+  physicalDescription: string | null;
+  personality: string | null;
+  motivation: string | null;
+  fear: string | null;
+  secret: string | null;
+  flaw: string | null;
+  strength: string | null;
+  backstory: string | null;
+  characterArc: string | null;
+  relationshipToProtagonist: string | null;
+  firstAppearanceChapter: string | null;
+  status: string;
+  notes: string | null;
+  imageUrl: string | null;
+  colorTag: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -106,6 +178,8 @@ export interface StoryNote {
   category: string;
   linkedChapterId: string | null;
   linkedSceneId: string | null;
+  linkedCharacterId: string | null;
+  linkedLocationId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -116,6 +190,11 @@ export interface Location {
   name: string;
   description: string;
   importance: string;
+  type: string;
+  mood: string | null;
+  rules: string | null;
+  history: string | null;
+  notes: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -126,7 +205,10 @@ export interface TimelineEvent {
   title: string;
   description: string;
   eventDateOrOrder: number | null;
+  eventDateText: string | null;
+  type: string;
   linkedSceneId: string | null;
+  linkedChapterId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -180,8 +262,8 @@ interface AppState {
   studioTab: 'ai' | 'bible' | 'outline' | 'characters' | 'notes' | 'versions' | 'export';
   setStudioTab: (tab: 'ai' | 'bible' | 'outline' | 'characters' | 'notes' | 'versions' | 'export') => void;
 
-  bibleTab: 'characters' | 'locations' | 'timeline' | 'worldbuilding' | 'research';
-  setBibleTab: (tab: 'characters' | 'locations' | 'timeline' | 'worldbuilding' | 'research') => void;
+  bibleTab: 'overview' | 'characters' | 'locations' | 'timeline' | 'lore' | 'research' | 'relationships' | 'objects';
+  setBibleTab: (tab: 'overview' | 'characters' | 'locations' | 'timeline' | 'lore' | 'research' | 'relationships' | 'objects') => void;
 
   versions: ManuscriptVersion[];
   setVersions: (versions: ManuscriptVersion[]) => void;
@@ -192,6 +274,12 @@ interface AppState {
   setLocations: (locations: Location[]) => void;
   timelineEvents: TimelineEvent[];
   setTimelineEvents: (events: TimelineEvent[]) => void;
+  plotBeats: PlotBeat[];
+  setPlotBeats: (beats: PlotBeat[]) => void;
+  relationships: Relationship[];
+  setRelationships: (rels: Relationship[]) => void;
+  researchItems: ResearchItem[];
+  setResearchItems: (items: ResearchItem[]) => void;
 
   writingGoals: WritingGoal[];
   setWritingGoals: (goals: WritingGoal[]) => void;
@@ -233,7 +321,7 @@ export const useNovelifyStore = create<AppState>((set, get) => ({
   studioTab: 'ai',
   setStudioTab: (tab) => set({ studioTab: tab }),
 
-  bibleTab: 'characters',
+  bibleTab: 'overview',
   setBibleTab: (tab) => set({ bibleTab: tab }),
 
   versions: [],
@@ -245,6 +333,12 @@ export const useNovelifyStore = create<AppState>((set, get) => ({
   setLocations: (locations) => set({ locations }),
   timelineEvents: [],
   setTimelineEvents: (events) => set({ timelineEvents: events }),
+  plotBeats: [],
+  setPlotBeats: (beats) => set({ plotBeats: beats }),
+  relationships: [],
+  setRelationships: (rels) => set({ relationships: rels }),
+  researchItems: [],
+  setResearchItems: (items) => set({ researchItems: items }),
 
   writingGoals: [],
   setWritingGoals: (goals) => set({ writingGoals: goals }),

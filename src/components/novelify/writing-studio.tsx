@@ -749,6 +749,61 @@ export function WritingStudio() {
             {/* Outline Tab */}
             {studioTab === 'outline' && (
               <div>
+                {/* Scene Metadata (when scene selected) */}
+                {writingMode === 'scene' && selectedScene && (
+                  <div className="mb-4 p-3 rounded-lg" style={{ background: '#faf6f0', border: '1px solid rgba(200,135,58,0.15)' }}>
+                    <p className="text-[10px] font-semibold uppercase mb-2" style={{ color: '#C8873A', letterSpacing: '0.05em' }}>Scene Info</p>
+                    <div className="space-y-2">
+                      <div>
+                        <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Goal</label>
+                        <input value={selectedScene.goal || ''} onChange={async (e) => {
+                          const updated = { ...selectedScene, goal: e.target.value };
+                          setSelectedScene(updated);
+                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: e.target.value }) });
+                        }} placeholder="What does this scene achieve?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Conflict</label>
+                        <input value={selectedScene.conflict || ''} onChange={async (e) => {
+                          const updated = { ...selectedScene, conflict: e.target.value };
+                          setSelectedScene(updated);
+                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conflict: e.target.value }) });
+                        }} placeholder="What opposes the goal?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Outcome</label>
+                        <input value={selectedScene.outcome || ''} onChange={async (e) => {
+                          const updated = { ...selectedScene, outcome: e.target.value };
+                          setSelectedScene(updated);
+                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome: e.target.value }) });
+                        }} placeholder="How does it end?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
+                      </div>
+                      <div>
+                        <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>POV Character</label>
+                        <select value={selectedScene.povCharacterId || ''} onChange={async (e) => {
+                          const updated = { ...selectedScene, povCharacterId: e.target.value || null };
+                          setSelectedScene(updated);
+                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ povCharacterId: e.target.value || null }) });
+                        }} className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }}>
+                          <option value="">No POV</option>
+                          {project.characters.map(ch => <option key={ch.id} value={ch.id}>{ch.name}</option>)}
+                        </select>
+                      </div>
+                      <div style={{ display: 'flex', gap: 4, marginTop: 4 }}>
+                        {['idea', 'drafting', 'revised', 'edited', 'locked'].map(s => (
+                          <button key={s} onClick={async () => {
+                            const updated = { ...selectedScene, status: s };
+                            setSelectedScene(updated);
+                            await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: s }) });
+                          }}
+                            style={{ flex: 1, padding: '3px 0', borderRadius: 4, fontSize: 8, fontWeight: 500, border: 'none', background: selectedScene.status === s ? '#C8873A' : 'rgba(0,0,0,0.05)', color: selectedScene.status === s ? '#fff' : '#666', cursor: 'pointer' }}
+                          >{s.slice(0, 3)}</button>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 <p className="text-[11px] font-medium mb-2" style={{ color: '#1a1a1a' }}>Plot Outline</p>
                 {project.plotOutline ? (
                   <p className="text-xs leading-relaxed whitespace-pre-wrap" style={{ color: '#666' }}>{project.plotOutline}</p>

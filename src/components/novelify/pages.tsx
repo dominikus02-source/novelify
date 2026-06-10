@@ -108,140 +108,14 @@ export function MyNovelsPage() {
 }
 
 // ═══════════════════════════════════════════
-// Story Bible (with Research tab)
+// Story Bible (full implementation)
 // ═══════════════════════════════════════════
-export function StoryBiblePage() {
-  const { go, projects, selectedProject, setSelectedProject } = useNav();
-  const [tab, setTab] = useState<'characters' | 'locations' | 'timeline' | 'lore' | 'research'>('characters');
-
-  if (!selectedProject) {
-    return (
-      <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-        <PageHeader title="Story Bible" subtitle="Build your story's foundation" />
-        {projects.length === 0 ? (
-          <EmptyState icon={BookMarked} title="No projects yet" desc="Create a novel to start building your story bible" />
-        ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            {projects.map((p) => (
-              <Card key={p.id} hover onClick={() => go('story-bible', p)}>
-                <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7' }}>{p.title}</div>
-                  <div style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{p.chapters.length} chapters · {p.characters.length} characters</div>
-                  <GlassButton small onClick={() => go('story-bible', p)} style={{ marginTop: 10 }}>Open Bible</GlassButton>
-                </div>
-              </Card>
-            ))}
-          </div>
-        )}
-      </div>
-    );
-  }
-
-  const p = selectedProject;
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title={`Story Bible: ${p.title}`} subtitle={`${p.characters.length} characters · ${p.chapters.length} chapters`}
-        action={<GlassButton onClick={() => go('writing', p)}><PenTool style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton>}
-      />
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
-        {(['characters', 'locations', 'timeline', 'lore', 'research'] as const).map((t) => (
-          <button key={t} onClick={() => setTab(t)} style={{ padding: '7px 16px', borderRadius: 20, fontSize: 11, fontWeight: 500, cursor: 'pointer', border: `1px solid ${tab === t ? colors.goldBorder : colors.border}`, background: tab === t ? 'rgba(201,169,110,0.10)' : '#161616', color: tab === t ? colors.gold : '#8E8E93' }}>
-            {t.charAt(0).toUpperCase() + t.slice(1)}
-          </button>
-        ))}
-      </div>
-
-      {tab === 'characters' && (
-        <div>
-          <SectionHeader title="Characters" count={p.characters.length} />
-          {p.characters.length === 0 ? (
-            <EmptyState icon={Users} title="No characters yet" desc="Add characters to your story bible" />
-          ) : (
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
-              {p.characters.map((ch) => (
-                <Card key={ch.id}>
-                  <div style={{ padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
-                    <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: colors.gold, fontSize: 14, fontWeight: 600, flexShrink: 0 }}>{ch.name.charAt(0)}</div>
-                    <div style={{ minWidth: 0 }}>
-                      <div style={{ fontSize: 12, fontWeight: 600, color: '#F5F5F7' }}>{ch.name}</div>
-                      <StatusBadge status={ch.role} />
-                      {ch.description && <div style={{ fontSize: 10, color: colors.muted, marginTop: 4, lineHeight: 1.4 }}>{ch.description}</div>}
-                    </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-      {tab === 'locations' && (
-        <FeaturePlaceholder title="Locations" description="Map out the world your story lives in"
-          features={['Track key locations across your story', 'Add descriptions, history, and significance', 'Link locations to specific chapters and scenes']}
-          cta="Start by adding locations from your Story Bible in Writing Studio"
-        />
-      )}
-      {tab === 'timeline' && (
-        <FeaturePlaceholder title="Timeline" description="Keep your story's chronology straight"
-          features={['Visual timeline of story events', 'Track character arcs across chapters', 'Avoid continuity errors with date tracking']}
-          cta="Your chapters already form the foundation of your timeline"
-        />
-      )}
-      {tab === 'lore' && (
-        <FeaturePlaceholder title="Lore & Worldbuilding" description="Document the rules and history of your world"
-          features={['Worldbuilding notes and rules', 'Magic systems, technology, and culture', 'History, politics, and geography']}
-          cta="Add worldbuilding notes from Writing Studio's Notes panel"
-        />
-      )}
-      {tab === 'research' && (
-        <FeaturePlaceholder title="Research" description="All your story research, organized"
-          features={['Save notes and research links per project', 'Character inspiration boards and reference images', 'Location research with maps and cultural notes', 'Historical facts and cultural references library', 'AI-powered summaries from your research notes']}
-          cta="Start adding research notes from your Writing Studio's Notes panel"
-        />
-      )}
-    </div>
-  );
-}
+export { StoryBiblePage } from './story-bible';
 
 // ═══════════════════════════════════════════
-// Plot Board
+// Plot Board (full implementation)
 // ═══════════════════════════════════════════
-export function PlotBoardPage() {
-  const { go, projects, selectedProject, setSelectedProject } = useNav();
-
-  return (
-    <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="Plot Board" subtitle="Visualize your story structure" />
-      {!selectedProject ? (
-        projects.length > 0 ? (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
-            {projects.map((p) => (
-              <Card key={p.id} hover onClick={() => go('plot-board', p)}>
-                <div style={{ padding: 16 }}>
-                  <div style={{ fontSize: 14, fontWeight: 600, color: '#F5F5F7' }}>{p.title}</div>
-                  <div style={{ fontSize: 11, color: colors.muted, marginTop: 4 }}>{p.chapters.length} chapters</div>
-                  <GlassButton small onClick={() => go('plot-board', p)} style={{ marginTop: 10 }}>Open Plot Board</GlassButton>
-                </div>
-              </Card>
-            ))}
-          </div>
-        ) : (
-          <EmptyState icon={Layout} title="No projects yet" desc="Create a novel to start plotting" />
-        )
-      ) : (
-        <FeaturePlaceholder title={`Plot Board: ${selectedProject.title}`}
-          description="Visualize your chapters and scenes on a story arc board"
-          features={[
-            'Drag-and-drop scene reordering',
-            'Three-act structure visualization',
-            'Chapter-by-chapter outline view',
-            'Scene cards with status, POV, and word count',
-          ]}
-          cta="Your chapters are structured in Writing Studio — a full board view is coming soon"
-        />
-      )}
-    </div>
-  );
-}
+export { PlotBoardPage } from './plot-board';
 
 // ═══════════════════════════════════════════
 // AI Co-Writer

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { updateCharacterSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // PATCH /api/characters/[id] - Update a character
 export async function PATCH(
@@ -8,11 +9,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const existing = await db.character.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Character not found' }, { status: 404 });
+    }
+
+    const project = await db.project.findUnique({ where: { id: existing.projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -45,6 +52,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const character = await db.character.findUnique({ where: { id } });
@@ -53,6 +61,11 @@ export async function DELETE(
         { error: 'Character not found' },
         { status: 404 }
       );
+    }
+
+    const project = await db.project.findUnique({ where: { id: character.projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     await db.character.delete({ where: { id } });

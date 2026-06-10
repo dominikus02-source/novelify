@@ -163,6 +163,19 @@ model Project {
   wordTarget     Int        @default(50000)
   chaptersTarget Int        @default(20)
   templateId     String?
+
+  // Story Bible Overview fields
+  premise        String?
+  logline        String?
+  theme          String?
+  targetAudience String?
+  pov            String?    // first_person | third_person_limited | third_person_omniscient | second_person
+  tense          String?    // past | present | future
+  tone           String?
+  centralConflict String?
+  stakes         String?
+  endingIdea     String?
+
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   chapters       Chapter[]
@@ -174,6 +187,9 @@ model Project {
   locations      Location[]
   timelineEvents TimelineEvent[]
   comments       Comment[]
+  plotBeats      PlotBeat[]
+  relationships  Relationship[]
+  researchItems  ResearchItem[]
 
   @@index([userId])
 }
@@ -192,6 +208,10 @@ model Chapter {
   updatedAt          DateTime @updatedAt
   scenes             Scene[]
   versions           ManuscriptVersion[]
+  storyNotes         StoryNote[]
+  timelineEvents     TimelineEvent[]
+  plotBeats          PlotBeat[]
+  researchItems      ResearchItem[]
 
   @@index([projectId])
 }
@@ -207,7 +227,11 @@ model Scene {
   goal            String   @default("")
   conflict        String   @default("")
   outcome         String   @default("")
+  emotionalShift  String   @default("")
   povCharacterId  String?
+  povCharacter    Character? @relation("povCharacter", fields: [povCharacterId], references: [id], onDelete: SetNull)
+  locationId      String?
+  location        Location?  @relation(fields: [locationId], references: [id], onDelete: SetNull)
   wordCount       Int      @default(0)
   targetWordCount Int      @default(0)
   status          String   @default("idea") // idea | drafting | revised | edited | locked
@@ -217,8 +241,10 @@ model Scene {
   timelineEvents  TimelineEvent[]
   comments        Comment[]
   versions        ManuscriptVersion[]
+  plotBeats       PlotBeat[]
 
   @@index([chapterId])
+  @@index([locationId])
 }
 
 model WritingGoal {
@@ -258,8 +284,11 @@ model StoryNote {
   project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
   title         String
   content       String   @default("")
-  category      String   @default("general") // general | character | plot | worldbuilding | research
+  category      String   @default("general") // general | character | plot | worldbuilding | research | lore | rule | culture | magic | technology | politics | history | creature | object | timeline | relationship
+  linkedCharacterId String?
+  linkedLocationId String?
   linkedChapterId String?
+  chapter       Chapter?  @relation(fields: [linkedChapterId], references: [id], onDelete: SetNull)
   linkedSceneId String?
   scene         Scene?    @relation(fields: [linkedSceneId], references: [id], onDelete: SetNull)
   createdAt     DateTime  @default(now())
@@ -273,10 +302,18 @@ model Location {
   projectId   String
   project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   name        String
+  type        String   @default("other") // city | village | kingdom | house | school | workplace | fantasy_realm | planet | other
   description String   @default("")
+  mood        String?
   importance  String   @default("minor") // minor | major | critical
+  rules       String?
+  history     String?
+  notes       String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
+
+  scenes      Scene[]
+  researchItems ResearchItem[]
 
   @@index([projectId])
 }
@@ -288,7 +325,11 @@ model TimelineEvent {
   title           String
   description     String   @default("")
   eventDateOrOrder Float?
+  eventDateText   String?
+  type            String   @default("main_plot") // backstory | main_plot | flashback | future | world_event
+  linkedChapterId String?
   linkedSceneId   String?
+  chapter         Chapter?  @relation(fields: [linkedChapterId], references: [id], onDelete: SetNull)
   scene           Scene?    @relation(fields: [linkedSceneId], references: [id], onDelete: SetNull)
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
@@ -313,14 +354,37 @@ model Comment {
 }
 
 model Character {
-  id          String   @id @default(cuid())
-  projectId   String
-  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  name        String
-  description String   @default("")
-  role        String   @default("supporting") // protagonist | antagonist | supporting
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id                      String   @id @default(cuid())
+  projectId               String
+  project                 Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name                    String
+  description             String   @default("")
+  role                    String   @default("supporting") // protagonist | antagonist | love_interest | mentor | ally | rival | side_character | narrator | supporting
+  age                     String?
+  gender                  String?
+  occupation              String?
+  physicalDescription     String?
+  personality             String?
+  motivation              String?
+  fear                    String?
+  secret                  String?
+  flaw                    String?
+  strength                String?
+  backstory               String?
+  characterArc            String?
+  relationshipToProtagonist String?
+  firstAppearanceChapter   String?
+  status                  String   @default("alive") // alive | dead | missing | unknown | not_applicable
+  notes                   String?
+  imageUrl                String?
+  colorTag                String?
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  scenesAsPovCharacter Scene[]    @relation("povCharacter")
+  researchItems        ResearchItem[]
+  relationshipsAsA     Relationship[] @relation("characterA")
+  relationshipsAsB     Relationship[] @relation("characterB")
 
   @@index([projectId])
 }
@@ -333,6 +397,67 @@ model Export {
   filePath    String?
   status      String   @default("pending") // pending | completed | failed
   createdAt   DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model PlotBeat {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  template        String   @default("three-act") // three-act | heros-journey | save-the-cat | romance | mystery | webnovel | custom
+  act             String   @default("act1") // act1 | act2 | act3 | section_name
+  order           Float    @default(0)
+  title           String
+  description     String   @default("")
+  status          String   @default("idea") // idea | planned | drafted | revised | locked
+  linkedChapterId String?
+  chapter         Chapter? @relation(fields: [linkedChapterId], references: [id], onDelete: SetNull)
+  linkedSceneId   String?
+  scene           Scene?   @relation(fields: [linkedSceneId], references: [id], onDelete: SetNull)
+  notes           String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Relationship {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  characterAId    String
+  characterA      Character @relation("characterA", fields: [characterAId], references: [id], onDelete: Cascade)
+  characterBId    String
+  characterB      Character @relation("characterB", fields: [characterBId], references: [id], onDelete: Cascade)
+  type            String   @default("complicated") // family | romance | enemy | mentor | ally | rival | secret | complicated
+  description     String   @default("")
+  conflict        String?
+  evolution       String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model ResearchItem {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title           String
+  sourceUrl       String?
+  summary         String   @default("")
+  notes           String?
+  relevance       String   @default("moderate") // low | moderate | high | critical
+  linkedCharacterId String?
+  linkedLocationId String?
+  linkedChapterId String?
+  chapter         Chapter?  @relation(fields: [linkedChapterId], references: [id], onDelete: SetNull)
+  linkedSceneId   String?
+  character       Character? @relation(fields: [linkedCharacterId], references: [id], onDelete: SetNull)
+  location        Location?  @relation(fields: [linkedLocationId], references: [id], onDelete: SetNull)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
   @@index([projectId])
 }

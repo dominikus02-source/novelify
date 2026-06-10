@@ -1,17 +1,24 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { updateLocationSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 export async function PATCH(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const existing = await db.location.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Location not found' }, { status: 404 });
+    }
+
+    const project = await db.project.findUnique({ where: { id: existing.projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     const body = await request.json();
@@ -43,11 +50,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
     const { id } = await params;
 
     const existing = await db.location.findUnique({ where: { id } });
     if (!existing) {
       return NextResponse.json({ error: 'Location not found' }, { status: 404 });
+    }
+
+    const project = await db.project.findUnique({ where: { id: existing.projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) {
+      return NextResponse.json({ error: 'Not found' }, { status: 404 });
     }
 
     await db.location.delete({ where: { id } });
