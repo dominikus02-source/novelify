@@ -1,0 +1,82 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String?
+  plan         String    @default("free") // free | founding | pro
+  wordCountUsed Int      @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  projects     Project[]
+}
+
+model Project {
+  id             String     @id @default(cuid())
+  userId         String
+  user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title          String
+  genre          String?
+  sourceLanguage String     @default("id") // e.g. 'id', 'es', 'fr', 'en'
+  targetLanguage String     @default("en")
+  status         String     @default("draft") // draft | translating | ready | exported
+  plotOutline    String?
+  styleGuide     String?
+  coverImage     String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+  chapters       Chapter[]
+  characters     Character[]
+  exports        Export[]
+}
+
+model Chapter {
+  id                 String   @id @default(cuid())
+  projectId          String
+  project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapterNumber      Int
+  title              String
+  contentOriginal    String   @default("") // original language content
+  contentTranslated  String?  // English translation
+  wordCount          Int      @default(0)
+  status             String   @default("draft") // draft | reviewed | locked
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Character {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String   @default("")
+  role        String   @default("supporting") // protagonist | antagonist | supporting
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model Export {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  format      String   @default("epub") // epub | pdf
+  filePath    String?
+  status      String   @default("pending") // pending | completed | failed
+  createdAt   DateTime @default(now())
+
+  @@index([projectId])
+}

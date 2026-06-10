@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Novelify — Fullstack Technical Blueprint</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:wght@700;900&family=Courier+Prime:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0D0D0D;
+    --amber: #C8873A;
+    --smoke: #1A1A1A;
+    --mist: #888;
+    --paper: #F7F3EC;
+    --border: #2A2A2A;
+  }
+
+  body {
+    background: #fff;
+    color: #1a1a1a;
+    font-family: 'Inter', sans-serif;
+    font-size: 11pt;
+    line-height: 1.7;
+  }
+
+  /* PRINT */
+  @media print {
+    .no-print { display: none; }
+    body { font-size: 10pt; }
+    .page-break { page-break-before: always; }
+    a { color: inherit; text-decoration: none; }
+  }
+
+  /* COVER */
+  .cover {
+    background: var(--ink);
+    color: var(--paper);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    padding: 72px 80px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cover::before {
+    content: '';
+    position: absolute;
+    top: 0; right: 0;
+    width: 50%;
+    height: 100%;
+    background: radial-gradient(ellipse at right center, rgba(200,135,58,0.08) 0%, transparent 60%);
+    pointer-events: none;
+  }
+
+  .cover-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+
+  .cover-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    font-weight: 900;
+    letter-spacing: 0.02em;
+  }
+
+  .cover-brand span { color: var(--amber); }
+
+  .cover-badge {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    border: 1px solid rgba(200,135,58,0.4);
+    padding: 6px 14px;
+  }
+
+  .cover-main { flex: 1; display: flex; flex-direction: column; justify-content: center; padding: 80px 0; }
+
+  .cover-eyebrow {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 24px;
+  }
+
+  .cover-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 4rem;
+    font-weight: 900;
+    line-height: 1.05;
+    margin-bottom: 32px;
+    max-width: 700px;
+  }
+
+  .cover-title em { font-style: italic; color: var(--amber); }
+
+  .cover-subtitle {
+    font-size: 1.1rem;
+    color: rgba(247,243,236,0.6);
+    max-width: 520px;
+    line-height: 1.8;
+    margin-bottom: 48px;
+  }
+
+  .cover-pills {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+
+  .pill {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    background: rgba(200,135,58,0.1);
+    border: 1px solid rgba(200,135,58,0.25);
+    color: var(--amber);
+    padding: 6px 16px;
+  }
+
+  .cover-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    border-top: 1px solid rgba(200,135,58,0.15);
+    padding-top: 24px;
+  }
+
+  .cover-meta {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.1em;
+    color: rgba(247,243,236,0.35);
+    line-height: 1.8;
+  }
+
+  .cover-version {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    color: var(--amber);
+  }
+
+  /* DOCUMENT BODY */
+  .doc-body {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 72px 80px;
+  }
+
+  /* TOC */
+  .toc {
+    background: #F9F7F4;
+    border-left: 4px solid var(--amber);
+    padding: 40px 48px;
+    margin-bottom: 64px;
+  }
+
+  .toc-title {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.7rem;
+    letter-spacing: 0.25em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 24px;
+  }
+
+  .toc-list {
+    list-style: none;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 40px;
+  }
+
+  .toc-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #333;
+    padding: 4px 0;
+    border-bottom: 1px dotted #ddd;
+  }
+
+  .toc-list li a { color: #333; text-decoration: none; }
+  .toc-list li a:hover { color: var(--amber); }
+  .toc-page { font-family: 'Courier Prime', monospace; font-size: 0.75rem; color: var(--mist); }
+
+  /* SECTION */
+  .section { margin-bottom: 72px; }
+
+  .section-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 24px;
+    margin-bottom: 32px;
+    padding-bottom: 20px;
+    border-bottom: 2px solid var(--amber);
+  }
+
+  .section-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 3rem;
+    font-weight: 900;
+    color: rgba(200,135,58,0.2);
+    line-height: 1;
+    flex-shrink: 0;
+    margin-top: -6px;
+  }
+
+  .section-title-wrap {}
+
+  .section-eyebrow {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 6px;
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    color: var(--ink);
+  }
+
+  /* SUBSECTION */
+  .subsection { margin-bottom: 40px; }
+
+  .subsection-title {
+    font-family: 'Inter', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    margin-bottom: 16px;
+    padding: 10px 16px;
+    background: #F5F3F0;
+    border-left: 3px solid var(--amber);
+  }
+
+  p { margin-bottom: 14px; color: #333; font-size: 0.95rem; line-height: 1.75; }
+
+  /* TECH STACK TABLE */
+  .tech-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+    font-size: 0.875rem;
+  }
+
+  .tech-table thead tr {
+    background: var(--ink);
+    color: var(--paper);
+  }
+
+  .tech-table thead th {
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .tech-table tbody tr { border-bottom: 1px solid #eee; }
+  .tech-table tbody tr:nth-child(even) { background: #FAFAF9; }
+  .tech-table tbody tr:hover { background: #FFF8F0; }
+
+  .tech-table td {
+    padding: 12px 16px;
+    vertical-align: top;
+    color: #333;
+  }
+
+  .tech-table td:first-child {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .tech-table td:nth-child(2) {
+    font-weight: 600;
+    color: var(--amber);
+  }
+
+  .badge {
+    display: inline-block;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 2px;
+    margin-left: 6px;
+  }
+
+  .badge-core { background: rgba(200,135,58,0.12); color: var(--amber); border: 1px solid rgba(200,135,58,0.3); }
+  .badge-api { background: rgba(59,130,246,0.1); color: #3B82F6; border: 1px solid rgba(59,130,246,0.3); }
+  .badge-infra { background: rgba(16,185,129,0.1); color: #10B981; border: 1px solid rgba(16,185,129,0.3); }
+  .badge-opt { background: rgba(107,114,128,0.1); color: #6B7280; border: 1px solid rgba(107,114,128,0.3); }
+
+  /* ARCH DIAGRAM */
+  .arch-diagram {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 40px 48px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.78rem;
+    line-height: 2;
+    margin-bottom: 32px;
+    overflow-x: auto;
+  }
+
+  .arch-diagram pre { white-space: pre; color: var(--paper); }
+  .arch-diagram .amber { color: var(--amber); }
+  .arch-diagram .dim { color: rgba(247,243,236,0.35); }
+
+  /* FLOW STEPS */
+  .flow {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 2px;
+    margin-bottom: 32px;
+  }
+
+  .flow-step {
+    background: #F9F7F4;
+    padding: 24px 20px;
+    position: relative;
+  }
+
+  .flow-step-num {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem;
+    font-weight: 900;
+    color: rgba(200,135,58,0.2);
+    line-height: 1;
+    margin-bottom: 12px;
+  }
+
+  .flow-step-title {
+    font-weight: 700;
+    font-size: 0.85rem;
+    margin-bottom: 8px;
+    color: var(--ink);
+  }
+
+  .flow-step-desc {
+    font-size: 0.78rem;
+    color: var(--mist);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  /* INFO BOX */
+  .info-box {
+    border: 1px solid rgba(200,135,58,0.3);
+    background: rgba(200,135,58,0.04);
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .info-box-title {
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.68rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--amber);
+    margin-bottom: 8px;
+  }
+
+  .info-box p { margin: 0; font-size: 0.88rem; color: #444; }
+
+  /* CODE BLOCK */
+  .code-block {
+    background: #1E1E1E;
+    color: #D4D4D4;
+    padding: 24px 28px;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.78rem;
+    line-height: 1.8;
+    margin-bottom: 24px;
+    overflow-x: auto;
+  }
+
+  .code-block .comment { color: #6A9955; }
+  .code-block .keyword { color: #569CD6; }
+  .code-block .string { color: #CE9178; }
+  .code-block .fn { color: #DCDCAA; }
+  .code-block .var { color: #9CDCFE; }
+
+  /* MILESTONE TABLE */
+  .milestone-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 32px;
+    font-size: 0.875rem;
+  }
+
+  .milestone-table th {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 10px 16px;
+    text-align: left;
+    font-family: 'Courier Prime', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    font-weight: 400;
+  }
+
+  .milestone-table td {
+    padding: 12px 16px;
+    border-bottom: 1px solid #eee;
+    vertical-align: top;
+    font-size: 0.875rem;
+    color: #333;
+  }
+
+  .milestone-table tr:nth-child(even) td { background: #FAFAF9; }
+
+  .status-dot {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    margin-right: 6px;
+  }
+
+  .dot-green { background: #10B981; }
+  .dot-amber { background: var(--amber); }
+  .dot-grey { background: #9CA3AF; }
+
+  /* COST TABLE */
+  .cost-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+  }
+
+  .cost-table th {
+    background: #F5F3F0;
+    padding: 10px 16px;
+    text-align: left;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: #555;
+    border-bottom: 2px solid var(--amber);
+  }
+
+  .cost-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid #eee;
+    font-size: 0.875rem;
+    color: #333;
+  }
+
+  .cost-table .total td {
+    background: #F9F7F4;
+    font-weight: 700;
+    border-top: 2px solid var(--amber);
+    color: var(--ink);
+  }
+
+  .cost-free { color: #10B981; font-weight: 600; }
+  .cost-amount { font-family: 'Courier Prime', monospace; }
+
+  /* DIVIDER */
+  .divider {
+    border: none;
+    border-top: 1px solid #E5E0D8;
+    margin: 48px 0;
+  }
+
+  /* PAGE BREAK */
+  .page-break { page-break-before: always; padding-top: 72px; }
+
+  /* PRINT BUTTON */
+  .print-btn {
+    position: fixed;
+    bottom: 32px;
+    right: 32px;
+    background: var(--amber);
+    color: var(--ink);
+    border: none;
+    padding: 12px 24px;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    cursor: pointer;
+    box-shadow: 0 4px 20px rgba(200,135,58,0.4);
+    transition: all 0.2s;
+  }
+
+  .print-btn:hover { background: #E8A85A; transform: translateY(-2px); }
+
+  @media (max-width: 768px) {
+    .doc-body { padding: 40px 24px; }
+    .cover { padding: 40px 24px; }
+    .toc-list { grid-template-columns: 1fr; }
+    .flow { grid-template-columns: 1fr 1fr; }
+    .cover-title { font-size: 2.5rem; }
+  }
+</style>
+</head>
+<body>
+
+<!-- PRINT BUTTON -->
+<button class="print-btn no-print" onclick="window.print()">⬇ Save as PDF</button>
+
+<!-- COVER PAGE -->
+<div class="cover">
+  <div class="cover-top">
+    <div class="cover-brand">Noveli<span>fy</span></div>
+    <div class="cover-badge">Technical Blueprint v1.0</div>
+  </div>
+
+  <div class="cover-main">
+    <p class="cover-eyebrow">Fullstack Architecture Document</p>
+    <h1 class="cover-title">From <em>Idea</em> to<br>Global — in Days.</h1>
+    <p class="cover-subtitle">A complete technical specification for building Novelify — an AI-powered platform that helps writers craft, translate, and publish their novels to global markets like Amazon KDP.</p>
+    <div class="cover-pills">
+      <span class="pill">Next.js 14</span>
+      <span class="pill">Claude AI</span>
+      <span class="pill">Node.js</span>
+      <span class="pill">PostgreSQL</span>
+      <span class="pill">Supabase</span>
+      <span class="pill">Calibre / EPUB</span>
+      <span class="pill">Gumroad</span>
+      <span class="pill">Vercel</span>
+    </div>
+  </div>
+
+  <div class="cover-bottom">
+    <div class="cover-meta">
+      Novelify Platform<br>
+      Confidential Technical Document<br>
+      Version 1.0 — 2026
+    </div>
+    <div class="cover-version">FULLSTACK SPEC</div>
+  </div>
+</div>
+
+<!-- DOCUMENT BODY -->
+<div class="doc-body">
+
+  <!-- TOC -->
+  <div class="toc">
+    <p class="toc-title">Table of Contents</p>
+    <ul class="toc-list">
+      <li><a href="#overview">1. Product Overview</a><span class="toc-page">2</span></li>
+      <li><a href="#architecture">2. System Architecture</a><span class="toc-page">3</span></li>
+      <li><a href="#frontend">3. Frontend</a><span class="toc-page">4</span></li>
+      <li><a href="#backend">4. Backend & API</a><span class="toc-page">5</span></li>
+      <li><a href="#ai">5. AI Layer</a><span class="toc-page">6</span></li>
+      <li><a href="#epub">6. EPUB Engine</a><span class="toc-page">7</span></li>
+      <li><a href="#database">7. Database</a><span class="toc-page">8</span></li>
+      <li><a href="#auth">8. Auth & Payments</a><span class="toc-page">9</span></li>
+      <li><a href="#infra">9. Infrastructure</a><span class="toc-page">10</span></li>
+      <li><a href="#roadmap">10. Roadmap & Milestones</a><span class="toc-page">11</span></li>
+      <li><a href="#cost">11. Cost Estimation</a><span class="toc-page">12</span></li>
+      <li><a href="#stack-summary">12. Full Stack Summary</a><span class="toc-page">13</span></li>
+    </ul>
+  </div>
+
+  <!-- 1. OVERVIEW -->
+  <div class="section" id="overview">
+    <div class="section-header">
+      <div class="section-num">01</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">What we're building</p>
+        <h2 class="section-title">Product Overview</h2>
+      </div>
+    </div>
+
+    <p>Novelify is a web-based SaaS platform that enables writers worldwide to craft novels using AI assistance, translate their manuscripts into English with literary quality, export to EPUB format, and publish to global platforms like Amazon KDP — all within a single workspace.</p>
+
+    <div class="info-box">
+      <p class="info-box-title">Core Value Proposition</p>
+      <p>Writers from non-English speaking countries face three major barriers to global publishing: the writing process itself, translation (cost + quality), and the technical complexity of publishing platforms. Novelify removes all three in one product.</p>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Core Features — MVP</div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-step-num">01</div>
+          <div class="flow-step-title">AI Writing Studio</div>
+          <p class="flow-step-desc">Chapter-by-chapter AI writing assistant with plot consistency, character tracking, and writer's block breaker.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">02</div>
+          <div class="flow-step-title">Literary Translation</div>
+          <p class="flow-step-desc">AI translation that preserves voice, tone, and emotion — not word-for-word, but meaning-for-meaning.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">03</div>
+          <div class="flow-step-title">EPUB Converter</div>
+          <p class="flow-step-desc">One-click export to Amazon-ready EPUB with proper metadata, chapter structure, and formatting.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">04</div>
+          <div class="flow-step-title">Synopsis Generator</div>
+          <p class="flow-step-desc">AI-crafted back-cover blurb and Amazon product description optimized for discoverability.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">05</div>
+          <div class="flow-step-title">KDP Launch Guide</div>
+          <p class="flow-step-desc">Interactive step-by-step walkthrough for Amazon KDP setup: categories, keywords, pricing strategy.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">06</div>
+          <div class="flow-step-title">Multi-Platform Export</div>
+          <p class="flow-step-desc">Export formats for Google Play Books, Apple Books, Smashwords, and other global platforms.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 2. ARCHITECTURE -->
+  <div class="section" id="architecture">
+    <div class="section-header">
+      <div class="section-num">02</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Big picture</p>
+        <h2 class="section-title">System Architecture</h2>
+      </div>
+    </div>
+
+    <p>Novelify follows a modern fullstack architecture with a clear separation between the client-facing frontend, the API backend, the AI processing layer, and the EPUB generation engine. All layers communicate via REST APIs and are deployed on cloud infrastructure.</p>
+
+    <div class="arch-diagram">
+      <pre>
+<span class="amber">╔══════════════════════════════════════════════════════════════════╗</span>
+<span class="amber">║                        NOVELIFY PLATFORM                         ║</span>
+<span class="amber">╚══════════════════════════════════════════════════════════════════╝</span>
+
+  <span class="amber">[ CLIENT LAYER ]</span>
+  ┌─────────────────────────────────────────────┐
+  │  Next.js 14 (App Router)                    │
+  │  React + Tailwind CSS + Shadcn UI           │
+  │  TipTap Rich Text Editor                    │
+  │  Zustand (state) · React Query (data)       │
+  └───────────────────┬─────────────────────────┘
+                      │ HTTPS / REST
+  <span class="amber">[ API LAYER ]</span>
+  ┌───────────────────▼─────────────────────────┐
+  │  Next.js API Routes (Node.js)               │
+  │  Route Handlers: /api/write /api/translate  │
+  │                  /api/epub  /api/synopsis   │
+  │  Auth: Supabase Auth (JWT)                  │
+  │  Rate Limiting: Upstash Redis               │
+  └──────┬───────────────────┬──────────────────┘
+         │                   │
+  <span class="amber">[ AI LAYER ]</span>       <span class="amber">[ EPUB ENGINE ]</span>
+  ┌──────▼────────┐  ┌───────▼──────────────────┐
+  │ Anthropic API │  │ Calibre (CLI)             │
+  │ claude-sonnet │  │ epub-gen (Node.js)        │
+  │ Streaming     │  │ Pandoc (fallback)         │
+  │ Tool use      │  │ Custom metadata injection │
+  └──────────────-┘  └──────────────────────────┘
+         │
+  <span class="amber">[ DATA LAYER ]</span>
+  ┌──────▼────────────────────────────────────┐
+  │  Supabase (PostgreSQL)                    │
+  │  Tables: users · projects · chapters      │
+  │          translations · exports · billing │
+  │  Storage: manuscript files · EPUB assets  │
+  └───────────────────────────────────────────┘
+         │
+  <span class="amber">[ INFRASTRUCTURE ]</span>
+  ┌──────▼────────────────────────────────────┐
+  │  Vercel (frontend + API routes)           │
+  │  Supabase Cloud (DB + Auth + Storage)     │
+  │  Gumroad (payments — early access)        │
+  │  Stripe (payments — full launch)          │
+  └───────────────────────────────────────────┘
+      </pre>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 3. FRONTEND -->
+  <div class="section page-break" id="frontend">
+    <div class="section-header">
+      <div class="section-num">03</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">What the user sees</p>
+        <h2 class="section-title">Frontend</h2>
+      </div>
+    </div>
+
+    <p>The frontend is a Next.js 14 application using the App Router pattern. It is fully server-rendered where possible, with client-side interactivity for the writing editor and real-time AI streaming responses.</p>
+
+    <div class="subsection">
+      <div class="subsection-title">Core Technologies</div>
+      <table class="tech-table">
+        <thead>
+          <tr>
+            <th>Layer</th>
+            <th>Technology</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Framework</td>
+            <td>Next.js 14 <span class="badge badge-core">Core</span></td>
+            <td>Full-stack React framework with App Router, SSR, and API routes built-in. Optimal for SEO and performance.</td>
+          </tr>
+          <tr>
+            <td>Language</td>
+            <td>TypeScript <span class="badge badge-core">Core</span></td>
+            <td>Type safety across the entire codebase. Reduces bugs significantly for a solo developer.</td>
+          </tr>
+          <tr>
+            <td>Styling</td>
+            <td>Tailwind CSS <span class="badge badge-core">Core</span></td>
+            <td>Utility-first CSS framework. Fast UI development with consistent design tokens.</td>
+          </tr>
+          <tr>
+            <td>UI Components</td>
+            <td>Shadcn/UI <span class="badge badge-core">Core</span></td>
+            <td>Accessible, composable component library built on Radix UI. Installed per-component, not as a dependency.</td>
+          </tr>
+          <tr>
+            <td>Rich Text Editor</td>
+            <td>TipTap <span class="badge badge-core">Core</span></td>
+            <td>Headless rich text editor built on ProseMirror. Powers the novel writing workspace with full formatting.</td>
+          </tr>
+          <tr>
+            <td>State Management</td>
+            <td>Zustand <span class="badge badge-core">Core</span></td>
+            <td>Lightweight global state for project data, editor state, and user session.</td>
+          </tr>
+          <tr>
+            <td>Server State</td>
+            <td>TanStack Query <span class="badge badge-core">Core</span></td>
+            <td>Data fetching, caching, and synchronization with the backend API.</td>
+          </tr>
+          <tr>
+            <td>AI Streaming</td>
+            <td>Vercel AI SDK <span class="badge badge-api">API</span></td>
+            <td>Handles streaming AI responses in real-time, rendering text as it arrives from the Claude API.</td>
+          </tr>
+          <tr>
+            <td>Forms</td>
+            <td>React Hook Form + Zod <span class="badge badge-opt">Util</span></td>
+            <td>Form handling and validation throughout the platform.</td>
+          </tr>
+          <tr>
+            <td>Icons</td>
+            <td>Lucide React <span class="badge badge-opt">Util</span></td>
+            <td>Consistent icon set throughout the UI.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Page Structure (App Router)</div>
+      <div class="code-block">
+        <pre>
+<span class="comment">// app/ directory structure</span>
+app/
+├── (marketing)/
+│   ├── page.tsx                <span class="comment">// Landing page</span>
+│   ├── pricing/page.tsx
+│   └── about/page.tsx
+├── (auth)/
+│   ├── login/page.tsx
+│   └── register/page.tsx
+├── (dashboard)/
+│   ├── layout.tsx              <span class="comment">// Protected layout with sidebar</span>
+│   ├── dashboard/page.tsx      <span class="comment">// Projects overview</span>
+│   ├── projects/
+│   │   ├── [id]/page.tsx       <span class="comment">// Project workspace</span>
+│   │   └── [id]/chapters/
+│   │       └── [chapterId]/    <span class="comment">// Chapter editor</span>
+│   ├── translate/[id]/page.tsx <span class="comment">// Translation workspace</span>
+│   ├── export/[id]/page.tsx    <span class="comment">// EPUB export</span>
+│   └── settings/page.tsx
+└── api/
+    ├── write/route.ts           <span class="comment">// AI writing endpoint</span>
+    ├── translate/route.ts       <span class="comment">// Translation endpoint</span>
+    ├── epub/route.ts            <span class="comment">// EPUB generation</span>
+    └── synopsis/route.ts        <span class="comment">// Synopsis generation</span>
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 4. BACKEND -->
+  <div class="section" id="backend">
+    <div class="section-header">
+      <div class="section-num">04</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Server-side logic</p>
+        <h2 class="section-title">Backend & API</h2>
+      </div>
+    </div>
+
+    <p>The backend runs entirely within Next.js API Routes (Route Handlers), deployed on Vercel's serverless infrastructure. This eliminates the need for a separate Express or Fastify server, keeping the architecture lean for a solo developer.</p>
+
+    <div class="subsection">
+      <div class="subsection-title">API Endpoints</div>
+      <table class="tech-table">
+        <thead>
+          <tr>
+            <th>Endpoint</th>
+            <th>Method</th>
+            <th>Description</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>/api/write</td>
+            <td>POST</td>
+            <td>Streams AI writing assistance for a given chapter. Accepts: chapter context, plot outline, character profiles, user prompt.</td>
+          </tr>
+          <tr>
+            <td>/api/translate</td>
+            <td>POST</td>
+            <td>Translates a chapter or full manuscript from source language to English. Supports chunk-based processing for large texts.</td>
+          </tr>
+          <tr>
+            <td>/api/synopsis</td>
+            <td>POST</td>
+            <td>Generates Amazon-ready book description and back-cover blurb from manuscript summary.</td>
+          </tr>
+          <tr>
+            <td>/api/epub</td>
+            <td>POST</td>
+            <td>Triggers EPUB generation from finalized manuscript. Returns a signed URL to download the file.</td>
+          </tr>
+          <tr>
+            <td>/api/projects</td>
+            <td>GET/POST</td>
+            <td>CRUD for user writing projects. List, create, update, delete novel projects.</td>
+          </tr>
+          <tr>
+            <td>/api/chapters</td>
+            <td>GET/POST/PATCH</td>
+            <td>Chapter management within a project. Auto-save on 2-second idle.</td>
+          </tr>
+          <tr>
+            <td>/api/webhooks/gumroad</td>
+            <td>POST</td>
+            <td>Gumroad webhook to activate user accounts on purchase.</td>
+          </tr>
+          <tr>
+            <td>/api/webhooks/stripe</td>
+            <td>POST</td>
+            <td>Stripe webhook for subscription management (full launch).</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Backend Utilities</div>
+      <table class="tech-table">
+        <thead><tr><th>Tool</th><th>Package</th><th>Use</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Rate Limiting</td>
+            <td>Upstash Redis <span class="badge badge-infra">Infra</span></td>
+            <td>Per-user rate limiting on AI endpoints to control API costs and prevent abuse.</td>
+          </tr>
+          <tr>
+            <td>Input Validation</td>
+            <td>Zod <span class="badge badge-opt">Util</span></td>
+            <td>Schema validation on all API request bodies.</td>
+          </tr>
+          <tr>
+            <td>Logging</td>
+            <td>Vercel Analytics <span class="badge badge-infra">Infra</span></td>
+            <td>Request logging and performance monitoring.</td>
+          </tr>
+          <tr>
+            <td>Email</td>
+            <td>Resend <span class="badge badge-opt">Util</span></td>
+            <td>Transactional emails: welcome, export ready, billing confirmation.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 5. AI LAYER -->
+  <div class="section page-break" id="ai">
+    <div class="section-header">
+      <div class="section-num">05</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">The brain of the platform</p>
+        <h2 class="section-title">AI Layer</h2>
+      </div>
+    </div>
+
+    <p>The AI layer is powered by Anthropic's Claude API. Claude is used for all natural language tasks: writing assistance, literary translation, synopsis generation, and chapter consistency checking. The Vercel AI SDK handles streaming responses to the frontend.</p>
+
+    <div class="subsection">
+      <div class="subsection-title">AI Stack</div>
+      <table class="tech-table">
+        <thead><tr><th>Component</th><th>Technology</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Primary LLM</td>
+            <td>Claude Sonnet (Anthropic) <span class="badge badge-core">Core</span></td>
+            <td>Main model for writing, translation, and synopsis. Best balance of quality and cost for literary tasks.</td>
+          </tr>
+          <tr>
+            <td>Streaming</td>
+            <td>Vercel AI SDK <span class="badge badge-core">Core</span></td>
+            <td>useChat / useCompletion hooks stream tokens in real-time to the TipTap editor as the AI writes.</td>
+          </tr>
+          <tr>
+            <td>Context Management</td>
+            <td>Custom prompt builder <span class="badge badge-core">Core</span></td>
+            <td>Builds rich system prompts per request including: novel genre, character profiles, plot outline, previous chapters, writing style guide.</td>
+          </tr>
+          <tr>
+            <td>Translation Quality</td>
+            <td>Multi-pass prompting <span class="badge badge-opt">Strategy</span></td>
+            <td>First pass: literal translation. Second pass: literary refinement. Ensures natural English prose, not machine translation feel.</td>
+          </tr>
+          <tr>
+            <td>Cost Control</td>
+            <td>Token chunking <span class="badge badge-opt">Strategy</span></td>
+            <td>Long manuscripts split into chapter-sized chunks (~4000 tokens). Prevents context overflow and controls API costs.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">System Prompt Architecture</div>
+      <div class="code-block">
+        <pre>
+<span class="comment">// Example: Writing Assistant System Prompt</span>
+<span class="keyword">const</span> <span class="var">buildWritingPrompt</span> = (<span class="var">project</span>: <span class="var">Project</span>) => <span class="string">`
+You are a literary writing assistant for a novelist.
+
+NOVEL CONTEXT:
+- Title: ${project.title}
+- Genre: ${project.genre}
+- Target language: ${project.targetLanguage}
+
+CHARACTERS:
+${project.characters.map(c => `- ${c.name}: ${c.description}`).join('\n')}
+
+PLOT OUTLINE:
+${project.plotOutline}
+
+PREVIOUS CHAPTER SUMMARY:
+${project.lastChapterSummary}
+
+WRITING STYLE:
+${project.styleGuide}
+
+Your task: Continue the story from where the writer left off.
+Maintain voice consistency. Do not introduce plot contradictions.
+Write in ${project.sourceLanguage}, approximately ${project.targetWordCount} words.
+`</span>;
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 6. EPUB ENGINE -->
+  <div class="section" id="epub">
+    <div class="section-header">
+      <div class="section-num">06</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">The output engine</p>
+        <h2 class="section-title">EPUB Generation Engine</h2>
+      </div>
+    </div>
+
+    <p>The EPUB engine converts the finalized, translated manuscript into a properly formatted EPUB 3.0 file ready for Amazon KDP, Google Play Books, Apple Books, and Smashwords. It runs as a Node.js process triggered by an API call.</p>
+
+    <div class="subsection">
+      <div class="subsection-title">EPUB Stack</div>
+      <table class="tech-table">
+        <thead><tr><th>Component</th><th>Technology</th><th>Details</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Primary Generator</td>
+            <td>epub-gen (Node.js) <span class="badge badge-core">Core</span></td>
+            <td>Programmatic EPUB generation from HTML/CSS content. Handles chapter structure, metadata, and cover image injection.</td>
+          </tr>
+          <tr>
+            <td>Fallback / Quality</td>
+            <td>Pandoc (CLI) <span class="badge badge-opt">Fallback</span></td>
+            <td>Used for complex formatting needs. Pandoc converts structured markdown to EPUB with high fidelity.</td>
+          </tr>
+          <tr>
+            <td>Validation</td>
+            <td>EPUBCheck (Java CLI) <span class="badge badge-opt">QA</span></td>
+            <td>Validates generated EPUB against the EPUB 3.0 spec before delivery. Required for KDP compliance.</td>
+          </tr>
+          <tr>
+            <td>Cover Design</td>
+            <td>Sharp (Node.js) <span class="badge badge-opt">Util</span></td>
+            <td>Image processing for cover resize and format conversion to meet KDP requirements (2560x1600px minimum).</td>
+          </tr>
+          <tr>
+            <td>File Storage</td>
+            <td>Supabase Storage <span class="badge badge-infra">Infra</span></td>
+            <td>Generated EPUB files stored in Supabase bucket. Signed download URLs with 1-hour expiry.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">EPUB Generation Flow</div>
+      <div class="flow">
+        <div class="flow-step">
+          <div class="flow-step-num">1</div>
+          <div class="flow-step-title">Collect Content</div>
+          <p class="flow-step-desc">Fetch all translated chapters from DB. Validate completeness and chapter order.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">2</div>
+          <div class="flow-step-title">Inject Metadata</div>
+          <p class="flow-step-desc">Add title, author, language, ISBN (if available), cover image, and genre tags.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">3</div>
+          <div class="flow-step-title">Generate EPUB</div>
+          <p class="flow-step-desc">epub-gen compiles all chapters into structured EPUB 3.0 with table of contents.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">4</div>
+          <div class="flow-step-title">Validate</div>
+          <p class="flow-step-desc">EPUBCheck validates file. Errors returned to user with fix suggestions.</p>
+        </div>
+        <div class="flow-step">
+          <div class="flow-step-num">5</div>
+          <div class="flow-step-title">Upload & Deliver</div>
+          <p class="flow-step-desc">File uploaded to Supabase Storage. Signed download URL sent to user via email + dashboard.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 7. DATABASE -->
+  <div class="section page-break" id="database">
+    <div class="section-header">
+      <div class="section-num">07</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Data persistence</p>
+        <h2 class="section-title">Database Design</h2>
+      </div>
+    </div>
+
+    <p>Novelify uses Supabase (PostgreSQL) as the primary database. Supabase provides a managed Postgres instance with built-in Auth, realtime subscriptions, Row Level Security (RLS), and file storage — ideal for a solo developer.</p>
+
+    <div class="subsection">
+      <div class="subsection-title">Core Tables</div>
+      <div class="code-block">
+        <pre>
+<span class="comment">-- Users</span>
+<span class="keyword">users</span>
+  id uuid PRIMARY KEY
+  email text UNIQUE
+  plan text DEFAULT 'free'       <span class="comment">-- free | founding | pro</span>
+  word_count_used integer
+  created_at timestamptz
+
+<span class="comment">-- Novel Projects</span>
+<span class="keyword">projects</span>
+  id uuid PRIMARY KEY
+  user_id uuid REFERENCES users
+  title text
+  genre text
+  source_language text           <span class="comment">-- e.g. 'id', 'es', 'fr'</span>
+  target_language text DEFAULT 'en'
+  status text                    <span class="comment">-- draft | translating | ready | exported</span>
+  plot_outline text
+  style_guide text
+  created_at timestamptz
+
+<span class="comment">-- Characters</span>
+<span class="keyword">characters</span>
+  id uuid PRIMARY KEY
+  project_id uuid REFERENCES projects
+  name text
+  description text
+  role text                      <span class="comment">-- protagonist | antagonist | supporting</span>
+
+<span class="comment">-- Chapters</span>
+<span class="keyword">chapters</span>
+  id uuid PRIMARY KEY
+  project_id uuid REFERENCES projects
+  chapter_number integer
+  title text
+  content_original text          <span class="comment">-- original language content</span>
+  content_translated text        <span class="comment">-- English translation</span>
+  word_count integer
+  status text                    <span class="comment">-- draft | reviewed | locked</span>
+  updated_at timestamptz
+
+<span class="comment">-- EPUB Exports</span>
+<span class="keyword">exports</span>
+  id uuid PRIMARY KEY
+  project_id uuid REFERENCES projects
+  file_path text                 <span class="comment">-- Supabase Storage path</span>
+  format text                    <span class="comment">-- epub | pdf | mobi</span>
+  download_url text
+  expires_at timestamptz
+  created_at timestamptz
+        </pre>
+      </div>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 8. AUTH & PAYMENTS -->
+  <div class="section" id="auth">
+    <div class="section-header">
+      <div class="section-num">08</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Access & monetization</p>
+        <h2 class="section-title">Auth & Payments</h2>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Authentication — Supabase Auth</div>
+      <table class="tech-table">
+        <thead><tr><th>Feature</th><th>Implementation</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Email/Password</td>
+            <td>Supabase Auth built-in. Magic link option also available.</td>
+          </tr>
+          <tr>
+            <td>Google OAuth</td>
+            <td>One-click social login via Supabase OAuth providers.</td>
+          </tr>
+          <tr>
+            <td>Session Management</td>
+            <td>JWT tokens. Refresh token rotation handled by Supabase client.</td>
+          </tr>
+          <tr>
+            <td>Row Level Security</td>
+            <td>Postgres RLS policies ensure users can only access their own projects and chapters.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Payments</div>
+      <table class="tech-table">
+        <thead><tr><th>Phase</th><th>Platform</th><th>Reason</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Early Access (now)</td>
+            <td>Gumroad <span class="badge badge-core">Active</span></td>
+            <td>Zero setup friction. Accepts cards + PayPal globally. $27 one-time payment. Webhook activates user account.</td>
+          </tr>
+          <tr>
+            <td>Full Launch</td>
+            <td>Stripe <span class="badge badge-opt">Planned</span></td>
+            <td>Subscription management, invoices, metered billing for word count. Full SaaS billing infrastructure.</td>
+          </tr>
+          <tr>
+            <td>Indonesia Market</td>
+            <td>Xendit <span class="badge badge-opt">Planned</span></td>
+            <td>Local payment methods: GoPay, QRIS, bank transfer for Indonesian users.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 9. INFRASTRUCTURE -->
+  <div class="section" id="infra">
+    <div class="section-header">
+      <div class="section-num">09</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Deployment & DevOps</p>
+        <h2 class="section-title">Infrastructure</h2>
+      </div>
+    </div>
+
+    <table class="tech-table">
+      <thead><tr><th>Service</th><th>Provider</th><th>Purpose</th><th>Cost</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>Frontend + API</td>
+          <td>Vercel <span class="badge badge-infra">Infra</span></td>
+          <td>Auto-deploy from GitHub. Serverless functions for API routes. Global CDN.</td>
+          <td class="cost-free">Free (Hobby)</td>
+        </tr>
+        <tr>
+          <td>Database + Auth</td>
+          <td>Supabase <span class="badge badge-infra">Infra</span></td>
+          <td>PostgreSQL, Auth, Realtime, Storage. Fully managed.</td>
+          <td class="cost-free">Free (up to 500MB)</td>
+        </tr>
+        <tr>
+          <td>AI API</td>
+          <td>Anthropic <span class="badge badge-api">API</span></td>
+          <td>Claude Sonnet for all AI features.</td>
+          <td class="cost-amount">~$3/1M tokens</td>
+        </tr>
+        <tr>
+          <td>Rate Limiting</td>
+          <td>Upstash Redis <span class="badge badge-infra">Infra</span></td>
+          <td>Per-user API rate limiting.</td>
+          <td class="cost-free">Free tier</td>
+        </tr>
+        <tr>
+          <td>Email</td>
+          <td>Resend <span class="badge badge-opt">Util</span></td>
+          <td>Transactional emails.</td>
+          <td class="cost-free">Free (3k/mo)</td>
+        </tr>
+        <tr>
+          <td>Domain</td>
+          <td>novelify.com / .io</td>
+          <td>Custom domain.</td>
+          <td class="cost-amount">~$12/year</td>
+        </tr>
+        <tr>
+          <td>Monitoring</td>
+          <td>Vercel Analytics</td>
+          <td>Performance + error tracking.</td>
+          <td class="cost-free">Free</td>
+        </tr>
+        <tr>
+          <td>Version Control</td>
+          <td>GitHub</td>
+          <td>Source code, CI/CD via Vercel integration.</td>
+          <td class="cost-free">Free</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="info-box">
+      <p class="info-box-title">MVP Infrastructure Cost</p>
+      <p>The MVP can run on ~$0/month infrastructure cost (all free tiers) until scale requires upgrades. The only variable cost is Anthropic API usage — estimated $5-20/month for early users. Total monthly cost for MVP phase: under $25.</p>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 10. ROADMAP -->
+  <div class="section page-break" id="roadmap">
+    <div class="section-header">
+      <div class="section-num">10</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Execution plan</p>
+        <h2 class="section-title">Roadmap & Milestones</h2>
+      </div>
+    </div>
+
+    <table class="milestone-table">
+      <thead>
+        <tr>
+          <th>Phase</th>
+          <th>Timeline</th>
+          <th>Deliverables</th>
+          <th>Goal</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Phase 0</strong><br>Validation</td>
+          <td>Week 1</td>
+          <td>
+            <span class="status-dot dot-green"></span>Landing page live<br>
+            <span class="status-dot dot-green"></span>Gumroad listing $27<br>
+            <span class="status-dot dot-amber"></span>First 10 paying users
+          </td>
+          <td>Validate willingness to pay before building.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 1</strong><br>MVP</td>
+          <td>Weeks 2–5</td>
+          <td>
+            <span class="status-dot dot-amber"></span>Auth + dashboard<br>
+            <span class="status-dot dot-amber"></span>AI writing studio<br>
+            <span class="status-dot dot-amber"></span>Translation engine<br>
+            <span class="status-dot dot-amber"></span>EPUB export
+          </td>
+          <td>Core product working end-to-end for founding members.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 2</strong><br>Polish</td>
+          <td>Weeks 6–8</td>
+          <td>
+            <span class="status-dot dot-grey"></span>Synopsis generator<br>
+            <span class="status-dot dot-grey"></span>KDP guide integration<br>
+            <span class="status-dot dot-grey"></span>Multi-platform export<br>
+            <span class="status-dot dot-grey"></span>User onboarding flow
+          </td>
+          <td>Complete feature set. Ready for public launch.</td>
+        </tr>
+        <tr>
+          <td><strong>Phase 3</strong><br>Growth</td>
+          <td>Month 3+</td>
+          <td>
+            <span class="status-dot dot-grey"></span>Stripe subscriptions<br>
+            <span class="status-dot dot-grey"></span>Community features<br>
+            <span class="status-dot dot-grey"></span>Beta reader network<br>
+            <span class="status-dot dot-grey"></span>Author analytics
+          </td>
+          <td>Recurring revenue. Network effects.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 11. COST -->
+  <div class="section" id="cost">
+    <div class="section-header">
+      <div class="section-num">11</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">Financial projection</p>
+        <h2 class="section-title">Cost & Revenue Estimation</h2>
+      </div>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Monthly Operating Cost (MVP Phase)</div>
+      <table class="cost-table">
+        <thead><tr><th>Item</th><th>Provider</th><th>Cost/Month</th></tr></thead>
+        <tbody>
+          <tr><td>Hosting (frontend + API)</td><td>Vercel</td><td class="cost-free">$0</td></tr>
+          <tr><td>Database + Auth + Storage</td><td>Supabase</td><td class="cost-free">$0</td></tr>
+          <tr><td>AI API (50 active users)</td><td>Anthropic</td><td class="cost-amount">~$15</td></tr>
+          <tr><td>Rate limiting</td><td>Upstash</td><td class="cost-free">$0</td></tr>
+          <tr><td>Email</td><td>Resend</td><td class="cost-free">$0</td></tr>
+          <tr><td>Domain</td><td>—</td><td class="cost-amount">~$1</td></tr>
+          <tr class="total"><td colspan="2">Total Monthly Cost (MVP)</td><td>~$16/month</td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="subsection">
+      <div class="subsection-title">Revenue Projection</div>
+      <table class="cost-table">
+        <thead><tr><th>Scenario</th><th>Users</th><th>Price</th><th>Revenue</th></tr></thead>
+        <tbody>
+          <tr><td>Early Access (Gumroad)</td><td>20 users</td><td>$27 one-time</td><td>$540</td></tr>
+          <tr><td>Early Access (Gumroad)</td><td>50 users</td><td>$27 one-time</td><td>$1,350</td></tr>
+          <tr><td>Full Launch (Monthly)</td><td>100 users</td><td>$19/month</td><td>$1,900/mo</td></tr>
+          <tr><td>Full Launch (Monthly)</td><td>500 users</td><td>$19/month</td><td>$9,500/mo</td></tr>
+          <tr class="total"><td colspan="3">Break-even point</td><td>1 paying user</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <hr class="divider">
+
+  <!-- 12. STACK SUMMARY -->
+  <div class="section" id="stack-summary">
+    <div class="section-header">
+      <div class="section-num">12</div>
+      <div class="section-title-wrap">
+        <p class="section-eyebrow">The complete picture</p>
+        <h2 class="section-title">Full Stack Summary</h2>
+      </div>
+    </div>
+
+    <table class="tech-table">
+      <thead><tr><th>Category</th><th>Technology</th><th>Version</th><th>Role</th></tr></thead>
+      <tbody>
+        <tr><td>Framework</td><td>Next.js <span class="badge badge-core">Core</span></td><td>14.x</td><td>Full-stack React framework (frontend + API)</td></tr>
+        <tr><td>Language</td><td>TypeScript <span class="badge badge-core">Core</span></td><td>5.x</td><td>Type-safe development across entire codebase</td></tr>
+        <tr><td>Styling</td><td>Tailwind CSS <span class="badge badge-core">Core</span></td><td>3.x</td><td>Utility-first CSS</td></tr>
+        <tr><td>UI Library</td><td>Shadcn/UI <span class="badge badge-core">Core</span></td><td>latest</td><td>Accessible component library</td></tr>
+        <tr><td>Editor</td><td>TipTap <span class="badge badge-core">Core</span></td><td>2.x</td><td>Rich text novel writing editor</td></tr>
+        <tr><td>State</td><td>Zustand <span class="badge badge-core">Core</span></td><td>4.x</td><td>Global state management</td></tr>
+        <tr><td>Data Fetching</td><td>TanStack Query <span class="badge badge-core">Core</span></td><td>5.x</td><td>Server state, caching, sync</td></tr>
+        <tr><td>AI SDK</td><td>Vercel AI SDK <span class="badge badge-api">API</span></td><td>3.x</td><td>AI streaming to frontend</td></tr>
+        <tr><td>LLM</td><td>Anthropic Claude <span class="badge badge-api">API</span></td><td>claude-sonnet</td><td>Writing, translation, synopsis</td></tr>
+        <tr><td>Database</td><td>Supabase (PostgreSQL) <span class="badge badge-infra">Infra</span></td><td>latest</td><td>Primary data store</td></tr>
+        <tr><td>Auth</td><td>Supabase Auth <span class="badge badge-infra">Infra</span></td><td>built-in</td><td>User authentication & sessions</td></tr>
+        <tr><td>Storage</td><td>Supabase Storage <span class="badge badge-infra">Infra</span></td><td>built-in</td><td>EPUB files, cover images</td></tr>
+        <tr><td>EPUB Generator</td><td>epub-gen <span class="badge badge-core">Core</span></td><td>1.x</td><td>EPUB 3.0 file generation</td></tr>
+        <tr><td>EPUB Validator</td><td>EPUBCheck <span class="badge badge-opt">QA</span></td><td>5.x</td><td>KDP compliance validation</td></tr>
+        <tr><td>Image Processing</td><td>Sharp <span class="badge badge-opt">Util</span></td><td>0.33.x</td><td>Cover image processing</td></tr>
+        <tr><td>Rate Limiting</td><td>Upstash Redis <span class="badge badge-infra">Infra</span></td><td>latest</td><td>Per-user API limits</td></tr>
+        <tr><td>Email</td><td>Resend <span class="badge badge-opt">Util</span></td><td>latest</td><td>Transactional emails</td></tr>
+        <tr><td>Payments (now)</td><td>Gumroad <span class="badge badge-core">Active</span></td><td>—</td><td>Early access $27 one-time</td></tr>
+        <tr><td>Payments (later)</td><td>Stripe <span class="badge badge-opt">Planned</span></td><td>latest</td><td>Subscription billing</td></tr>
+        <tr><td>Deployment</td><td>Vercel <span class="badge badge-infra">Infra</span></td><td>—</td><td>Hosting, CDN, serverless</td></tr>
+        <tr><td>CI/CD</td><td>GitHub Actions <span class="badge badge-infra">Infra</span></td><td>—</td><td>Auto-deploy on push to main</td></tr>
+        <tr><td>Monitoring</td><td>Vercel Analytics <span class="badge badge-opt">Util</span></td><td>—</td><td>Performance & error tracking</td></tr>
+        <tr><td>Forms</td><td>React Hook Form + Zod <span class="badge badge-opt">Util</span></td><td>latest</td><td>Form handling & validation</td></tr>
+        <tr><td>Icons</td><td>Lucide React <span class="badge badge-opt">Util</span></td><td>latest</td><td>UI icons</td></tr>
+      </tbody>
+    </table>
+
+    <div class="info-box" style="margin-top: 32px;">
+      <p class="info-box-title">Solo Developer Notes</p>
+      <p>This stack is deliberately chosen for a solo developer: Next.js eliminates the need for a separate backend server, Supabase eliminates DevOps for the database, and Vercel eliminates deployment complexity. The entire stack can be bootstrapped in under a week and scaled to thousands of users without infrastructure changes.</p>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <hr class="divider">
+  <div style="display: flex; justify-content: space-between; align-items: center; padding: 24px 0; color: #999;">
+    <span style="font-family: 'Playfair Display', serif; font-size: 1rem; font-weight: 700; color: #1a1a1a;">Noveli<span style="color: var(--amber);">fy</span></span>
+    <span style="font-family: 'Courier Prime', monospace; font-size: 0.68rem; letter-spacing: 0.1em;">TECHNICAL BLUEPRINT v1.0 — CONFIDENTIAL — 2026</span>
+  </div>
+
+</div>
+
+</body>
+</html>
