@@ -2,9 +2,13 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { coverUploadSchema } from '@/lib/validations';
 import { uploadCoverFile } from '@/lib/blob';
+import { getUserId } from '@/lib/session';
 
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const formData = await request.formData();
     const projectId = formData.get('projectId') as string;
     const file = formData.get('file') as File | null;
@@ -23,6 +27,9 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const project = await db.project.findUnique({ where: { id: projectId } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
 
     const allowedTypes = ['image/png', 'image/jpeg', 'image/webp', 'image/jpg'];
     if (!allowedTypes.includes(file.type)) {
@@ -58,6 +65,9 @@ export async function POST(request: NextRequest) {
 
 export async function DELETE(request: NextRequest) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const { searchParams } = new URL(request.url);
     const projectId = searchParams.get('projectId');
 
@@ -67,6 +77,9 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const project = await db.project.findUnique({ where: { id: projectId } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
 
     await db.project.update({
       where: { id: projectId },

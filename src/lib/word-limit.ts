@@ -1,5 +1,4 @@
 import { db } from '@/lib/db';
-import { getUserId } from './db';
 
 const LIMITS: Record<string, number> = {
   free: 1000,

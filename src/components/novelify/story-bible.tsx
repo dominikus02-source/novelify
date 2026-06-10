@@ -502,7 +502,7 @@ export function StoryBiblePage() {
   }
 
   const p = selectedProject;
-  const statCharacters = characters.length || p.characters.length;
+  const statCharacters = characters.length;
   const statLocations = locations.length;
   const statTimeline = timelineEvents.length;
   const statResearch = researchItems.length;
@@ -572,6 +572,29 @@ export function StoryBiblePage() {
   // Overview Tab
   // ═══════════════════════════════════════════
   function renderOverview() {
+    if (overviewLoading) {
+      return (
+        <FadeIn>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+            {[1, 2, 3, 4].map(i => (
+              <Card key={i} style={{ padding: 16 }}>
+                <div className="skeleton-pulse" style={{ height: 12, width: '40%', background: '#2a2a2a', borderRadius: 4, marginBottom: 8 }} />
+                <div className="skeleton-pulse" style={{ height: 32, width: '100%', background: '#2a2a2a', borderRadius: 6 }} />
+              </Card>
+            ))}
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+            {[1, 2].map(i => (
+              <Card key={i} style={{ padding: 16 }}>
+                <div className="skeleton-pulse" style={{ height: 12, width: '30%', background: '#2a2a2a', borderRadius: 4, marginBottom: 8 }} />
+                <div className="skeleton-pulse" style={{ height: 32, width: '100%', background: '#2a2a2a', borderRadius: 6 }} />
+              </Card>
+            ))}
+          </div>
+        </FadeIn>
+      );
+    }
+
     const fields: { key: keyof ProjectOverview; label: string; multiline?: boolean; rows?: number; type?: string }[] = [
       { key: 'premise', label: 'Premise', multiline: true, rows: 3 },
       { key: 'logline', label: 'Logline' },

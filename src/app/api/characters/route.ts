@@ -15,6 +15,12 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
+    const project = await db.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
+
     const characters = await db.character.findMany({
       where: { projectId },
       orderBy: { createdAt: 'asc' },

@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { updateChapterSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // PATCH /api/chapters/[id] - Update a chapter
 export async function PATCH(
@@ -8,6 +9,9 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const { id } = await params;
 
     const chapter = await db.chapter.findUnique({ where: { id } });
@@ -17,6 +21,9 @@ export async function PATCH(
         { status: 404 }
       );
     }
+
+    const project = await db.project.findUnique({ where: { id: chapter.projectId } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
 
     const body = await request.json();
     const parsed = updateChapterSchema.safeParse(body);
@@ -55,12 +62,18 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const { id } = await params;
 
     const chapter = await db.chapter.findUnique({ where: { id } });
     if (!chapter) {
       return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
     }
+
+    const project = await db.project.findUnique({ where: { id: chapter.projectId } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
 
     await db.scene.deleteMany({ where: { chapterId: id } });
     await db.chapter.delete({ where: { id } });

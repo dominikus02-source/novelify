@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { synopsisSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
@@ -26,6 +27,12 @@ export async function POST(request: NextRequest) {
 
     const { type, context } = parsed.data;
     const { title, genre, plotOutline } = context;
+
+    // Verify project ownership if projectId provided
+    if (parsed.data.projectId) {
+      const project = await db.project.findUnique({ where: { id: parsed.data.projectId }, select: { userId: true } });
+      if (!project || project.userId !== userId) return new Response(null, { status: 403 });
+    }
 
     // Resolve language from project or user settings
     const language = await resolveLanguageContext(userId, parsed.data.projectId);

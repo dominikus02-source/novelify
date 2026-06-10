@@ -9,7 +9,7 @@ import {
   Settings, BookMarked, CheckCircle2, History, Globe,
   Star, TrendingUp, Target,
 } from 'lucide-react';
-import { useNovelifyStore, type Project } from '@/lib/store';
+import { useNovelifyStore, type Project, type AppView } from '@/lib/store';
 import { useSession } from 'next-auth/react';
 import { CreateProjectDialog } from '@/components/novelify/create-project-dialog';
 import {
@@ -272,10 +272,10 @@ export function Dashboard() {
                         <button onClick={() => { setSelectedProject(project); setCurrentView('writing'); }}
                           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
                         ><CheckCircle2 style={{ width: 11, height: 11 }} /> Write</button>
-                        <button onClick={() => { setSelectedProject(project); setCurrentView('translate'); }}
+                        <button onClick={() => { setSelectedProject(project); setCurrentView('translation' as AppView); }}
                           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
                         ><Globe style={{ width: 11, height: 11 }} /> Translate</button>
-                        <button onClick={() => { setSelectedProject(project); setCurrentView('export'); }}
+                        <button onClick={() => { setSelectedProject(project); setCurrentView('publishing' as AppView); }}
                           style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', color: '#8E8E93', fontSize: 10, fontWeight: 500, cursor: 'pointer' }}
                         ><Download style={{ width: 11, height: 11 }} /> Export</button>
                         <button onClick={() => { setProjectToDelete(project); setDeleteDialogOpen(true); }}

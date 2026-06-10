@@ -293,7 +293,7 @@ export function ProjectWorkspace() {
   // Navigate to action
   const handleAction = (view: string | null) => {
     if (view) {
-      setCurrentView(view as 'writing' | 'translate' | 'synopsis' | 'cover' | 'export');
+      setCurrentView(view as any);
     } else {
       // Characters: toggle expandable section
       setCharsOpen(!charsOpen);

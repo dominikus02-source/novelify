@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { translateSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
@@ -41,12 +42,20 @@ export async function POST(request: NextRequest) {
       }, { status: 429 });
     }
 
+    // Verify project ownership if projectId provided
+    if (parsed.data.projectId) {
+      const project = await db.project.findUnique({ where: { id: parsed.data.projectId }, select: { userId: true } });
+      if (!project || project.userId !== userId) return new Response(null, { status: 403 });
+    }
+
     // Resolve language for user settings context
     const language = await resolveLanguageContext(userId, parsed.data.projectId);
+    // Override aiOutputLanguage with the form's explicit target language
+    const translationLanguage = { ...language, aiOutputLanguage: targetLanguage };
 
     const systemPrompt = `You are a professional literary translator specializing in novels. Translate the following literary text from ${sourceLanguage} to ${targetLanguage} at publishable quality.
 
-${buildLanguageInstruction(language)}
+${buildLanguageInstruction(translationLanguage)}
 
 RULES:
 - Meaning-for-meaning translation (dynamic equivalence), never word-for-word

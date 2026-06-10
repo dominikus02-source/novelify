@@ -152,7 +152,7 @@ function useTypewriter() {
 
     function type() {
       if (i < full.length) {
-        el.innerHTML = full.slice(0, ++i) + '<span class="cursor"></span>';
+        if (el) el.innerHTML = full.slice(0, ++i) + '<span class="cursor"></span>';
         timeout = setTimeout(type, 28 + Math.random() * 30);
       } else if (full === typewriterLines[0]) {
         timeout = setTimeout(() => {

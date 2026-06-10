@@ -1,3 +1,4 @@
+import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { aiWriteSchema } from '@/lib/validations';
 import { rateLimit } from '@/lib/rate-limit';
@@ -26,7 +27,7 @@ export async function POST(request: NextRequest) {
     }
 
     const { prompt, context } = parsed.data;
-    const { chapterContent, plotOutline, characters, styleGuide, projectTitle, genre } = context || {};
+    const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage, projectTitle, genre } = (context || {}) as { chapterContent?: string; plotOutline?: string; characters?: string; styleGuide?: string; sourceLanguage?: string; projectTitle?: string; genre?: string };
 
     const estimatedWords = Math.min(500, prompt.split(/\s+/).filter(Boolean).length * 3);
     const limitResult = await checkWordLimit(userId, estimatedWords);
@@ -40,6 +41,12 @@ export async function POST(request: NextRequest) {
         used: limitResult.used,
         remaining: limitResult.remaining,
       }, { status: 429 });
+    }
+
+    // Verify project ownership if projectId provided
+    if (parsed.data.projectId) {
+      const project = await db.project.findUnique({ where: { id: parsed.data.projectId }, select: { userId: true } });
+      if (!project || project.userId !== userId) return new Response(null, { status: 403 });
     }
 
     // Resolve language context

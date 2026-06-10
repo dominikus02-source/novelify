@@ -68,7 +68,7 @@ interface ExportItem {
   status: string;
   createdAt: string;
   fileSize: number;
-  downloadUrl: string;
+  fileUrl: string;
 }
 
 interface ChecklistItem {
@@ -559,7 +559,7 @@ export function PublishingCenterPage() {
   const [exportFormat, setExportFormat] = useState('epub');
   const [exportIncludeScenes, setExportIncludeScenes] = useState(true);
   const [exportProgress, setExportProgress] = useState<string | null>(null);
-  const [exportResult, setExportResult] = useState<{ downloadUrl: string; format: string } | null>(null);
+  const [exportResult, setExportResult] = useState<{ fileUrl: string; format: string } | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
   const [exportHistory, setExportHistory] = useState<ExportItem[]>([]);
 
@@ -568,6 +568,18 @@ export function PublishingCenterPage() {
 
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const projectId = selectedProject?.id;
+
+  const CHECKLIST_FIELD_MAP: Record<string, string> = {
+    metadata: 'metadataComplete',
+    cover: 'coverReady',
+    synopsis: 'synopsisReady',
+    blurb: 'blurbReady',
+    frontmatter: 'frontMatterReady',
+    backmatter: 'backMatterReady',
+    manuscript: 'manuscriptReady',
+    revision: 'revisionReady',
+    export: 'exportReady',
+  };
 
   // ─── API Helpers ───
   const showToast = useCallback((message: string, type: 'success' | 'error') => {
@@ -590,9 +602,10 @@ export function PublishingCenterPage() {
         setSaveStatus('saved');
       }
       if (checklistData) {
+        const raw = checklistData as Record<string, any>;
         setChecklist(CHECKLIST_ITEMS.map(item => {
-          const found = Array.isArray(checklistData) ? checklistData.find((c: any) => c.id === item.id) : null;
-          return { ...item, completed: found ? found.completed : false };
+          const mapKey = CHECKLIST_FIELD_MAP[item.id] || item.id + 'Complete';
+          return { ...item, completed: raw[mapKey] === true };
         }));
       }
       if (Array.isArray(exportsData)) {
@@ -819,6 +832,32 @@ export function PublishingCenterPage() {
   }, [aiGenResult, updateMetadataField, showToast]);
 
   // ─── Export handlers ───
+  // ─── Synopsis/Blurb Auto-save ───
+  const autoSaveSynopsisBlurb = useCallback(async (s: string, b: string) => {
+    if (!projectId) return;
+    try {
+      await fetch('/api/publishing/metadata', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, synopsis: s, blurb: b }),
+      });
+    } catch {
+      showToast('Failed to save synopsis/blurb', 'error');
+    }
+  }, [projectId, showToast]);
+
+  const synopsisDebounceRef = useRef<NodeJS.Timeout | null>(null);
+  useEffect(() => {
+    if (!projectId) return;
+    if (synopsisDebounceRef.current) clearTimeout(synopsisDebounceRef.current);
+    synopsisDebounceRef.current = setTimeout(() => {
+      autoSaveSynopsisBlurb(synopsis, blurb);
+    }, 500);
+    return () => {
+      if (synopsisDebounceRef.current) clearTimeout(synopsisDebounceRef.current);
+    };
+  }, [synopsis, blurb, projectId, autoSaveSynopsisBlurb]);
+
   const handleExport = useCallback(async () => {
     if (!projectId) return;
     setExportProgress('Preparing your export...');
@@ -834,6 +873,7 @@ export function PublishingCenterPage() {
         const data = await res.json();
         setExportResult(data);
         setExportProgress('Export complete!');
+        setTimeout(() => setExportProgress(null), 3000);
         // Refresh history
         const histRes = await fetch(`/api/publishing/export?projectId=${projectId}`);
         if (histRes.ok) {
@@ -869,10 +909,11 @@ export function PublishingCenterPage() {
     const newVal = !item.completed;
     setChecklist(prev => prev.map(c => c.id === id ? { ...c, completed: newVal } : c));
     try {
+      const fieldName = CHECKLIST_FIELD_MAP[id];
       await fetch('/api/publishing/checklist', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, id, completed: newVal }),
+        body: JSON.stringify({ projectId, [fieldName]: newVal }),
       });
     } catch {
       setChecklist(prev => prev.map(c => c.id === id ? { ...c, completed: !newVal } : c));
@@ -1504,10 +1545,10 @@ export function PublishingCenterPage() {
                 <FieldHint text="Larger manuscripts may take longer to export" />
                 </FormField>
                 <Divider />
-                <button onClick={handleExport} disabled={!!exportProgress}
+                <button onClick={handleExport} disabled={exportProgress === 'Preparing your export...'}
                   style={{
                     width: '100%', padding: '10px 16px', borderRadius: 10, fontSize: 13, fontWeight: 600,
-                    cursor: exportProgress ? 'wait' : 'pointer', border: 'none',
+                    cursor: exportProgress === 'Preparing your export...' ? 'wait' : 'pointer', border: 'none',
                     background: colors.gold, color: '#1a0f00',
                     display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
                     opacity: exportProgress ? 0.7 : 1,
@@ -1526,7 +1567,7 @@ export function PublishingCenterPage() {
                       <Check style={{ width: 14, height: 14, color: '#34D399' }} />
                       <span style={{ fontSize: 12, color: '#34D399', fontWeight: 500 }}>Export Complete</span>
                     </div>
-                    <a href={exportResult.downloadUrl} download
+                    <a href={exportResult.fileUrl} download
                       style={{
                         display: 'inline-flex', alignItems: 'center', gap: 6,
                         padding: '8px 16px', borderRadius: 8, fontSize: 12, fontWeight: 500,
@@ -1573,8 +1614,8 @@ export function PublishingCenterPage() {
                         </div>
                       </div>
                       <div style={{ display: 'flex', gap: 4 }}>
-                        {item.downloadUrl && (
-                          <a href={item.downloadUrl} download
+                        {item.fileUrl && (
+                          <a href={item.fileUrl} download
                             style={{
                               padding: '6px 10px', borderRadius: 6, fontSize: 10, fontWeight: 500,
                               background: 'rgba(201,169,110,0.10)', color: colors.gold,

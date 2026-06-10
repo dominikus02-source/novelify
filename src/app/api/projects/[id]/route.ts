@@ -1,6 +1,7 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { updateProjectSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // PATCH /api/projects/[id] - Update a project
 export async function PATCH(
@@ -8,12 +9,17 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const { id } = await params;
 
     const project = await db.project.findUnique({ where: { id } });
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
+
+    if (project.userId !== userId) return new Response(null, { status: 403 });
 
     const body = await request.json();
     const parsed = updateProjectSchema.safeParse(body);
@@ -63,12 +69,17 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const { id } = await params;
 
     const project = await db.project.findUnique({ where: { id } });
     if (!project) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 });
     }
+
+    if (project.userId !== userId) return new Response(null, { status: 403 });
 
     await db.project.delete({ where: { id } });
 

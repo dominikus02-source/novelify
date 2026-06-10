@@ -289,22 +289,22 @@ export function SettingsPage() {
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <Field label="Chapter Word Target" desc="Default target words per chapter">
-                            <Input type="number" value={s.defaultChapterWordTarget || 3000}
-                              onChange={(e) => updateField('defaultChapterWordTarget', parseInt(e.target.value) || 3000)}
+                            <Input type="number" value={s.defaultChapterWordTarget ?? 3000}
+                              onChange={(e) => updateField('defaultChapterWordTarget', (v => isNaN(v) ? 3000 : v)(parseInt(e.target.value)))}
                               style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#1c1c1e', color: '#F5F5F7' }}
                             />
                           </Field>
                           <Field label="Daily Word Goal" desc="Default daily writing target">
-                            <Input type="number" value={s.defaultDailyWordGoal || 1000}
-                              onChange={(e) => updateField('defaultDailyWordGoal', parseInt(e.target.value) || 1000)}
+                            <Input type="number" value={s.defaultDailyWordGoal ?? 1000}
+                              onChange={(e) => updateField('defaultDailyWordGoal', (v => isNaN(v) ? 1000 : v)(parseInt(e.target.value)))}
                               style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#1c1c1e', color: '#F5F5F7' }}
                             />
                           </Field>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
                           <Field label="Autosave Interval (ms)" desc="How often your work is auto-saved">
-                            <Input type="number" value={s.autosaveInterval || 2000}
-                              onChange={(e) => updateField('autosaveInterval', parseInt(e.target.value) || 2000)}
+                            <Input type="number" value={s.autosaveInterval ?? 2000}
+                              onChange={(e) => updateField('autosaveInterval', (v => isNaN(v) ? 2000 : v)(parseInt(e.target.value)))}
                               style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#1c1c1e', color: '#F5F5F7' }}
                             />
                           </Field>

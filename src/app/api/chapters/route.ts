@@ -1,10 +1,14 @@
 import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { createChapterSchema } from '@/lib/validations';
+import { getUserId } from '@/lib/session';
 
 // GET /api/chapters?projectId=xxx - Fetch all chapters for a project
 export async function GET(request: NextRequest) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const projectId = request.nextUrl.searchParams.get('projectId');
 
     if (!projectId) {
@@ -13,6 +17,9 @@ export async function GET(request: NextRequest) {
         { status: 400 }
       );
     }
+
+    const project = await db.project.findUnique({ where: { id: projectId } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
 
     const chapters = await db.chapter.findMany({
       where: { projectId },
@@ -39,6 +46,9 @@ export async function GET(request: NextRequest) {
 // POST /api/chapters - Create a new chapter
 export async function POST(request: NextRequest) {
   try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
     const body = await request.json();
     const parsed = createChapterSchema.safeParse(body);
     if (!parsed.success) {
@@ -58,6 +68,8 @@ export async function POST(request: NextRequest) {
         { status: 404 }
       );
     }
+
+    if (project.userId !== userId) return new Response(null, { status: 403 });
 
     const chapter = await db.chapter.create({
       data: {

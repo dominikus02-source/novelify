@@ -84,15 +84,25 @@ export function WritingStudio() {
   const [newEventDesc, setNewEventDesc] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const savedTimeRef = useRef<Date | null>(null);
+  const originalContentRef = useRef('');
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const goalTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const conflictTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const outcomeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Update editor content when selection changes
   useEffect(() => {
     if (writingMode === 'scene' && selectedScene) {
-      setEditorContent(selectedScene.content || '');
+      const content = selectedScene.content || '';
+      setEditorContent(content);
+      originalContentRef.current = content;
     } else if (selectedChapter) {
-      setEditorContent(selectedChapter.contentOriginal || '');
+      const content = selectedChapter.contentOriginal || '';
+      setEditorContent(content);
+      originalContentRef.current = content;
     } else {
       setEditorContent('');
+      originalContentRef.current = '';
     }
     setSaveStatus('idle');
     setAiSuggestion('');
@@ -104,6 +114,17 @@ export function WritingStudio() {
     }
   }, [editingTitle]);
 
+  useEffect(() => {
+    const handler = (event: BeforeUnloadEvent) => {
+      if (editorContent !== originalContentRef.current) {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handler);
+    return () => window.removeEventListener('beforeunload', handler);
+  }, [editorContent]);
+
   // Expand current chapter
   useEffect(() => {
     if (selectedChapter) {
@@ -111,16 +132,27 @@ export function WritingStudio() {
     }
   }, [selectedChapter?.id]);
 
+  useEffect(() => {
+    if (bibleTab === 'overview') {
+      setBibleTab('characters');
+    }
+  }, [bibleTab, setBibleTab]);
+
   // Load scenes when project changes
   useEffect(() => {
     if (!selectedProject) return;
+    abortControllerRef.current?.abort();
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
     const chapterIds = selectedProject.chapters.map((c) => c.id);
     if (chapterIds.length === 0) { setScenes([]); return; }
     Promise.all(
-      chapterIds.map((id) => fetch(`/api/scenes?chapterId=${id}`).then((r) => r.ok ? r.json() : []))
+      chapterIds.map((id) => fetch(`/api/scenes?chapterId=${id}`, { signal: controller.signal }).then((r) => r.ok ? r.json() : []))
     ).then((results) => {
-      setScenes(results.flat());
-    });
+      if (!controller.signal.aborted) {
+        setScenes(results.flat());
+      }
+    }).catch(() => {});
   }, [selectedProject?.id]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -158,7 +190,7 @@ export function WritingStudio() {
   const refreshProject = useCallback(async () => {
     if (!selectedProject) return;
     try {
-      const res = await fetch('/api/projects');
+      const res = await fetch(`/api/projects?id=${selectedProject.id}`);
       if (res.ok) {
         const data: Project[] = await res.json();
         const fresh = data.find((p) => p.id === selectedProject.id);
@@ -642,7 +674,7 @@ export function WritingStudio() {
             {studioTab === 'bible' && (
               <div>
                 <div className="flex gap-1 mb-3">
-                  {(['characters', 'locations', 'timeline', 'worldbuilding'] as const).map((tab) => (
+                  {(['characters', 'locations', 'timeline', 'lore'] as const).map((tab) => (
                     <button key={tab} onClick={() => setBibleTab(tab)}
                       className="px-2.5 py-1 rounded-md text-[10px] font-medium capitalize transition-all"
                       style={{ background: bibleTab === tab ? '#C8873A' : '#f5f5f5', color: bibleTab === tab ? '#fff' : '#666' }}
@@ -700,7 +732,19 @@ export function WritingStudio() {
                     <div className="mt-3 space-y-2">
                       <Input value={newLocationName} onChange={(e) => setNewLocationName(e.target.value)} placeholder="Location name" className="text-xs" style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
                       <Input value={newLocationDesc} onChange={(e) => setNewLocationDesc(e.target.value)} placeholder="Description" className="text-xs" style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
-                      <Button size="sm" className="w-full text-xs bg-amber hover:bg-amber/90 text-ink">Add Location</Button>
+                      <Button size="sm" className="w-full text-xs bg-amber hover:bg-amber/90 text-ink" onClick={async () => {
+                        if (!selectedProject || !newLocationName.trim()) return;
+                        try {
+                          await fetch('/api/locations', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ projectId: selectedProject.id, name: newLocationName, description: newLocationDesc }),
+                          });
+                          setNewLocationName('');
+                          setNewLocationDesc('');
+                          const res = await fetch(`/api/locations?projectId=${selectedProject.id}`);
+                          if (res.ok) setLocations(await res.json());
+                        } catch { /* ignore */ }
+                      }}>Add Location</Button>
                     </div>
                   </div>
                 )}
@@ -722,8 +766,8 @@ export function WritingStudio() {
                   </div>
                 )}
 
-                {/* Worldbuilding */}
-                {bibleTab === 'worldbuilding' && (
+                {/* Worldbuilding / Lore */}
+                {bibleTab === 'lore' && (
                   <div>
                     <div className="space-y-2">
                       {storyNotes.filter((n) => n.category === 'worldbuilding').length === 0 && (
@@ -739,7 +783,19 @@ export function WritingStudio() {
                     <div className="mt-3 space-y-2">
                       <Input value={newNoteTitle} onChange={(e) => setNewNoteTitle(e.target.value)} placeholder="Note title" className="text-xs" style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
                       <Input value={newNoteContent} onChange={(e) => setNewNoteContent(e.target.value)} placeholder="Note content" className="text-xs" style={{ borderColor: 'rgba(0,0,0,0.1)' }} />
-                      <Button size="sm" className="w-full text-xs bg-amber hover:bg-amber/90 text-ink">Add Note</Button>
+                      <Button size="sm" className="w-full text-xs bg-amber hover:bg-amber/90 text-ink" onClick={async () => {
+                        if (!selectedProject || !newNoteTitle.trim()) return;
+                        try {
+                          await fetch('/api/story-notes', {
+                            method: 'POST', headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ projectId: selectedProject.id, title: newNoteTitle, content: newNoteContent, category: 'worldbuilding' }),
+                          });
+                          setNewNoteTitle('');
+                          setNewNoteContent('');
+                          const res = await fetch(`/api/story-notes?projectId=${selectedProject.id}`);
+                          if (res.ok) setStoryNotes(await res.json());
+                        } catch { /* ignore */ }
+                      }}>Add Note</Button>
                     </div>
                   </div>
                 )}
@@ -756,26 +812,41 @@ export function WritingStudio() {
                     <div className="space-y-2">
                       <div>
                         <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Goal</label>
-                        <input value={selectedScene.goal || ''} onChange={async (e) => {
-                          const updated = { ...selectedScene, goal: e.target.value };
+                        <input value={selectedScene.goal || ''} onChange={(e) => {
+                          const value = e.target.value;
+                          const updated = { ...selectedScene, goal: value };
                           setSelectedScene(updated);
-                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: e.target.value }) });
+                          if (goalTimeoutRef.current) clearTimeout(goalTimeoutRef.current);
+                          const sceneId = selectedScene.id;
+                          goalTimeoutRef.current = setTimeout(async () => {
+                            await fetch(`/api/scenes/${sceneId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ goal: value }) });
+                          }, 500);
                         }} placeholder="What does this scene achieve?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
                       </div>
                       <div>
                         <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Conflict</label>
-                        <input value={selectedScene.conflict || ''} onChange={async (e) => {
-                          const updated = { ...selectedScene, conflict: e.target.value };
+                        <input value={selectedScene.conflict || ''} onChange={(e) => {
+                          const value = e.target.value;
+                          const updated = { ...selectedScene, conflict: value };
                           setSelectedScene(updated);
-                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conflict: e.target.value }) });
+                          if (conflictTimeoutRef.current) clearTimeout(conflictTimeoutRef.current);
+                          const sceneId = selectedScene.id;
+                          conflictTimeoutRef.current = setTimeout(async () => {
+                            await fetch(`/api/scenes/${sceneId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ conflict: value }) });
+                          }, 500);
                         }} placeholder="What opposes the goal?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
                       </div>
                       <div>
                         <label className="text-[9px] uppercase tracking-wider" style={{ color: '#8E8E93' }}>Outcome</label>
-                        <input value={selectedScene.outcome || ''} onChange={async (e) => {
-                          const updated = { ...selectedScene, outcome: e.target.value };
+                        <input value={selectedScene.outcome || ''} onChange={(e) => {
+                          const value = e.target.value;
+                          const updated = { ...selectedScene, outcome: value };
                           setSelectedScene(updated);
-                          await fetch(`/api/scenes/${selectedScene.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome: e.target.value }) });
+                          if (outcomeTimeoutRef.current) clearTimeout(outcomeTimeoutRef.current);
+                          const sceneId = selectedScene.id;
+                          outcomeTimeoutRef.current = setTimeout(async () => {
+                            await fetch(`/api/scenes/${sceneId}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ outcome: value }) });
+                          }, 500);
                         }} placeholder="How does it end?" className="w-full text-xs mt-0.5 p-1.5 rounded border" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#fff', color: '#1a1a1a', outline: 'none' }} />
                       </div>
                       <div>
@@ -913,9 +984,9 @@ export function WritingStudio() {
                 <div className="space-y-2">
                   {[
                     { icon: BookOpen, label: 'EPUB', desc: 'Standard ebook format', path: 'publishing' },
-                    { icon: FileText, label: 'PDF', desc: 'Print-ready document' },
-                    { icon: Download, label: 'DOCX', desc: 'Microsoft Word format' },
-                    { icon: Globe, label: 'Google Docs', desc: 'Send to Google Drive' },
+                    { icon: FileText, label: 'PDF', desc: 'Print-ready document', path: 'publishing' },
+                    { icon: Download, label: 'DOCX', desc: 'Microsoft Word format', path: 'publishing' },
+                    { icon: Globe, label: 'Google Docs', desc: 'Send to Google Drive', path: undefined },
                   ].map((opt) => {
                     const Icon = opt.icon;
                     const goPath = 'path' in opt ? (opt as any).path : null;

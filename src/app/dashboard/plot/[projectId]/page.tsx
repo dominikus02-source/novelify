@@ -1,12 +1,21 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { PlotBoardPage } from '@/components/novelify/pages';
 import { useProject } from '@/lib/use-project';
+import { useNovelifyStore } from '@/lib/store';
 
 export default function PlotProjectPage() {
   const params = useParams();
   const project = useProject(params.projectId as string);
+  const { projects, setProjects } = useNovelifyStore();
+
+  useEffect(() => {
+    if (projects.length === 0) {
+      fetch('/api/projects').then(r => r.json()).then(setProjects);
+    }
+  }, []);
 
   if (!project) {
     return (

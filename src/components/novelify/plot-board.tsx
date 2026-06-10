@@ -150,6 +150,7 @@ export function PlotBoardPage() {
       if (project) {
         const updated = { ...project, chapters: [...(project.chapters || []), data.chapter] };
         setChapters([...chapters, data.chapter]);
+        setSelectedProject(updated);
       }
       refreshBeats();
     }

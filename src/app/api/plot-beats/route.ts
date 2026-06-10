@@ -10,6 +10,12 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: 'projectId query parameter is required' }, { status: 400 });
     }
 
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
+    const project = await db.project.findUnique({ where: { id: projectId }, select: { userId: true } });
+    if (!project || project.userId !== userId) return new Response(null, { status: 403 });
+
     const plotBeats = await db.plotBeat.findMany({
       where: { projectId },
       orderBy: { order: 'asc' },

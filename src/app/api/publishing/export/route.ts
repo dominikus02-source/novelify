@@ -15,6 +15,43 @@ const FORMAT_EXT: Record<string, string> = {
   markdown: 'md',
 };
 
+export async function GET(request: NextRequest) {
+  try {
+    const userId = await getUserId();
+    const projectId = request.nextUrl.searchParams.get('projectId');
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'projectId query parameter is required' }, { status: 400 });
+    }
+
+    const project = await db.project.findUnique({
+      where: { id: projectId },
+      select: { userId: true },
+    });
+
+    if (!project || project.userId !== userId) {
+      return new Response(null, { status: 403 });
+    }
+
+    const exports = await db.exportJob.findMany({
+      where: { projectId },
+      orderBy: { createdAt: 'desc' },
+      take: 20,
+    });
+
+    return NextResponse.json(
+      exports.map((e) => ({
+        ...e,
+        createdAt: e.createdAt.toISOString(),
+        completedAt: e.completedAt?.toISOString() || null,
+      }))
+    );
+  } catch (error) {
+    console.error('Error fetching exports:', error);
+    return NextResponse.json({ error: 'Failed to fetch exports' }, { status: 500 });
+  }
+}
+
 export async function POST(request: NextRequest) {
   let exportJob: { id: string } | null = null;
 
@@ -22,7 +59,8 @@ export async function POST(request: NextRequest) {
     const userId = await getUserId();
 
     const body = await request.json();
-    const { projectId, format, options } = body;
+    const { projectId, format, includeScenes, ...rest } = body;
+    const options = { includeScenes, ...rest };
 
     if (!projectId || !format) {
       return NextResponse.json({ error: 'projectId and format are required' }, { status: 400 });
@@ -56,13 +94,13 @@ export async function POST(request: NextRequest) {
     let buffer: Buffer;
     switch (format) {
       case 'epub':
-        buffer = await generateEpubFromAssembly(manuscript);
+        buffer = await generateEpubFromAssembly(manuscript, { includeScenes: options?.includeScenes });
         break;
       case 'pdf':
-        buffer = await generatePdfFromAssembly(manuscript);
+        buffer = await generatePdfFromAssembly(manuscript, { includeScenes: options?.includeScenes });
         break;
       case 'docx':
-        buffer = await generateDocxFromAssembly(manuscript);
+        buffer = await generateDocxFromAssembly(manuscript, { includeScenes: options?.includeScenes });
         break;
       case 'markdown': {
         const md = buildMarkdown(manuscript, options);

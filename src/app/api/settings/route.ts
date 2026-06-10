@@ -8,7 +8,7 @@ const updateSettingsSchema = z.object({
   penName: z.string().max(100).optional().nullable(),
   authorBio: z.string().max(2000).optional().nullable(),
   defaultAuthorName: z.string().max(100).optional().nullable(),
-  website: z.string().url().max(500).optional().nullable().or(z.literal('')),
+  website: z.string().max(500).optional().nullable(),
 
   // Language & AI Output
   defaultSourceLanguage: z.string().length(2).optional(),
