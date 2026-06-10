@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   LayoutDashboard, PenTool, Languages, FileText, Image,
   Download, ChevronLeft, BookOpen, Settings as SettingsIcon,
-  LogOut, Target, Star,
+  LogOut,
 } from 'lucide-react';
 import { useNovelifyStore, type AppView } from '@/lib/store';
 import { useSession } from 'next-auth/react';
@@ -21,7 +21,6 @@ const workspaceItems: { icon: React.ElementType; label: string; view: AppView }[
 const publishItems: { icon: React.ElementType; label: string; view: AppView }[] = [
   { icon: Image, label: 'Cover Art', view: 'cover' },
   { icon: Download, label: 'Export', view: 'export' },
-  { icon: Target, label: 'KDP Publish', view: 'export' },
   { icon: SettingsIcon, label: 'Settings', view: 'settings' },
 ];
 
