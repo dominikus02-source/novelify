@@ -72,11 +72,11 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-paper">
+    <div className="min-h-screen" style={{ background: '#080808' }}>
       <Sidebar />
       <main
         className="transition-all duration-300"
-        style={{ marginLeft: sidebarOpen ? 256 : 64 }}
+        style={{ marginLeft: sidebarOpen ? 228 : 64 }}
       >
         <AnimatePresence mode="wait">
           <motion.div

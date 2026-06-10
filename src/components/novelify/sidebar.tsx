@@ -100,7 +100,7 @@ export function Sidebar() {
       style={{
         position: 'fixed', left: 0, top: 0, bottom: 0, zIndex: 40,
         display: 'flex', flexDirection: 'column',
-        background: '#111111', borderRight: '1px solid rgba(255,255,255,0.07)',
+        background: '#111111',
         overflowY: 'auto', overflowX: 'hidden',
       }}
     >
