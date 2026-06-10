@@ -71,17 +71,26 @@ model Project {
   user           User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   title          String
   genre          String?
-  sourceLanguage String     @default("id") // e.g. 'id', 'es', 'fr', 'en'
+  sourceLanguage String     @default("id")
   targetLanguage String     @default("en")
-  status         String     @default("draft") // draft | translating | ready | exported
+  status         String     @default("draft")
   plotOutline    String?
   styleGuide     String?
   coverImage     String?
+  wordTarget     Int        @default(50000)
+  chaptersTarget Int        @default(20)
+  templateId     String?
   createdAt      DateTime   @default(now())
   updatedAt      DateTime   @updatedAt
   chapters       Chapter[]
   characters     Character[]
   exports        Export[]
+  writingGoals   WritingGoal[]
+  versions       ManuscriptVersion[]
+  storyNotes     StoryNote[]
+  locations      Location[]
+  timelineEvents TimelineEvent[]
+  comments       Comment[]
 
   @@index([userId])
 }
@@ -92,12 +101,130 @@ model Chapter {
   project            Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
   chapterNumber      Int
   title              String
-  contentOriginal    String   @default("") // original language content
-  contentTranslated  String?  // English translation
+  contentOriginal    String   @default("")
+  contentTranslated  String?
   wordCount          Int      @default(0)
-  status             String   @default("draft") // draft | reviewed | locked
+  status             String   @default("draft") // idea | drafting | revised | edited | locked
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
+  scenes             Scene[]
+  versions           ManuscriptVersion[]
+
+  @@index([projectId])
+}
+
+model Scene {
+  id              String   @id @default(cuid())
+  chapterId       String
+  chapter         Chapter  @relation(fields: [chapterId], references: [id], onDelete: Cascade)
+  sceneNumber     Int
+  title           String   @default("")
+  content         String   @default("")
+  summary         String   @default("")
+  goal            String   @default("")
+  conflict        String   @default("")
+  outcome         String   @default("")
+  povCharacterId  String?
+  wordCount       Int      @default(0)
+  targetWordCount Int      @default(0)
+  status          String   @default("idea") // idea | drafting | revised | edited | locked
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  storyNotes      StoryNote[]
+  timelineEvents  TimelineEvent[]
+  comments        Comment[]
+  versions        ManuscriptVersion[]
+
+  @@index([chapterId])
+}
+
+model WritingGoal {
+  id           String   @id @default(cuid())
+  projectId    String
+  project      Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  type         String   @default("daily") // daily | weekly | project
+  targetWords  Int      @default(1000)
+  currentWords Int      @default(0)
+  startDate    DateTime @default(now())
+  endDate      DateTime?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model ManuscriptVersion {
+  id         String   @id @default(cuid())
+  projectId  String
+  project    Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapterId  String?
+  chapter    Chapter?  @relation(fields: [chapterId], references: [id], onDelete: SetNull)
+  sceneId    String?
+  scene      Scene?    @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  content    String   @default("")
+  wordCount  Int      @default(0)
+  label      String   @default("")
+  createdAt  DateTime @default(now())
+
+  @@index([projectId])
+}
+
+model StoryNote {
+  id            String   @id @default(cuid())
+  projectId     String
+  project       Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title         String
+  content       String   @default("")
+  category      String   @default("general") // general | character | plot | worldbuilding | research
+  linkedChapterId String?
+  linkedSceneId String?
+  scene         Scene?    @relation(fields: [linkedSceneId], references: [id], onDelete: SetNull)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([projectId])
+}
+
+model Location {
+  id          String   @id @default(cuid())
+  projectId   String
+  project     Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  name        String
+  description String   @default("")
+  importance  String   @default("minor") // minor | major | critical
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([projectId])
+}
+
+model TimelineEvent {
+  id              String   @id @default(cuid())
+  projectId       String
+  project         Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  title           String
+  description     String   @default("")
+  eventDateOrOrder Float?
+  linkedSceneId   String?
+  scene           Scene?    @relation(fields: [linkedSceneId], references: [id], onDelete: SetNull)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  @@index([projectId])
+}
+
+model Comment {
+  id        String   @id @default(cuid())
+  projectId String
+  project   Project  @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  chapterId String?
+  sceneId   String?
+  scene     Scene?   @relation(fields: [sceneId], references: [id], onDelete: SetNull)
+  content   String   @default("")
+  authorType String  @default("user") // user | ai | beta_reader
+  status    String   @default("active") // active | resolved
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 
   @@index([projectId])
 }

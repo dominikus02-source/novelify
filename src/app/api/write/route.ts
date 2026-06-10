@@ -1,10 +1,16 @@
-import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { aiWriteSchema } from '@/lib/validations';
+import { rateLimit } from '@/lib/rate-limit';
+import { createChatCompletion } from '@/lib/ai';
+
+const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
 // POST /api/write - AI writing assistant
 export async function POST(request: NextRequest) {
   try {
+    const limitCheck = limiter.check(request);
+    if (limitCheck) return limitCheck;
+
     const body = await request.json();
     const parsed = aiWriteSchema.safeParse(body);
     if (!parsed.success) {
@@ -15,12 +21,25 @@ export async function POST(request: NextRequest) {
     }
 
     const { prompt, context } = parsed.data;
-    const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage } = context || {};
+    const { chapterContent, plotOutline, characters, styleGuide, sourceLanguage, projectTitle, genre } = context || {};
 
-    // Build the system prompt
-    const systemPrompt = `You are a literary writing assistant for a novelist. Continue writing the story based on the user's prompt.
-Maintain voice consistency and literary quality. Write in the ${sourceLanguage || 'the original'} language.
-Do not introduce plot contradictions. Write approximately 200-500 words.`;
+    // Build the system prompt — language-agnostic novel writing specialist
+    const systemPrompt = `You are a professional novel-writing assistant. Your task is to continue the story or polish the user's prose. Detect the language of the user's content automatically and respond in the same language.
+
+RULES:
+- Detect and use the SAME language as the user's content (English, Indonesian, Spanish, etc.)
+- Fix grammar, spelling, and awkward phrasing naturally — never mention you fixed anything
+- Improve flow and readability while preserving the author's voice and style
+- Maintain consistent POV, tense, and character voice
+- Show-don't-tell technique
+- Natural dialogue that fits each character
+- No plot contradictions
+- Appropriate pacing for the scene
+- 200-500 words per response (adjust to scene needs)
+- End with a natural hook when possible (for chapter/scene transitions)
+- Follow genre conventions if specified (romance, fantasy, mystery, thriller, etc.)
+
+If the user submits existing text for polishing, treat it as a proofread/edit request — improve the language and feel without changing the story content.`;
 
     // Build the user message with context
     let userMessage = '';
@@ -29,8 +48,8 @@ Do not introduce plot contradictions. Write approximately 200-500 words.`;
       userMessage += `Plot Outline:\n${plotOutline}\n\n`;
     }
 
-    if (characters && characters.length > 0) {
-      userMessage += `Characters:\n${characters.map((c: { name: string; description: string; role: string }) => `- ${c.name} (${c.role}): ${c.description}`).join('\n')}\n\n`;
+    if (characters) {
+      userMessage += `Characters:\n${characters}\n\n`;
     }
 
     if (styleGuide) {
@@ -43,16 +62,10 @@ Do not introduce plot contradictions. Write approximately 200-500 words.`;
 
     userMessage += `Writer's Request: ${prompt}`;
 
-    const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const content = completion.choices[0]?.message?.content || '';
+    const content = await createChatCompletion([
+      { role: 'assistant', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ]);
 
     return NextResponse.json({ content });
   } catch (error) {

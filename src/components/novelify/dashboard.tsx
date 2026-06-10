@@ -233,10 +233,16 @@ export function Dashboard() {
                       onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.11)'; e.currentTarget.style.transform = 'translateY(-3px)'; e.currentTarget.style.boxShadow = '0 12px 32px rgba(0,0,0,0.4)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.07)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
-                      <div className={grad} style={{ height: 96, display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden' }}>
-                        <div style={{ opacity: 0.7 }}>
-                          <BookOpen style={{ width: 36, height: 36, color: iconColors.gold }} />
-                        </div>
+                      <div style={{ height: 96, position: 'relative', overflow: 'hidden', background: project.coverImage ? '#000' : undefined }} className={project.coverImage ? '' : grad}>
+                        {project.coverImage ? (
+                          <img src={project.coverImage} alt={project.title}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        ) : (
+                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>
+                            <BookOpen style={{ width: 36, height: 36, color: iconColors.gold }} />
+                          </div>
+                        )}
                         <span style={{ position: 'absolute', top: 10, right: 10, fontSize: 9, fontWeight: 600, padding: '2px 7px', borderRadius: 8, letterSpacing: '0.04em', textTransform: 'uppercase', ...(() => { const s = st.cls; if (s === 'ns-active') return { background: 'rgba(52,211,153,0.12)', color: '#34D399', border: '1px solid rgba(52,211,153,0.2)' }; if (s === 'ns-review') return { background: 'rgba(167,139,250,0.10)', color: '#A78BFA', border: '1px solid rgba(167,139,250,0.2)' }; return { background: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: '1px solid rgba(255,255,255,0.11)' }; })() }}>
                           {st.label}
                         </span>

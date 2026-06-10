@@ -48,3 +48,29 @@ export async function PATCH(
     );
   }
 }
+
+// DELETE /api/chapters/[id] - Delete a chapter
+export async function DELETE(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const { id } = await params;
+
+    const chapter = await db.chapter.findUnique({ where: { id } });
+    if (!chapter) {
+      return NextResponse.json({ error: 'Chapter not found' }, { status: 404 });
+    }
+
+    await db.scene.deleteMany({ where: { chapterId: id } });
+    await db.chapter.delete({ where: { id } });
+
+    return NextResponse.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting chapter:', error);
+    return NextResponse.json(
+      { error: 'Failed to delete chapter' },
+      { status: 500 }
+    );
+  }
+}

@@ -23,13 +23,13 @@ const languageNames: Record<string, string> = {
 };
 
 const formatOptions = [
-  { value: 'html', label: 'EPUB / HTML', icon: FileText, desc: 'Clean manuscript. KDP-ready formatting.' },
-  { value: 'pdf', label: 'PDF', icon: FileDown, desc: 'Print-ready PDF with page breaks.' },
+  { value: 'epub', label: 'EPUB', icon: BookOpen, desc: 'Ebook format for Apple Books, Google Play, Kobo, etc.' },
+  { value: 'pdf', label: 'PDF / HTML', icon: FileDown, desc: 'Print-ready manuscript with page breaks.' },
 ];
 
 export function EpubExport() {
   const { selectedProject, setCurrentView } = useNovelifyStore();
-  const [format, setFormat] = useState<'html' | 'pdf'>('html');
+  const [format, setFormat] = useState<'epub' | 'pdf'>('epub');
   const [includeOriginal, setIncludeOriginal] = useState(true);
   const [includeTranslation, setIncludeTranslation] = useState(false);
   const [authorName, setAuthorName] = useState('Author');
@@ -54,6 +54,7 @@ export function EpubExport() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           projectId: selectedProject.id,
+          format,
           options: { includeOriginal, includeTranslation, authorName, language },
         }),
       });
@@ -69,7 +70,7 @@ export function EpubExport() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `${selectedProject.title.replace(/[^a-zA-Z0-9-]/g, '_')}-manuscript.${format === 'html' ? 'html' : 'pdf'}`;
+      a.download = `${selectedProject.title.replace(/[^a-zA-Z0-9-]/g, '_')}-manuscript.${format === 'epub' ? 'epub' : 'html'}`;
       a.click();
       URL.revokeObjectURL(url);
       setExportDone(true);
@@ -123,7 +124,7 @@ export function EpubExport() {
                       const Icon = fmt.icon;
                       const isActive = format === fmt.value;
                       return (
-                        <button key={fmt.value} onClick={() => setFormat(fmt.value as 'html' | 'pdf')}
+                        <button key={fmt.value}               onClick={() => setFormat(fmt.value as 'epub' | 'pdf')}
                           className={`flex items-start gap-3 rounded-xl border p-4 text-left transition-all ${
                             isActive ? 'border-amber bg-amber/5 shadow-sm' : 'border-border/50 hover:border-amber/30 bg-white'
                           }`}
@@ -229,11 +230,11 @@ export function EpubExport() {
                 className="w-full bg-amber hover:bg-amber/90 text-ink font-semibold py-6 text-base shadow-md hover:shadow-lg transition-all"
               >
                 {isExporting ? (
-                  <><Loader2 className="size-5 animate-spin" /> Generating {format === 'html' ? 'EPUB' : 'PDF'}...</>
+                  <><Loader2 className="size-5 animate-spin" /> Generating {format === 'epub' ? 'EPUB' : 'PDF'}...</>
                 ) : exportDone ? (
                   <><CheckCircle2 className="size-5 text-emerald-700" /> Downloaded!</>
                 ) : (
-                  <><Download className="size-5" /> Export & Download {format === 'html' ? 'EPUB' : 'PDF'}</>
+                  <><Download className="size-5" /> Export & Download {format === 'epub' ? 'EPUB' : 'PDF'}</>
                 )}
               </Button>
               {exportError && (

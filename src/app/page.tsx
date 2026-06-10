@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useNovelifyStore } from '@/lib/store';
 import { Hero } from '@/components/novelify/hero';
 import { Sidebar } from '@/components/novelify/sidebar';
-import { Dashboard } from '@/components/novelify/dashboard';
+import { CommandCenter } from '@/components/novelify/command-center';
 import { ProjectWorkspace } from '@/components/novelify/project-workspace';
 import { WritingStudio } from '@/components/novelify/writing-studio';
 import { Translation } from '@/components/novelify/translation';
@@ -14,6 +14,12 @@ import { Synopsis } from '@/components/novelify/synopsis';
 import { CoverGenerator } from '@/components/novelify/cover-generator';
 import { EpubExport } from '@/components/novelify/epub-export';
 import { SettingsPage } from '@/components/novelify/settings';
+import {
+  MyNovelsPage, StoryBiblePage, PlotBoardPage, AICoWriterPage,
+  WritingGoalsPage, RevisionRoomPage, TranslationStudioPage,
+  PublishingCenterPage, CoverStudioPage, TemplatesPage,
+  ResearchVaultPage, AnalyticsPage, MarketingKitPage,
+} from '@/components/novelify/pages';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function Home() {
@@ -23,7 +29,6 @@ export default function Home() {
 
   const authenticated = status === 'authenticated';
 
-  // Redirect non-hero views to login if not authenticated
   useEffect(() => {
     if (status === 'unauthenticated' && currentView !== 'hero') {
       setCurrentView('hero');
@@ -33,25 +38,22 @@ export default function Home() {
     }
   }, [status, currentView, setCurrentView]);
 
-  // Loading state
   if (status === 'loading') {
     return (
-      <div className="flex min-h-screen items-center justify-center bg-[#0D0D0D]">
+      <div className="flex min-h-screen items-center justify-center" style={{ background: '#080808' }}>
         <div className="h-8 w-8 animate-spin rounded-full border-2 border-[#C8873A] border-t-transparent" />
       </div>
     );
   }
 
-  // Unauthenticated — show hero always
   if (!authenticated) {
     return <Hero />;
   }
 
-  // All authenticated views
   const renderView = () => {
     switch (currentView) {
       case 'dashboard':
-        return <Dashboard />;
+        return <CommandCenter />;
       case 'project':
         return <ProjectWorkspace />;
       case 'writing':
@@ -66,8 +68,35 @@ export default function Home() {
         return <EpubExport />;
       case 'settings':
         return <SettingsPage />;
+      // New views
+      case 'my-novels':
+        return <MyNovelsPage />;
+      case 'story-bible':
+        return <StoryBiblePage />;
+      case 'plot-board':
+        return <PlotBoardPage />;
+      case 'ai-cowriter':
+        return <AICoWriterPage />;
+      case 'writing-goals':
+        return <WritingGoalsPage />;
+      case 'revision':
+        return <RevisionRoomPage />;
+      case 'translation-studio':
+        return <TranslationStudioPage />;
+      case 'publishing':
+        return <PublishingCenterPage />;
+      case 'cover-studio':
+        return <CoverStudioPage />;
+      case 'templates':
+        return <TemplatesPage />;
+      case 'research':
+        return <ResearchVaultPage />;
+      case 'analytics':
+        return <AnalyticsPage />;
+      case 'marketing':
+        return <MarketingKitPage />;
       default:
-        return <Dashboard />;
+        return <CommandCenter />;
     }
   };
 
@@ -76,7 +105,7 @@ export default function Home() {
       <Sidebar />
       <main
         className="transition-all duration-300"
-        style={{ marginLeft: sidebarOpen ? 228 : 64 }}
+        style={{ marginLeft: sidebarOpen ? 240 : 64 }}
       >
         <AnimatePresence mode="wait">
           <motion.div

@@ -1,10 +1,16 @@
-import ZAI from 'z-ai-web-dev-sdk';
 import { NextRequest, NextResponse } from 'next/server';
 import { synopsisSchema } from '@/lib/validations';
+import { rateLimit } from '@/lib/rate-limit';
+import { createChatCompletion } from '@/lib/ai';
+
+const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
 // POST /api/synopsis - Synopsis/description generator
 export async function POST(request: NextRequest) {
   try {
+    const limitCheck = limiter.check(request);
+    if (limitCheck) return limitCheck;
+
     const body = await request.json();
     const parsed = synopsisSchema.safeParse(body);
     if (!parsed.success) {
@@ -20,9 +26,31 @@ export async function POST(request: NextRequest) {
     // Build the appropriate system prompt based on type
     let systemPrompt: string;
     if (type === 'blurb') {
-      systemPrompt = `You are a professional book marketing copywriter. Write a compelling back-cover blurb for this novel. 150-200 words. Hook the reader. Create intrigue without spoilers. End with a question or dramatic statement that makes readers want to buy the book.`;
+      systemPrompt = `You are a professional book marketing copywriter. Write a compelling back-cover blurb for this novel. Detect the language from the context and write in that same language.
+
+RULES:
+- Length: 150-200 words
+- Open with a strong hook
+- Introduce the main character's conflict/stakes
+- Create intrigue without spoilers
+- End with a question or dramatic statement
+- Use emotive, engaging language
+- Goal: make readers want to buy/read the book immediately`;
     } else {
-      systemPrompt = `You are a professional book marketing copywriter specializing in Amazon KDP listings. Write an Amazon KDP product description for this novel. Include compelling headline, bullet points of key selling features, and a call to action. 300-500 words. Use formatting that stands out on Amazon's product page.`;
+      systemPrompt = `You are a professional book marketing copywriter specializing in Amazon KDP listings. Write an Amazon KDP product description for this novel. Detect the language from the context and write in that same language.
+
+STRUCTURE:
+1. HEADLINE (bold): One-line strong hook
+2. Description body (2-3 paragraphs): Engaging premise
+3. BULLET POINTS: 3-5 key selling features (plot, characters, themes, uniqueness)
+4. CALL TO ACTION: Natural purchase invitation
+
+RULES:
+- Short paragraphs for mobile readability
+- Total length: 300-500 words
+- Include genre keywords naturally (for Amazon SEO)
+- Match tone to genre (romance=passionate, thriller=tense, etc.)
+- End with CTA like "Scroll up, click 'Buy Now', and dive into [title] today!"`;
     }
 
     // Build user message with novel context
@@ -34,16 +62,10 @@ export async function POST(request: NextRequest) {
       userMessage += `Plot Outline:\n${plotOutline}\n`;
     }
 
-    const zai = await ZAI.create();
-    const completion = await zai.chat.completions.create({
-      messages: [
-        { role: 'assistant', content: systemPrompt },
-        { role: 'user', content: userMessage },
-      ],
-      thinking: { type: 'disabled' },
-    });
-
-    const generatedText = completion.choices[0]?.message?.content || '';
+    const generatedText = await createChatCompletion([
+      { role: 'assistant', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ]);
 
     return NextResponse.json({ content: generatedText });
   } catch (error) {
