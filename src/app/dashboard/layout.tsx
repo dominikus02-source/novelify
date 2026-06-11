@@ -56,16 +56,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     <div className="min-h-screen" style={{ background: '#080808' }}>
       <Sidebar />
       <main
-        className="transition-all duration-300"
+        className="transition-all duration-300 max-md:!ml-0 max-md:pt-14"
         style={{ marginLeft: sidebarOpen ? 240 : 64 }}
       >
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="popLayout">
           <motion.div
             key={pathname}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.2 }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.15 }}
           >
             {children}
           </motion.div>

@@ -22,6 +22,7 @@ import {
   MetricCard, SectionHeader, ProgressBar, StatusBadge, EmptyState,
   Card, FadeIn, QuickActionBtn, GlassButton, colors, iconColors, fmtWords, timeAgo, progressPct,
 } from './dashboard-components';
+import NextImage from "next/image";
 import { ActivationScreen } from './activation-screen';
 
 
@@ -304,7 +305,7 @@ export function CommandCenter() {
                       onMouseLeave={(e) => { e.currentTarget.style.borderColor = colors.border; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}
                     >
                       <div style={{ height: 80, position: 'relative', overflow: 'hidden', background: hasCover ? '#000' : i % 3 === 0 ? 'linear-gradient(135deg, rgba(201,169,110,0.15), rgba(201,169,110,0.05))' : i % 3 === 1 ? 'linear-gradient(135deg, rgba(167,139,250,0.15), rgba(167,139,250,0.05))' : 'linear-gradient(135deg, rgba(52,211,153,0.12), rgba(52,211,153,0.04))' }}>
-                        {hasCover ? <img src={project.coverImage || ''} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5 }}><BookOpen style={{ width: 32, height: 32, color: colors.gold }} /></div>}
+                        {hasCover ? <NextImage src={project.coverImage || ''} alt={project.title} fill style={{ objectFit: 'cover' }} sizes="100vw" /> : <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.5 }}><BookOpen style={{ width: 32, height: 32, color: colors.gold }} /></div>}
                         <span style={{ position: 'absolute', top: 8, right: 8 }}><StatusBadge status={project.status} /></span>
                       </div>
                       <div onClick={() => handleOpenProject(project)} style={{ padding: '12px 14px', flex: 1, display: 'flex', flexDirection: 'column', cursor: 'pointer' }}>

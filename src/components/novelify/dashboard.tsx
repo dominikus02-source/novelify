@@ -17,6 +17,7 @@ import {
   AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
+import NextImage from "next/image";
 
 const languageNames: Record<string, string> = {
   id: 'Indonesian', en: 'English', es: 'Spanish', fr: 'French',
@@ -124,7 +125,7 @@ export function Dashboard() {
       `}</style>
 
       {/* Topbar */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-7" style={{ height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
           <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>My Novels</h1>
           <p style={{ fontSize: 11, color: '#8E8E93', marginTop: 1 }}>Your literary universe in one place</p>
@@ -147,10 +148,10 @@ export function Dashboard() {
       </header>
 
         {/* Page Body */}
-        <div style={{ padding: '28px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24, flex: 1 }}>
+        <div className="flex flex-col gap-6 px-4 pb-12 pt-5 sm:px-7" style={{ flex: 1 }}>
 
           {/* Stats */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
             {[
               { icon: BookMarked, color: 'gold', label: 'Total Projects', value: projects.length, delta: `+${Math.min(projects.length, 1)} this month` },
               { icon: FileText, color: 'purple', label: 'Total Chapters', value: totalChapters, delta: `+${Math.min(totalChapters, 6)} this week` },
@@ -192,7 +193,7 @@ export function Dashboard() {
             </div>
 
             {isLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, overflow: 'hidden' }}>
                     <div style={{ height: 96, background: 'rgba(255,255,255,0.03)' }} />
@@ -218,7 +219,7 @@ export function Dashboard() {
                 </button>
               </div>
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+              <div className="grid grid-cols-1 gap-3.5 sm:grid-cols-2 lg:grid-cols-3">
                 {sortedProjects.map((project, i) => {
                   const st = statusStyle[project.status] || statusStyle.draft;
                   const cc = project.chapters.length;
@@ -235,8 +236,8 @@ export function Dashboard() {
                     >
                       <div style={{ height: 96, position: 'relative', overflow: 'hidden', background: project.coverImage ? '#000' : undefined }} className={project.coverImage ? '' : grad}>
                         {project.coverImage ? (
-                          <img src={project.coverImage} alt={project.title}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          <NextImage src={project.coverImage} alt={project.title}
+                            fill style={{ objectFit: 'cover' }} sizes="100vw"
                           />
                         ) : (
                           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', opacity: 0.7 }}>
@@ -290,7 +291,7 @@ export function Dashboard() {
           </div>
 
           {/* Bottom Grid: Activity + Quick Actions */}
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 320px', gap: 14 }}>
+          <div className="grid grid-cols-1 gap-3.5 lg:grid-cols-[1fr_320px]">
             {/* Activity Feed */}
             <div style={{ background: '#111111', border: '1px solid rgba(255,255,255,0.07)', borderRadius: 16, padding: 20 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>

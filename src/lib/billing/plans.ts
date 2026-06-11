@@ -25,10 +25,14 @@ export interface PlanConfig {
   description: string
   monthlyPrice: number
   yearlyPrice: number
+  monthlyPriceIdr: number
+  yearlyPriceIdr: number
   badge: string
   highlighted: boolean
   limits: PlanLimits
 }
+
+export type Currency = 'USD' | 'IDR'
 
 export type PlanTier = 'free' | 'starter' | 'pro' | 'studio'
 
@@ -46,6 +50,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'Perfect for trying Novelify',
     monthlyPrice: 0,
     yearlyPrice: 0,
+    monthlyPriceIdr: 0,
+    yearlyPriceIdr: 0,
     badge: 'Free',
     highlighted: false,
     limits: {
@@ -67,6 +73,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'For serious writers',
     monthlyPrice: 9,
     yearlyPrice: 90,
+    monthlyPriceIdr: 129000,
+    yearlyPriceIdr: 1290000,
     badge: 'Starter',
     highlighted: false,
     limits: {
@@ -88,6 +96,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'For published authors',
     monthlyPrice: 19,
     yearlyPrice: 190,
+    monthlyPriceIdr: 249000,
+    yearlyPriceIdr: 2490000,
     badge: 'Pro',
     highlighted: true,
     limits: {
@@ -109,6 +119,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'For professional writers & teams',
     monthlyPrice: 49,
     yearlyPrice: 490,
+    monthlyPriceIdr: 649000,
+    yearlyPriceIdr: 6490000,
     badge: 'Studio',
     highlighted: false,
     limits: {
@@ -212,4 +224,19 @@ export function comparePlans(planA: string, planB: string): number {
 
 export function isPlanAtLeast(plan: string, minimum: PlanTier): boolean {
   return comparePlans(plan, minimum) >= 0
+}
+
+export function getCurrencyPrice(plan: string, interval: 'monthly' | 'yearly', currency: Currency): number {
+  const config = getPlanConfig(plan)
+  if (currency === 'IDR') {
+    return interval === 'monthly' ? config.monthlyPriceIdr : config.yearlyPriceIdr
+  }
+  return interval === 'monthly' ? config.monthlyPrice : config.yearlyPrice
+}
+
+export function formatPrice(amount: number, currency: Currency): string {
+  if (currency === 'IDR') {
+    return `Rp ${amount.toLocaleString('id-ID')}`
+  }
+  return `$${amount}`
 }

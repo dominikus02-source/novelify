@@ -1,8 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { StoryBiblePage } from '@/components/novelify/pages';
 import { useProject } from '@/lib/use-project';
+
+const StoryBiblePage = dynamic(() => import('@/components/novelify/story-bible').then(m => m.StoryBiblePage), { ssr: false });
 
 export default function BibleProjectPage() {
   const params = useParams();

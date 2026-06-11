@@ -1,8 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { PublishingCenterPage } from '@/components/novelify/pages';
 import { useProject } from '@/lib/use-project';
+
+const PublishingCenterPage = dynamic(() => import('@/components/novelify/publishing-center').then(m => m.PublishingCenterPage), { ssr: false });
 
 export default function PublishingProjectPage() {
   const params = useParams();

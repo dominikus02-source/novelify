@@ -1,6 +1,8 @@
 'use client';
 
-import { AICoWriterPage } from '@/components/novelify/pages';
+import dynamic from 'next/dynamic';
+
+const AICoWriterPage = dynamic(() => import('@/components/novelify/pages').then(m => m.AICoWriterPage), { ssr: false });
 
 export default function AIPage() {
   return <AICoWriterPage />;

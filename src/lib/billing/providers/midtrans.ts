@@ -1,3 +1,5 @@
+import crypto from 'crypto'
+
 export type MidtransEnvironment = 'sandbox' | 'production'
 
 export interface MidtransConfig {
@@ -34,6 +36,7 @@ export interface SubscriptionStatus {
 export interface MidtransTransactionResponse {
   token: string
   redirect_url: string
+  order_id: string
 }
 
 function getConfig(): MidtransConfig {
@@ -53,21 +56,32 @@ function getConfig(): MidtransConfig {
   }
 }
 
-function getBaseUrl(environment: MidtransEnvironment): string {
+function getSnapBaseUrl(environment: MidtransEnvironment): string {
   return environment === 'production'
     ? 'https://app.midtrans.com/snap/v1'
     : 'https://app.sandbox.midtrans.com/snap/v1'
 }
 
+function getApiBaseUrl(environment: MidtransEnvironment): string {
+  return environment === 'production'
+    ? 'https://api.midtrans.com/v2'
+    : 'https://api.sandbox.midtrans.com/v2'
+}
+
+function getAuthHeader(serverKey: string): string {
+  return `Basic ${Buffer.from(`${serverKey}:`).toString('base64')}`
+}
+
 export async function createCheckoutSession(params: CreateCheckoutParams): Promise<MidtransTransactionResponse> {
   const config = getConfig()
-  const baseUrl = getBaseUrl(config.environment)
+  const baseUrl = getSnapBaseUrl(config.environment)
+  const auth = getAuthHeader(config.serverKey)
 
-  const auth = Buffer.from(`${config.serverKey}:`).toString('base64')
+  const orderId = `NOVELIFY-${params.userId}-${Date.now()}`
 
   const body = {
     transaction_details: {
-      order_id: `NOVELIFY-${params.userId}-${Date.now()}`,
+      order_id: orderId,
       gross_amount: params.planPrice,
     },
     credit_card: {
@@ -97,7 +111,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams): Promi
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'Authorization': `Basic ${auth}`,
+      'Authorization': auth,
       'Accept': 'application/json',
     },
     body: JSON.stringify(body),
@@ -112,6 +126,7 @@ export async function createCheckoutSession(params: CreateCheckoutParams): Promi
   return {
     token: data.token,
     redirect_url: data.redirect_url,
+    order_id: orderId,
   }
 }
 
@@ -120,33 +135,52 @@ export async function createBillingPortal(params: BillingPortalParams): Promise<
   throw new Error('Midtrans does not provide a self-service billing portal. Use the /pricing page to manage subscriptions.')
 }
 
-export async function handleWebhook(payload: any): Promise<{ event: string; subscriptionId?: string; status?: string; orderId?: string; transactionStatus?: string; fraudStatus?: string }> {
+function verifySignature(payload: {
+  order_id: string
+  status_code: string
+  gross_amount: string
+  server_key: string
+  signature_key: string
+}): boolean {
+  const hash = crypto
+    .createHash('sha512')
+    .update(`${payload.order_id}${payload.status_code}${payload.gross_amount}${payload.server_key}`)
+    .digest('hex')
+  return hash === payload.signature_key
+}
+
+export async function handleWebhook(payload: any): Promise<{
+  event: string
+  subscriptionId?: string
+  status?: string
+  orderId?: string
+  transactionStatus?: string
+  fraudStatus?: string
+}> {
   const config = getConfig()
-  const baseUrl = getBaseUrl(config.environment)
-  const auth = Buffer.from(`${config.serverKey}:`).toString('base64')
+  const auth = getAuthHeader(config.serverKey)
 
   const orderId = payload.order_id
   const transactionStatus = payload.transaction_status
   const fraudStatus = payload.fraud_status
-  const statusCode = payload.status_code
-  const grossAmount = payload.gross_amount
+  const statusCode = String(payload.status_code)
+  const grossAmount = String(payload.gross_amount)
   const signatureKey = payload.signature_key
 
-  const expectedSignature = Buffer.from(
-    `${orderId}${statusCode}${grossAmount}${config.serverKey}`,
-  ).toString('utf-8')
-
-  const computedSignature = Buffer.from(
-    `${orderId}${statusCode}${grossAmount}${config.serverKey}`,
-  ).toString('utf-8')
-
-  if (signatureKey !== computedSignature) {
+  if (!verifySignature({
+    order_id: orderId,
+    status_code: statusCode,
+    gross_amount: grossAmount,
+    server_key: config.serverKey,
+    signature_key: signatureKey,
+  })) {
     throw new Error('Invalid Midtrans webhook signature')
   }
 
-  const response = await fetch(`${baseUrl}/${orderId}/status`, {
+  const apiBaseUrl = getApiBaseUrl(config.environment)
+  const response = await fetch(`${apiBaseUrl}/${orderId}/status`, {
     headers: {
-      'Authorization': `Basic ${auth}`,
+      'Authorization': auth,
       'Accept': 'application/json',
     },
   })
@@ -157,6 +191,12 @@ export async function handleWebhook(payload: any): Promise<{ event: string; subs
 
   const verificationData = await response.json()
 
+  const serverTransactionStatus = verificationData.transaction_status
+
+  if (serverTransactionStatus !== transactionStatus) {
+    throw new Error(`Midtrans transaction status mismatch: webhook says ${transactionStatus}, server says ${serverTransactionStatus}`)
+  }
+
   let event = 'payment.unknown'
   let status: string | undefined
 
@@ -165,6 +205,7 @@ export async function handleWebhook(payload: any): Promise<{ event: string; subs
     status = fraudStatus === 'accept' ? 'active' : 'pending_review'
   } else if (transactionStatus === 'pending') {
     event = 'payment.pending'
+    status = 'pending'
   } else if (transactionStatus === 'deny' || transactionStatus === 'cancel' || transactionStatus === 'expire') {
     event = 'payment.failed'
     status = 'canceled'
@@ -184,12 +225,12 @@ export async function handleWebhook(payload: any): Promise<{ event: string; subs
 
 export async function getSubscriptionStatus(orderId: string): Promise<SubscriptionStatus> {
   const config = getConfig()
-  const baseUrl = getBaseUrl(config.environment)
-  const auth = Buffer.from(`${config.serverKey}:`).toString('base64')
+  const apiBaseUrl = getApiBaseUrl(config.environment)
+  const auth = getAuthHeader(config.serverKey)
 
-  const response = await fetch(`${baseUrl}/${orderId}/status`, {
+  const response = await fetch(`${apiBaseUrl}/${orderId}/status`, {
     headers: {
-      'Authorization': `Basic ${auth}`,
+      'Authorization': auth,
       'Accept': 'application/json',
     },
   })

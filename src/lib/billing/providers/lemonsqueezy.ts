@@ -1,3 +1,4 @@
+import { createHmac, timingSafeEqual } from 'crypto'
 import { db } from '@/lib/db'
 
 export type LemonSqueezyPlan = 'starter' | 'pro' | 'studio'
@@ -102,6 +103,23 @@ export function getLemonSqueezyConfig() {
 export function isLemonSqueezyConfigured(): boolean {
   const { apiKey, storeId, webhookSecret } = getLemonSqueezyConfig()
   return !!(apiKey && storeId && webhookSecret)
+}
+
+export function getMissingLemonSqueezyEnvVars(): string[] {
+  const missing: string[] = []
+  if (!process.env.LEMONSQUEEZY_API_KEY) missing.push('LEMONSQUEEZY_API_KEY')
+  if (!process.env.LEMONSQUEEZY_STORE_ID) missing.push('LEMONSQUEEZY_STORE_ID')
+  if (!process.env.LEMONSQUEEZY_WEBHOOK_SECRET) missing.push('LEMONSQUEEZY_WEBHOOK_SECRET')
+  return missing
+}
+
+export function assertLemonSqueezyConfigured(): void {
+  const missing = getMissingLemonSqueezyEnvVars()
+  if (missing.length > 0) {
+    throw new Error(
+      `Payment provider is not configured: missing ${missing.join(', ')}. Set these in your environment variables.`,
+    )
+  }
 }
 
 export function getLemonSqueezyVariantId(plan: LemonSqueezyPlan, interval: LemonSqueezyInterval): string | null {
@@ -211,28 +229,17 @@ export async function createLemonSqueezyCheckout(params: LemonSqueezyCheckoutPar
 
 export function verifyLemonSqueezyWebhook(rawBody: string, signature: string): boolean {
   const { webhookSecret } = getLemonSqueezyConfig()
-  if (!webhookSecret) return false
-
-  const crypto = require('crypto')
-  const expected = crypto.createHmac('sha256', webhookSecret).update(rawBody).digest('hex')
+  if (!webhookSecret || !signature) return false
 
   try {
-    const received = signature
-      .split(',')
-      .find((part: string) => part.startsWith('sig_'))
-      ?.split('=')[1]
-      ?.trim()
-
+    const expected = createHmac('sha256', webhookSecret).update(rawBody).digest('hex')
+    const received = signature.trim()
     if (!received) return false
 
-    if (crypto.timingSafeEqual) {
-      const expectedBuf = Buffer.from(expected)
-      const receivedBuf = Buffer.from(received)
-      if (expectedBuf.length !== receivedBuf.length) return false
-      return crypto.timingSafeEqual(expectedBuf, receivedBuf)
-    }
-
-    return expected === received
+    const expectedBuf = Buffer.from(expected)
+    const receivedBuf = Buffer.from(received)
+    if (expectedBuf.length !== receivedBuf.length) return false
+    return timingSafeEqual(expectedBuf, receivedBuf)
   } catch {
     return false
   }

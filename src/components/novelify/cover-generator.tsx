@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import { useNovelifyStore } from '@/lib/store';
 import { Button } from '@/components/ui/button';
+import Image from "next/image";
 
 const KDP_RATIOS = [
   { label: '6×9 (Standard)', ratio: 2 / 3, desc: 'US trade paperback' },
@@ -141,9 +142,10 @@ export function CoverGenerator() {
               ><Trash2 className="size-3" /> Remove</button>
             </div>
             <div className="p-6 flex justify-center">
-              <img src={savedCover} alt="Cover"
+              <Image src={savedCover} alt="Cover"
+                width={0} height={0} sizes="100vw"
                 className="rounded-lg shadow-lg max-h-96 object-contain"
-                style={{ maxWidth: '100%' }}
+                style={{ maxWidth: '100%', width: '100%', height: 'auto' }}
               />
             </div>
           </motion.div>
@@ -188,9 +190,10 @@ export function CoverGenerator() {
           ) : (
             <div className="p-6">
               <div className="flex justify-center mb-4">
-                <img src={preview} alt="Preview"
+                <Image src={preview} alt="Preview"
+                  width={0} height={0} sizes="100vw"
                   className="rounded-lg shadow-lg max-h-80 object-contain"
-                  style={{ maxWidth: '100%' }}
+                  style={{ maxWidth: '100%', width: '100%', height: 'auto' }}
                 />
               </div>
               <div className="flex items-center justify-center gap-3">

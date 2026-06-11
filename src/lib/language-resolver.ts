@@ -16,7 +16,20 @@ export async function resolveLanguageContext(
 ): Promise<LanguageContext> {
   const user = await db.user.findUnique({
     where: { id: userId },
-    include: { settings: true },
+    select: {
+      plan: true,
+      settings: {
+        select: {
+          defaultSourceLanguage: true,
+          defaultTargetLanguage: true,
+          defaultAiOutputLanguage: true,
+          translationStyle: true,
+          preserveCharacterNames: true,
+          preservePlaceNames: true,
+          alwaysUseProjectTargetLanguage: true,
+        },
+      },
+    },
   });
 
   const settings = user?.settings;

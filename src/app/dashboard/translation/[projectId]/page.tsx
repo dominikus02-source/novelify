@@ -1,8 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { TranslationStudio } from '@/components/novelify/translation-studio';
 import { useProject } from '@/lib/use-project';
+
+const TranslationStudio = dynamic(() => import('@/components/novelify/translation-studio').then(m => m.TranslationStudio), { ssr: false });
 
 export default function TranslationProjectPage() {
   const params = useParams();

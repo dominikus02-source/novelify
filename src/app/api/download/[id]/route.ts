@@ -8,7 +8,7 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
     if (!userId) return new Response(null, { status: 401 });
 
     const { id } = await params;
-    const exportJob = await db.exportJob.findUnique({ where: { id }, include: { project: { select: { userId: true } } } });
+    const exportJob = await db.exportJob.findUnique({ where: { id }, select: { status: true, filePath: true, format: true, fileName: true, fileSize: true, project: { select: { userId: true } } } });
 
     if (!exportJob) return NextResponse.json({ error: 'Export not found' }, { status: 404 });
     if (exportJob.project.userId !== userId) return new Response(null, { status: 403 });

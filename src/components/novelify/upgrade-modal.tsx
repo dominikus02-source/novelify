@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { Crown, Lock, ArrowRight, X, Check, Loader2 } from 'lucide-react';
-import { getPlanConfig, FEATURES, PLAN_TIERS, type PlanTier } from '@/lib/billing/plans';
+import { getPlanConfig, FEATURES, PLAN_TIERS, getCurrencyPrice, formatPrice, type PlanTier, type Currency } from '@/lib/billing/plans';
 
 interface UpgradeModalProps {
   isOpen: boolean
@@ -38,6 +38,7 @@ export function UpgradeModal({
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly')
+  const [currency, setCurrency] = useState<Currency>('USD')
   const [checkoutMessage, setCheckoutMessage] = useState<string | null>(null)
 
   useEffect(() => {
@@ -78,7 +79,11 @@ export function UpgradeModal({
     setError(null)
 
     try {
-      const res = await fetch('/api/billing/lemonsqueezy/checkout', {
+      const endpoint = currency === 'IDR'
+        ? '/api/billing/create-checkout'
+        : '/api/billing/lemonsqueezy/checkout'
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,7 +95,7 @@ export function UpgradeModal({
       const data = await res.json()
 
       if (!res.ok) {
-        if (data.error === 'PAYMENT_NOT_CONFIGURED') {
+        if (data.error === 'PAYMENT_NOT_CONFIGURED' || data.error?.includes('not configured')) {
           alert('Checkout is not configured yet.')
           return
         }
@@ -98,8 +103,9 @@ export function UpgradeModal({
         return
       }
 
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl
+      const redirectUrl = data.redirectUrl || data.checkoutUrl
+      if (redirectUrl) {
+        window.location.href = redirectUrl
       }
     } catch {
       setError('Failed to connect. Please check your internet connection and try again.')
@@ -108,9 +114,10 @@ export function UpgradeModal({
     }
   }
 
-  const displayPrice = billingInterval === 'monthly'
-    ? `$${targetConfig.monthlyPrice}/mo`
-    : `$${targetConfig.yearlyPrice}/yr`
+  const displayPrice = formatPrice(
+    getCurrencyPrice(requiredPlan, billingInterval, currency),
+    currency,
+  ) + (currency === 'IDR' ? '/bln' : '/mo')
 
   return (
     <div
@@ -238,8 +245,58 @@ export function UpgradeModal({
           </div>
         )}
 
+        {/* Currency toggle */}
+        {targetConfig.monthlyPrice > 0 && (
+          <div
+            style={{
+              display: 'flex',
+              gap: 0,
+              background: '#0a0a0a',
+              borderRadius: 10,
+              padding: 3,
+              marginBottom: 10,
+              border: '1px solid rgba(255,255,255,0.06)',
+            }}
+          >
+            <button
+              onClick={() => setCurrency('USD')}
+              style={{
+                flex: 1,
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: currency === 'USD' ? '#C9A96E' : 'transparent',
+                color: currency === 'USD' ? '#1a0f00' : '#8E8E93',
+              }}
+            >
+              USD $
+            </button>
+            <button
+              onClick={() => setCurrency('IDR')}
+              style={{
+                flex: 1,
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 11,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: currency === 'IDR' ? '#C9A96E' : 'transparent',
+                color: currency === 'IDR' ? '#1a0f00' : '#8E8E93',
+              }}
+            >
+              IDR Rp
+            </button>
+          </div>
+        )}
+
         {/* Billing interval toggle */}
-        {targetConfig.yearlyPrice > 0 && (
+        {targetConfig.monthlyPrice > 0 && (
           <div
             style={{
               display: 'flex',
@@ -266,7 +323,7 @@ export function UpgradeModal({
                 color: billingInterval === 'monthly' ? '#1a0f00' : '#8E8E93',
               }}
             >
-              Monthly
+              {currency === 'IDR' ? 'Bulanan' : 'Monthly'}
             </button>
             <button
               onClick={() => setBillingInterval('yearly')}
@@ -287,7 +344,7 @@ export function UpgradeModal({
                 gap: 6,
               }}
             >
-              Yearly
+              {currency === 'IDR' ? 'Tahunan' : 'Yearly'}
               {yearlySavings > 0 && (
                 <span
                   style={{
@@ -300,7 +357,9 @@ export function UpgradeModal({
                     lineHeight: '16px',
                   }}
                 >
-                  Save ${yearlySavings}
+                  {currency === 'IDR'
+                    ? `Hemat Rp ${(targetConfig.yearlyPriceIdr - targetConfig.monthlyPriceIdr * 12).toLocaleString('id-ID')}`
+                    : `Save $${yearlySavings}`}
                 </span>
               )}
             </button>
@@ -328,9 +387,10 @@ export function UpgradeModal({
               {currentConfig.name}
             </div>
             <div style={{ fontSize: 13, color: '#8E8E93', marginTop: 2 }}>
-              {billingInterval === 'monthly'
-                ? `$${currentConfig.monthlyPrice}/mo`
-                : `$${currentConfig.yearlyPrice}/yr`}
+              {formatPrice(
+                getCurrencyPrice(currentPlan, billingInterval, currency),
+                currency,
+              )}{currency === 'IDR' ? '/bln' : '/mo'}
             </div>
           </div>
 
@@ -487,7 +547,7 @@ export function UpgradeModal({
           )}
           {isLoading
             ? 'Creating checkout...'
-            : `Upgrade to ${targetConfig.name} — ${displayPrice}`}
+            : `${currency === 'IDR' ? 'Upgrade' : 'Upgrade'} ${currency === 'IDR' ? 'ke' : 'to'} ${targetConfig.name} — ${displayPrice}`}
         </button>
 
         {/* Maybe later */}
@@ -512,7 +572,7 @@ export function UpgradeModal({
         </div>
 
         <p style={{ fontSize: 10, color: '#5c5c5e', textAlign: 'center', margin: '8px 0 0' }}>
-          No commitment. Cancel anytime.
+          {currency === 'IDR' ? 'Tidak ada komitmen. Batalkan kapan saja.' : 'No commitment. Cancel anytime.'}
         </p>
 
         {/* Inline style for spin animation */}

@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { plan: planId } = body
+    const { plan: planId, interval = 'monthly' } = body
 
     if (!planId || !PLANS[planId as keyof typeof PLANS]) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
@@ -34,11 +34,13 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, plan: planId, message: 'Free plan activated' })
     }
 
+    const priceIdr = interval === 'yearly' ? planConfig.yearlyPriceIdr : planConfig.monthlyPriceIdr
+
     try {
       const result = await createCheckoutSession({
         planId,
         planName: planConfig.name,
-        planPrice: planConfig.monthlyPrice * 1000,
+        planPrice: priceIdr,
         userId: session.user.id,
         userEmail: session.user.email || '',
         userName: session.user.name || undefined,
@@ -50,6 +52,7 @@ export async function POST(request: NextRequest) {
         success: true,
         redirectUrl: result.redirect_url,
         token: result.token,
+        orderId: result.order_id,
       })
     } catch (providerError) {
       const message = providerError instanceof Error ? providerError.message : ''

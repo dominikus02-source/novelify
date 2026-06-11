@@ -124,7 +124,5 @@ export function buildUpgradePayload(currentPlan: string, targetPlan: PlanTier, f
 }
 
 export function recordFeatureGateEvent(featureKey: string, userId: string, plan: string) {
-  if (process.env.NODE_ENV === 'development') {
-    console.log(`[FEATURE_GATE] user=${userId}, feature=${featureKey}, plan=${plan}, blocked=true`)
-  }
+
 }

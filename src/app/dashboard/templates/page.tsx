@@ -1,6 +1,8 @@
 'use client';
 
-import { TemplatesPage } from '@/components/novelify/pages';
+import dynamic from 'next/dynamic';
+
+const TemplatesPage = dynamic(() => import('@/components/novelify/pages').then(m => m.TemplatesPage), { ssr: false });
 
 export default function TemplatesRoutePage() {
   return <TemplatesPage />;

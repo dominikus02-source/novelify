@@ -16,6 +16,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
 const chapterStatusCfg: Record<string, { label: string; cls: string }> = {
   idea: { label: 'Idea', cls: 'bg-gray-100 text-gray-500 border-gray-200' },
@@ -71,6 +72,8 @@ export function WritingStudio() {
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
   const [fullscreen, setFullscreen] = useState(false);
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const [mobileStudioOpen, setMobileStudioOpen] = useState(false);
   const [chaptersExpanded, setChaptersExpanded] = useState<Record<string, boolean>>({});
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showBibleSearch, setShowBibleSearch] = useState(false);
@@ -146,13 +149,13 @@ export function WritingStudio() {
     abortControllerRef.current = controller;
     const chapterIds = selectedProject.chapters.map((c) => c.id);
     if (chapterIds.length === 0) { setScenes([]); return; }
-    Promise.all(
-      chapterIds.map((id) => fetch(`/api/scenes?chapterId=${id}`, { signal: controller.signal }).then((r) => r.ok ? r.json() : []))
-    ).then((results) => {
-      if (!controller.signal.aborted) {
-        setScenes(results.flat());
-      }
-    }).catch(() => {});
+    fetch(`/api/scenes?chapterIds=${chapterIds.join(',')}`, { signal: controller.signal })
+      .then((r) => r.ok ? r.json() : [])
+      .then((data) => {
+        if (!controller.signal.aborted) {
+          setScenes(data);
+        }
+      }).catch(() => {});
   }, [selectedProject?.id]);
 
   const timeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -384,6 +387,13 @@ export function WritingStudio() {
             </div>
 
             <div className="flex items-center gap-2 shrink-0">
+              {/* Mobile nav/studio toggles */}
+              <button onClick={() => setMobileNavOpen(true)} className="flex lg:hidden size-7 items-center justify-center rounded-md hover:bg-black/5" title="Chapters">
+                <FolderTree className="size-3.5" />
+              </button>
+              <button onClick={() => setMobileStudioOpen(true)} className="flex lg:hidden size-7 items-center justify-center rounded-md hover:bg-black/5" title="Tools">
+                <Sparkles className="size-3.5" />
+              </button>
               {/* Mode selector */}
               <select value={writingMode} onChange={(e) => setWritingMode(e.target.value as 'chapter' | 'scene' | 'full' | 'focus')}
                 className="h-7 rounded-md border text-xs px-2" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#f5f5f5', color: '#1a1a1a' }}
@@ -417,11 +427,11 @@ export function WritingStudio() {
 
         {/* Editor textarea */}
         <div className="flex-1 overflow-y-auto" style={{ background: '#faf8f5' }}>
-          <div className="mx-auto max-w-3xl px-8 py-8">
+          <div className="mx-auto max-w-full lg:max-w-3xl px-4 py-4 md:px-6 md:py-6 lg:px-8 lg:py-8">
             <textarea ref={textareaRef} value={editorContent}
               onChange={(e) => handleEditorChange(e.target.value)}
-              className="w-full min-h-[60vh] resize-none border-0 bg-transparent leading-relaxed focus:outline-none"
-              style={{ color: '#1a1a1a', fontSize: 15, lineHeight: 1.8, fontFamily: "'Georgia','Times New Roman',serif" }}
+              className="w-full min-h-[60vh] resize-none border-0 bg-transparent leading-relaxed focus:outline-none text-base lg:text-[15px]"
+              style={{ color: '#1a1a1a', lineHeight: 1.8, fontFamily: "'Georgia','Times New Roman',serif" }}
               placeholder="Start writing..."
             />
           </div>
@@ -454,7 +464,7 @@ export function WritingStudio() {
 
         {/* AI Input Bar */}
         <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)', background: '#fff', padding: '10px 24px' }}>
-          <div className="flex gap-2 mb-2">
+          <div className="flex gap-2 mb-2 flex-wrap">
             {aiPresets.slice(0, 4).map((preset) => {
               const Icon = preset.icon;
               return (
@@ -468,15 +478,15 @@ export function WritingStudio() {
               );
             })}
           </div>
-          <div className="flex gap-2">
+          <div className="flex flex-col sm:flex-row gap-2">
             <Input value={aiPrompt} onChange={(e) => setAiPrompt(e.target.value)}
               onKeyDown={(e) => { if (e.key === 'Enter' && !e.shiftKey && aiPrompt.trim() && !isAiWriting) { e.preventDefault(); handleAiGenerate(); } }}
               placeholder="Ask AI to write, rewrite, or continue..."
               disabled={isAiWriting || !selectedChapter}
-              className="border text-sm" style={{ borderColor: 'rgba(0,0,0,0.1)' }}
+              className="border text-sm flex-1" style={{ borderColor: 'rgba(0,0,0,0.1)' }}
             />
             <Button onClick={() => handleAiGenerate()} disabled={!aiPrompt.trim() || isAiWriting || !selectedChapter}
-              className="bg-amber hover:bg-amber/90 text-ink font-semibold shrink-0"
+              className="bg-amber hover:bg-amber/90 text-ink font-semibold shrink-0 w-full sm:w-auto"
             >{isAiWriting ? <Loader2 className="size-4 animate-spin" /> : <Sparkles className="size-4" />} Generate</Button>
           </div>
         </div>
@@ -572,7 +582,7 @@ export function WritingStudio() {
 
                 {/* Add scene button */}
                 <button onClick={() => handleAddScene(chapter.id)} disabled={isAddingScene}
-                  className="flex items-center gap-1.5 ml-8 px-2 py-1 rounded text-[10px] transition-all w-full hover:bg-white/5"
+                  className="flex items-center gap-1.5 ml-8 px-2 py-2 lg:py-1 rounded text-[10px] transition-all w-full hover:bg-white/5 min-h-[36px] lg:min-h-0"
                   style={{ color: '#48484a' }}
                 ><Plus className="size-2.5" /> Add scene</button>
               </div>
@@ -1021,14 +1031,28 @@ export function WritingStudio() {
 
   return (
     <div className={`${fullscreen ? 'fixed inset-0 z-50' : ''} flex h-screen`} style={{ background: '#f5f0eb' }}>
-      {/* Navigator */}
-      <div style={{ width: 260, flexShrink: 0 }}>{renderNavigator()}</div>
+      {/* Navigator - Desktop */}
+      <div className="hidden lg:flex" style={{ width: 260, flexShrink: 0 }}>{renderNavigator()}</div>
+
+      {/* Navigator - Mobile Sheet */}
+      <Sheet open={mobileNavOpen} onOpenChange={setMobileNavOpen}>
+        <SheetContent side="left" className="p-0 w-[300px]" style={{ background: '#1c1c1e', borderRight: '1px solid rgba(255,255,255,0.06)' }}>
+          {renderNavigator()}
+        </SheetContent>
+      </Sheet>
 
       {/* Editor */}
       <div className="flex flex-1 flex-col overflow-hidden">{renderContent()}</div>
 
-      {/* Studio Panel */}
-      <div style={{ width: 320, flexShrink: 0 }}>{renderStudioPanel()}</div>
+      {/* Studio Panel - Desktop */}
+      <div className="hidden lg:flex" style={{ width: 320, flexShrink: 0 }}>{renderStudioPanel()}</div>
+
+      {/* Studio Panel - Mobile Sheet */}
+      <Sheet open={mobileStudioOpen} onOpenChange={setMobileStudioOpen}>
+        <SheetContent side="right" className="p-0 w-[320px]" style={{ background: '#fff', borderLeft: '1px solid rgba(0,0,0,0.06)' }}>
+          {renderStudioPanel()}
+        </SheetContent>
+      </Sheet>
 
       {/* Template Picker Modal */}
       <AnimatePresence>

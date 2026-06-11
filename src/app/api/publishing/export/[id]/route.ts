@@ -12,7 +12,23 @@ export async function GET(
 
     const exportJob = await db.exportJob.findUnique({
       where: { id },
-      include: { project: { select: { userId: true } } },
+      select: {
+        id: true,
+        projectId: true,
+        userId: true,
+        format: true,
+        status: true,
+        fileName: true,
+        fileUrl: true,
+        filePath: true,
+        fileSize: true,
+        errorMessage: true,
+        optionsJson: true,
+        completedAt: true,
+        createdAt: true,
+        updatedAt: true,
+        project: { select: { userId: true } },
+      },
     });
 
     if (!exportJob) {
@@ -41,7 +57,7 @@ export async function PATCH(
 
     const exportJob = await db.exportJob.findUnique({
       where: { id },
-      include: { project: { select: { userId: true } } },
+      select: { project: { select: { userId: true } } },
     });
 
     if (!exportJob) {
@@ -76,7 +92,7 @@ export async function DELETE(
 
     const exportJob = await db.exportJob.findUnique({
       where: { id },
-      include: { project: { select: { userId: true } } },
+      select: { project: { select: { userId: true } } },
     });
 
     if (!exportJob) {

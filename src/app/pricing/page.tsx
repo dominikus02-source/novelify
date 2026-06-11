@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Check, X, Star, Zap, Crown, Sparkles } from 'lucide-react';
-import { PLANS, FEATURES, hasFeature, type PlanTier } from '@/lib/billing/plans';
+import { PLANS, FEATURES, hasFeature, getCurrencyPrice, formatPrice, type PlanTier, type Currency } from '@/lib/billing/plans';
 
 const GROUP_LABELS: Record<string, string> = {
   writing: 'Writing',
@@ -28,6 +28,7 @@ const TIERS: PlanTier[] = ['free', 'starter', 'pro', 'studio'];
 
 export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
+  const [currency, setCurrency] = useState<Currency>('USD');
   const [loading, setLoading] = useState<PlanTier | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const { data: session } = useSession();
@@ -45,7 +46,11 @@ export default function PricingPage() {
     setLoading(plan);
 
     try {
-      const res = await fetch('/api/billing/lemonsqueezy/checkout', {
+      const endpoint = currency === 'IDR'
+        ? '/api/billing/create-checkout'
+        : '/api/billing/lemonsqueezy/checkout';
+
+      const res = await fetch(endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ plan, interval: yearly ? 'yearly' : 'monthly' }),
@@ -54,7 +59,7 @@ export default function PricingPage() {
       const data = await res.json();
 
       if (!res.ok) {
-        if (data.error === 'PAYMENT_NOT_CONFIGURED') {
+        if (data.error === 'PAYMENT_NOT_CONFIGURED' || data.error?.includes('not configured')) {
           toast.error('Checkout is not configured yet.');
         } else {
           toast.error(data.error || 'Something went wrong. Please try again.');
@@ -62,15 +67,20 @@ export default function PricingPage() {
         return;
       }
 
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      const redirectUrl = data.redirectUrl || data.checkoutUrl;
+      if (redirectUrl) {
+        window.location.href = redirectUrl;
       }
     } catch {
       toast.error('Something went wrong. Please try again.');
     } finally {
       setLoading(null);
     }
-  }, [session, yearly, router]);
+  }, [session, yearly, currency, router]);
+
+  useEffect(() => {
+    document.title = 'Pricing | Novelify';
+  }, []);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -168,9 +178,55 @@ export default function PricingPage() {
             alignItems: 'center',
             justifyContent: 'center',
             gap: 12,
-            marginBottom: 56,
+            marginBottom: 40,
+            flexWrap: 'wrap',
           }}
         >
+          {/* Currency toggle */}
+          <div
+            style={{
+              display: 'flex',
+              gap: 0,
+              background: '#1a1a1a',
+              borderRadius: 10,
+              padding: 3,
+              border: '1px solid rgba(255,255,255,0.08)',
+            }}
+          >
+            <button
+              onClick={() => setCurrency('USD')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: currency === 'USD' ? '#C9A96E' : 'transparent',
+                color: currency === 'USD' ? '#1a0f00' : '#8E8E93',
+              }}
+            >
+              USD $
+            </button>
+            <button
+              onClick={() => setCurrency('IDR')}
+              style={{
+                padding: '6px 14px',
+                borderRadius: 8,
+                border: 'none',
+                fontSize: 12,
+                fontWeight: 600,
+                cursor: 'pointer',
+                transition: 'all 0.15s',
+                background: currency === 'IDR' ? '#C9A96E' : 'transparent',
+                color: currency === 'IDR' ? '#1a0f00' : '#8E8E93',
+              }}
+            >
+              IDR Rp
+            </button>
+          </div>
+
           <span
             style={{
               fontSize: 14,
@@ -235,10 +291,13 @@ export default function PricingPage() {
         </div>
 
         {/* Plan Cards */}
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginBottom: 80 }}>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginBottom: 80 }}>
           {TIERS.map((tier) => {
             const plan = PLANS[tier];
-            const price = yearly ? plan.yearlyPrice / 12 : plan.monthlyPrice;
+            const price = getCurrencyPrice(tier, yearly ? 'yearly' : 'monthly', currency);
+            const displayPrice = currency === 'IDR'
+              ? `Rp ${(yearly ? plan.yearlyPriceIdr / 12 : plan.monthlyPriceIdr).toLocaleString('id-ID')}`
+              : `$${yearly ? plan.yearlyPrice / 12 : plan.monthlyPrice}`;
             const isCurrent = userPlan === tier;
             const isLoading = loading === tier;
             const IconComponent = PLAN_ICONS[tier];
@@ -246,12 +305,12 @@ export default function PricingPage() {
             return (
               <div
                 key={tier}
+                className="p-6 md:p-8"
                 style={{
                   position: 'relative',
                   background: '#121212',
                   border: `1px solid rgba(201, 169, 110, ${plan.highlighted ? 0.6 : 0.3})`,
                   borderRadius: 16,
-                  padding: 32,
                   display: 'flex',
                   flexDirection: 'column',
                   ...(plan.highlighted
@@ -321,7 +380,7 @@ export default function PricingPage() {
                       fontFamily: "'Playfair Display', serif",
                     }}
                   >
-                    ${price}
+                    {displayPrice}
                   </span>
                   <span
                     style={{
@@ -330,7 +389,7 @@ export default function PricingPage() {
                       marginLeft: 6,
                     }}
                   >
-                    /month
+                    {currency === 'IDR' ? '/bulan' : '/month'}
                   </span>
                 </div>
 
@@ -446,7 +505,7 @@ export default function PricingPage() {
             marginBottom: 80,
           }}
         >
-          <div style={{ overflowX: 'auto' }}>
+          <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
             <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14 }}>
               <thead>
                 <tr
@@ -458,6 +517,7 @@ export default function PricingPage() {
                   }}
                 >
                   <th
+                    className="min-w-[160px] md:min-w-[220px]"
                     style={{
                       textAlign: 'left',
                       padding: '18px 24px',
@@ -467,7 +527,6 @@ export default function PricingPage() {
                       letterSpacing: '0.03em',
                       textTransform: 'uppercase' as const,
                       borderBottom: '1px solid rgba(201, 169, 110, 0.15)',
-                      minWidth: 220,
                     }}
                   >
                     Feature
@@ -475,6 +534,7 @@ export default function PricingPage() {
                   {TIERS.map((tier) => (
                     <th
                       key={tier}
+                      className="min-w-[80px] md:min-w-[100px]"
                       style={{
                         textAlign: 'center',
                         padding: '18px 16px',
@@ -484,7 +544,6 @@ export default function PricingPage() {
                         letterSpacing: '0.03em',
                         textTransform: 'uppercase' as const,
                         borderBottom: '1px solid rgba(201, 169, 110, 0.15)',
-                        minWidth: 100,
                       }}
                     >
                       {PLANS[tier].name}
@@ -533,10 +592,10 @@ export default function PricingPage() {
                             style={{ background: bgColor }}
                           >
                             <td
+                              className="text-xs md:text-sm"
                               style={{
                                 padding: '14px 24px',
                                 color: '#F5F5F7CC',
-                                fontSize: 13,
                                 borderBottom: '1px solid rgba(255,255,255,0.04)',
                               }}
                             >
@@ -547,6 +606,7 @@ export default function PricingPage() {
                               return (
                                 <td
                                   key={`${feature.key}-${tier}`}
+                                  className="text-xs md:text-sm"
                                   style={{
                                     textAlign: 'center',
                                     padding: '14px 16px',
@@ -611,7 +671,7 @@ export default function PricingPage() {
               },
               {
                 q: 'What payment methods do you accept?',
-                a: 'Online payment is not yet available in our current development build. We are working on integrating secure payment processing and will announce supported methods upon release.',
+                a: 'We accept two payment options: pay in USD via Lemon Squeezy (credit/debit cards) or pay in IDR via Midtrans (GoPay, OVO, DANA, ShopeePay, bank transfer, credit card). Choose your preferred currency using the toggle above.',
               },
               {
                 q: 'Can I cancel anytime?',

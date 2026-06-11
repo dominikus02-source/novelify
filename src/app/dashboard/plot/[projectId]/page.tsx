@@ -1,10 +1,12 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useEffect } from 'react';
 import { useParams } from 'next/navigation';
-import { PlotBoardPage } from '@/components/novelify/pages';
 import { useProject } from '@/lib/use-project';
 import { useNovelifyStore } from '@/lib/store';
+
+const PlotBoardPage = dynamic(() => import('@/components/novelify/plot-board').then(m => m.PlotBoardPage), { ssr: false });
 
 export default function PlotProjectPage() {
   const params = useParams();

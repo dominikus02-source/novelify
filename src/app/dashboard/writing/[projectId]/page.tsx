@@ -1,8 +1,10 @@
 'use client';
 
+import dynamic from 'next/dynamic';
 import { useParams } from 'next/navigation';
-import { WritingStudio } from '@/components/novelify/writing-studio';
 import { useProject } from '@/lib/use-project';
+
+const WritingStudio = dynamic(() => import('@/components/novelify/writing-studio').then(m => m.WritingStudio), { ssr: false });
 
 export default function WritingProjectPage() {
   const params = useParams();

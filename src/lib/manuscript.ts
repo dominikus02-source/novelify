@@ -28,11 +28,80 @@ export interface ManuscriptAssembly {
 export async function getOrderedManuscript(projectId: string): Promise<ManuscriptAssembly> {
   const project = await db.project.findUnique({
     where: { id: projectId },
-    include: {
-      chapters: { orderBy: { chapterNumber: 'asc' }, include: { scenes: { orderBy: { sceneNumber: 'asc' } } } },
-      publishingMetadata: true,
-      frontMatter: true,
-      backMatter: true,
+    select: {
+      title: true,
+      genre: true,
+      targetLanguage: true,
+      coverImage: true,
+      chapters: {
+        orderBy: { chapterNumber: 'asc' },
+        select: {
+          chapterNumber: true,
+          title: true,
+          contentOriginal: true,
+          wordCount: true,
+          scenes: {
+            orderBy: { sceneNumber: 'asc' },
+            select: {
+              title: true,
+              content: true,
+              wordCount: true,
+            },
+          },
+        },
+      },
+      publishingMetadata: {
+        select: {
+          bookTitle: true,
+          authorName: true,
+          language: true,
+          longDescription: true,
+          shortDescription: true,
+          isbn: true,
+          copyrightYear: true,
+          copyrightHolder: true,
+          coverImageUrl: true,
+          authorBio: true,
+          authorWebsite: true,
+        },
+      },
+      frontMatter: {
+        select: {
+          includeTitlePage: true,
+          includeCopyrightPage: true,
+          copyrightNotice: true,
+          includeDedication: true,
+          dedication: true,
+          includeEpigraph: true,
+          epigraph: true,
+          includeForeword: true,
+          foreword: true,
+          includePreface: true,
+          preface: true,
+          includeAcknowledgments: true,
+          acknowledgments: true,
+          includeTableOfContents: true,
+          alsoByAuthor: true,
+        },
+      },
+      backMatter: {
+        select: {
+          includeAboutAuthor: true,
+          aboutAuthor: true,
+          includeAuthorWebsite: true,
+          authorWebsite: true,
+          includeReviewRequest: true,
+          reviewRequest: true,
+          includeNewsletterSignup: true,
+          newsletterSignup: true,
+          includeThankYou: true,
+          thankYouNote: true,
+          includeNextBookTeaser: true,
+          nextBookTeaser: true,
+          includeAlsoByAuthor: true,
+          alsoByAuthor: true,
+        },
+      },
     },
   });
 

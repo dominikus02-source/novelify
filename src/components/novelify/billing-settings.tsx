@@ -320,6 +320,7 @@ function BillingSettings() {
   }, [billingSuccess, planData?.plan]);
 
   const isLemonSqueezy = subscription?.provider === 'lemonsqueezy';
+  const isMidtrans = subscription?.provider === 'midtrans';
 
   const isUnlimited = (v: number | 'unlimited'): v is 'unlimited' => v === 'unlimited';
 
@@ -527,7 +528,7 @@ function BillingSettings() {
               Billing & Payments
             </div>
             <div style={{ fontSize: 13, color: MUTED_TEXT, lineHeight: 1.6, maxWidth: 400, margin: '0 auto' }}>
-              Online payment processing is not yet configured. To enable billing, set up Stripe or Midtrans API keys.
+              Payment processing is not configured. Contact support to enable billing for your account.
             </div>
           </div>
         </div>
@@ -625,6 +626,23 @@ function BillingSettings() {
                         }}
                       >
                         Lemon Squeezy
+                      </span>
+                    )}
+                    {isMidtrans && (
+                      <span
+                        style={{
+                          fontSize: 10,
+                          fontWeight: 600,
+                          padding: '2px 8px',
+                          borderRadius: 8,
+                          background: 'rgba(255,255,255,0.06)',
+                          color: MUTED_TEXT,
+                          border: `1px solid ${BORDER}`,
+                          letterSpacing: '0.03em',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Midtrans
                       </span>
                     )}
                   </div>

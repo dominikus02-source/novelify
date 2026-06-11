@@ -3,9 +3,10 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { BookOpen, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
+import { AuthLayout } from '@/components/auth/auth-layout';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -37,7 +38,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Auto sign in after signup
       const result = await signIn('credentials', {
         email,
         password,
@@ -60,117 +60,142 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-[#0D0D0D]">
-      <div className="flex flex-1 flex-col justify-center px-4 py-12 sm:px-6 lg:flex-none lg:px-20 xl:px-24">
-        <div className="mx-auto w-full max-w-sm">
-          <div className="flex items-center gap-2 mb-8">
-            <BookOpen className="h-8 w-8 text-[#C8873A]" />
-            <span className="font-bold text-2xl text-[#F7F3EC]">
-              Noveli<span className="text-[#C8873A]">fy</span>
-            </span>
-          </div>
+    <AuthLayout
+      title="Start your first novel"
+      subtitle="Create your Novelify account and begin planning, writing, and publishing your story."
+    >
+      <form onSubmit={handleSubmit} className="space-y-5">
+        <div>
+          <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+            Name
+          </label>
+          <input
+            id="name"
+            type="text"
+            required
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="block w-full rounded-xl px-4 py-3 text-sm transition-all duration-200"
+            style={{
+              background: '#161616',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#F5F5F7',
+              outline: 'none',
+            }}
+            placeholder="Your name"
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+          />
+        </div>
 
-          <h2 className="text-2xl font-bold text-[#F7F3EC]">Create your account</h2>
-          <p className="mt-1 text-sm text-[#F7F3EC]/50">Start writing for a global audience</p>
+        <div>
+          <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+            Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            required
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            className="block w-full rounded-xl px-4 py-3 text-sm transition-all duration-200"
+            style={{
+              background: '#161616',
+              border: '1px solid rgba(255,255,255,0.08)',
+              color: '#F5F5F7',
+              outline: 'none',
+            }}
+            placeholder="you@example.com"
+            onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
+            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+          />
+        </div>
 
-          <form onSubmit={handleSubmit} className="mt-8 space-y-5">
-            <div>
-              <label htmlFor="name" className="block text-sm font-medium text-[#F7F3EC]/70 mb-1.5">
-                Name
-              </label>
-              <input
-                id="name"
-                type="text"
-                required
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                className="block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-[#F7F3EC] placeholder:text-[#F7F3EC]/30 focus:border-[#C8873A] focus:outline-none focus:ring-1 focus:ring-[#C8873A]"
-                placeholder="Your name"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="email" className="block text-sm font-medium text-[#F7F3EC]/70 mb-1.5">
-                Email
-              </label>
-              <input
-                id="email"
-                type="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 text-sm text-[#F7F3EC] placeholder:text-[#F7F3EC]/30 focus:border-[#C8873A] focus:outline-none focus:ring-1 focus:ring-[#C8873A]"
-                placeholder="you@example.com"
-              />
-            </div>
-
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-[#F7F3EC]/70 mb-1.5">
-                Password
-              </label>
-              <div className="relative">
-                <input
-                  id="password"
-                  type={showPassword ? 'text' : 'password'}
-                  required
-                  minLength={6}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="block w-full rounded-lg border border-white/10 bg-white/5 px-4 py-2.5 pr-10 text-sm text-[#F7F3EC] placeholder:text-[#F7F3EC]/30 focus:border-[#C8873A] focus:outline-none focus:ring-1 focus:ring-[#C8873A]"
-                  placeholder="At least 6 characters"
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#F7F3EC]/40 hover:text-[#F7F3EC]/70"
-                >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                </button>
-              </div>
-            </div>
-
-            {error && (
-              <p className="text-sm text-red-400">{error}</p>
-            )}
-
+        <div>
+          <label htmlFor="password" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+            Password
+          </label>
+          <div className="relative">
+            <input
+              id="password"
+              type={showPassword ? 'text' : 'password'}
+              required
+              minLength={6}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="block w-full rounded-xl px-4 py-3 pr-11 text-sm transition-all duration-200"
+              style={{
+                background: '#161616',
+                border: '1px solid rgba(255,255,255,0.08)',
+                color: '#F5F5F7',
+                outline: 'none',
+              }}
+              placeholder="At least 6 characters"
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
+              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+            />
             <button
-              type="submit"
-              disabled={loading}
-              className="flex w-full items-center justify-center rounded-lg bg-[#C8873A] px-4 py-2.5 text-sm font-semibold text-[#0D0D0D] hover:bg-[#C8873A]/90 disabled:opacity-50 transition-all"
+              type="button"
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
+              style={{ color: '#636366' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#8E8E93'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#636366'; }}
+              aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create account'}
+              {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
             </button>
-          </form>
+          </div>
+        </div>
 
-          <p className="mt-6 text-center text-sm text-[#F7F3EC]/50">
+        {error && (
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', color: '#F87171' }}>
+            {error}
+          </div>
+        )}
+
+        <button
+          type="submit"
+          disabled={loading}
+          className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
+          style={{
+            background: 'linear-gradient(135deg, #C9A96E, #E8C98A)',
+            color: '#1a0f00',
+            boxShadow: '0 2px 12px rgba(201,169,110,0.15)',
+          }}
+          onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 2px 12px rgba(201,169,110,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+        >
+          {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create your account'}
+        </button>
+
+        <div className="text-center">
+          <p className="text-sm" style={{ color: '#636366' }}>
             Already have an account?{' '}
-            <Link href="/login" className="font-medium text-[#C8873A] hover:text-[#C8873A]/80">
+            <Link href="/login" className="font-medium transition-colors" style={{ color: '#C9A96E' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = '#E8C98A'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = '#C9A96E'; }}
+            >
               Sign in
             </Link>
           </p>
+        </div>
 
-          <p className="mt-4 text-center">
-            <Link href="/" className="text-xs text-[#F7F3EC]/30 hover:text-[#F7F3EC]/50">
-              ← Back to home
+        <p className="text-center text-[11px] leading-relaxed" style={{ color: '#48484a' }}>
+          By creating an account, you agree to{' '}
+          <Link href="/terms" className="underline hover:text-[#636366] transition-colors">Terms of Service</Link>
+          {' '}and{' '}
+          <Link href="/privacy" className="underline hover:text-[#636366] transition-colors">Privacy Policy</Link>.
+        </p>
+
+        <div className="pt-1">
+          <p className="text-center" style={{ color: '#48484a' }}>
+            <Link href="/" className="text-xs transition-colors hover:text-[#636366]">
+              Back to home
             </Link>
           </p>
         </div>
-      </div>
-
-      {/* Right decorative panel */}
-      <div className="relative hidden w-0 flex-1 lg:block">
-        <div className="absolute inset-0 bg-gradient-to-br from-[#C8873A]/5 via-transparent to-[#C8873A]/10" />
-        <div className="flex h-full items-center justify-center p-12">
-          <div className="max-w-md text-center">
-            <div className="text-6xl mb-6">🚀</div>
-            <h3 className="text-2xl font-bold text-[#F7F3EC] mb-3">Start your journey</h3>
-            <p className="text-[#F7F3EC]/50 leading-relaxed">
-              Write in your native language, translate to global markets, 
-              and publish on Amazon KDP — all in one place.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
+      </form>
+    </AuthLayout>
   );
 }

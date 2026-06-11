@@ -34,7 +34,7 @@ export async function GET() {
     const usage = await getCurrentUsage(user.id)
 
     const latestEvent = await db.billingEvent.findFirst({
-      where: { userId: user.id, provider: 'lemonsqueezy' },
+      where: { userId: user.id },
       orderBy: { createdAt: 'desc' },
       select: { type: true, createdAt: true, status: true },
     })

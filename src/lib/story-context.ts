@@ -24,19 +24,80 @@ export interface StoryContextForAI {
 export async function getProjectStoryContext(projectId: string): Promise<StoryContextForAI> {
   const project = await db.project.findUnique({
     where: { id: projectId },
-    include: {
-      characters: true,
-      locations: true,
-      chapters: { orderBy: { chapterNumber: 'asc' } },
-      timelineEvents: { orderBy: { eventDateOrOrder: 'asc' } },
-      plotBeats: { orderBy: { order: 'asc' } },
+    select: {
+      title: true,
+      genre: true,
+      premise: true,
+      logline: true,
+      theme: true,
+      styleGuide: true,
+      pov: true,
+      tense: true,
+      tone: true,
+      centralConflict: true,
+      stakes: true,
+      characters: {
+        select: {
+          name: true,
+          role: true,
+          description: true,
+          personality: true,
+          motivation: true,
+          flaw: true,
+          characterArc: true,
+        },
+      },
+      locations: {
+        select: {
+          name: true,
+          type: true,
+          description: true,
+          mood: true,
+        },
+      },
+      chapters: {
+        orderBy: { chapterNumber: 'asc' },
+        select: {
+          title: true,
+          chapterNumber: true,
+          wordCount: true,
+          status: true,
+        },
+      },
+      timelineEvents: {
+        orderBy: { eventDateOrOrder: 'asc' },
+        select: {
+          title: true,
+          type: true,
+          description: true,
+        },
+      },
+      plotBeats: {
+        orderBy: { order: 'asc' },
+        select: {
+          title: true,
+          description: true,
+          act: true,
+          order: true,
+          status: true,
+        },
+      },
       relationships: {
-        include: {
+        select: {
+          type: true,
+          description: true,
           characterA: { select: { name: true } },
           characterB: { select: { name: true } },
         },
       },
-      researchItems: { where: { relevance: { in: ['high', 'critical'] } } },
+      researchItems: {
+        where: { relevance: { in: ['high', 'critical'] } },
+        select: {
+          title: true,
+          summary: true,
+          relevance: true,
+        },
+      },
     },
   });
 
@@ -178,9 +239,31 @@ export function buildStoryContextForPrompt(context: StoryContextForAI): string {
 export async function getProjectPlotContext(projectId: string): Promise<string> {
   const project = await db.project.findUnique({
     where: { id: projectId },
-    include: {
-      chapters: { orderBy: { chapterNumber: 'asc' }, include: { scenes: { orderBy: { sceneNumber: 'asc' }, select: { title: true, summary: true, status: true, wordCount: true, povCharacterId: true } } } },
-      plotBeats: { orderBy: { order: 'asc' } },
+    select: {
+      title: true,
+      genre: true,
+      chapters: {
+        orderBy: { chapterNumber: 'asc' },
+        select: {
+          chapterNumber: true,
+          title: true,
+          wordCount: true,
+          status: true,
+          scenes: {
+            orderBy: { sceneNumber: 'asc' },
+            select: { title: true, summary: true, status: true, wordCount: true, povCharacterId: true },
+          },
+        },
+      },
+      plotBeats: {
+        orderBy: { order: 'asc' },
+        select: {
+          act: true,
+          title: true,
+          linkedChapterId: true,
+          order: true,
+        },
+      },
     },
   });
 

@@ -1,6 +1,8 @@
 'use client';
 
-import { MarketingKitPage } from '@/components/novelify/pages';
+import dynamic from 'next/dynamic';
+
+const MarketingKitPage = dynamic(() => import('@/components/novelify/pages').then(m => m.MarketingKitPage), { ssr: false });
 
 export default function MarketingRoutePage() {
   return <MarketingKitPage />;
