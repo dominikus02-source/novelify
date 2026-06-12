@@ -83,7 +83,7 @@ export function MyNovelsPage() {
       {filtered.length === 0 ? (
         <EmptyState icon={BookOpen} title="No novels found" desc={search ? 'Try a different search term' : 'Create your first novel to get started'} />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4" style={{ gap: 14 }}>
           {filtered.map((project) => {
             const wc = project.chapters.reduce((s, c) => s + c.wordCount, 0);
             return (

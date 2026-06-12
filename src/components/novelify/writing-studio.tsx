@@ -71,7 +71,7 @@ export function WritingStudio() {
   const [isAddingScene, setIsAddingScene] = useState(false);
   const [editingTitle, setEditingTitle] = useState(false);
   const [titleValue, setTitleValue] = useState('');
-  const [fullscreen, setFullscreen] = useState(false);
+  const [fullscreen, setFullscreen] = useState(true);
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
   const [mobileStudioOpen, setMobileStudioOpen] = useState(false);
   const [chaptersExpanded, setChaptersExpanded] = useState<Record<string, boolean>>({});
