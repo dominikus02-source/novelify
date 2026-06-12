@@ -28,22 +28,18 @@ function getStripeSecret(): string {
   return key
 }
 
-export async function createCheckoutSession(params: CreateCheckoutParams): Promise<{ url: string; sessionId: string }> {
-  getStripeSecret()
-  throw new Error('Stripe checkout not yet implemented. Install stripe package and set STRIPE_SECRET_KEY to enable.')
+export async function createCheckoutSession(params: CreateCheckoutParams): Promise<{ url?: string; sessionId?: string; error: string }> {
+  return { error: 'Stripe is not configured. Use Lemon Squeezy or Midtrans.' }
 }
 
-export async function createBillingPortal(params: BillingPortalParams): Promise<{ url: string }> {
-  getStripeSecret()
-  throw new Error('Stripe billing portal not yet implemented.')
+export async function createBillingPortal(params: BillingPortalParams): Promise<{ url?: string; error: string }> {
+  return { error: 'Stripe is not configured. Use Lemon Squeezy or Midtrans.' }
 }
 
-export async function handleWebhook(payload: any, signature: string): Promise<{ event: string; subscriptionId?: string; status?: string }> {
-  getStripeSecret()
-  throw new Error('Stripe webhook handler not yet implemented.')
+export async function handleWebhook(payload: any, signature: string): Promise<{ event?: string; subscriptionId?: string; status?: string; error: string }> {
+  return { error: 'Stripe is not configured. Use Lemon Squeezy or Midtrans.' }
 }
 
-export async function getSubscriptionStatus(customerId: string): Promise<SubscriptionStatus> {
-  getStripeSecret()
-  throw new Error('Stripe subscription status check not yet implemented.')
+export async function getSubscriptionStatus(customerId: string): Promise<SubscriptionStatus | { error: string }> {
+  return { error: 'Stripe is not configured. Use Lemon Squeezy or Midtrans.' }
 }

@@ -1,4 +1,4 @@
-import { MetadataRoute } from 'next'
+import type { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -6,9 +6,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/dashboard/', '/api/', '/_next/'],
+        disallow: ['/api/', '/dashboard/', '/admin/'],
       },
     ],
     sitemap: 'https://novelify.online/sitemap.xml',
-  }
+  };
 }

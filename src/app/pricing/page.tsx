@@ -78,9 +78,7 @@ export default function PricingPage() {
     }
   }, [session, yearly, currency, router]);
 
-  useEffect(() => {
-    document.title = 'Pricing | Novelify';
-  }, []);
+  // Note: page is 'use client' so metadata is set via root layout template
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
@@ -406,13 +404,13 @@ export default function PricingPage() {
                   {FEATURES.filter((f) => f.planRequired === 'free').map((f) => (
                     <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Check size={16} style={{ color: '#10B981', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: '#F5F5F7B3' }}>{f.label}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(245,245,247,0.7)' }}>{f.label}</span>
                     </div>
                   ))}
                   {FEATURES.filter((f) => f.planRequired === tier && tier !== 'free').map((f) => (
                     <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
                       <Check size={16} style={{ color: '#10B981', flexShrink: 0 }} />
-                      <span style={{ fontSize: 13, color: '#F5F5F7B3' }}>{f.label}</span>
+                      <span style={{ fontSize: 13, color: 'rgba(245,245,247,0.7)' }}>{f.label}</span>
                     </div>
                   ))}
                   {FEATURES.filter(

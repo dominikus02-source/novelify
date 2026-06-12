@@ -1,16 +1,13 @@
 'use client';
 
 import { useEffect, useRef, useCallback, useState } from 'react';
-import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
-import { useNovelifyStore } from '@/lib/store';
 import { PLANS } from '@/lib/billing/plans';
-import { trackEvent } from '@/lib/analytics';
 import Link from 'next/link';
 import {
-  Globe2, Package, Sparkles, FileText, Lock, BarChart3, Target,
-  PenTool, BookOpen, BookMarked, Wand2, Languages, Download, Megaphone,
-  Check, Star, Zap, Crown, Layers, Menu, X,
+  Globe2, Package, Sparkles, FileText, Lock,
+  PenTool, BookMarked, Wand2, Languages, Download, Megaphone,
+  Check, Layers, Menu, X,
 } from 'lucide-react';
 
 const navLinks = [
@@ -60,49 +57,6 @@ const workflowSteps = [
     icon: Megaphone, color: '#FBBF24', bgColor: 'rgba(251,191,36,0.1)',
     title: 'Market',
     desc: 'Generate blurbs, taglines, Amazon descriptions, and social captions for launch.',
-  },
-];
-
-const features = [
-  {
-    icon: PenTool, color: '#C9A96E', bgColor: 'rgba(201,169,110,0.12)',
-    title: 'Writing Studio',
-    desc: 'A focused manuscript editor built for chapters, scenes, autosave, word goals, and AI writing support.',
-  },
-  {
-    icon: BookMarked, color: '#A78BFA', bgColor: 'rgba(167,139,250,0.1)',
-    title: 'Story Bible',
-    desc: 'Keep every character, location, rule, relationship, and secret consistent across your novel.',
-  },
-  {
-    icon: Layers, color: '#34D399', bgColor: 'rgba(52,211,153,0.1)',
-    title: 'Plot Board',
-    desc: 'Turn story beats into chapters and scenes with structure templates like Three-Act, Hero\'s Journey, and Romance Beats.',
-  },
-  {
-    icon: Sparkles, color: '#F87171', bgColor: 'rgba(248,113,113,0.1)',
-    title: 'AI Co-Writer',
-    desc: 'Generate ideas, continue scenes, rewrite passages, improve dialogue, and expand descriptions.',
-  },
-  {
-    icon: Wand2, color: '#60A5FA', bgColor: 'rgba(96,165,250,0.1)',
-    title: 'Revision Engine',
-    desc: 'Find continuity issues, pacing problems, weak dialogue, and style inconsistencies before readers do.',
-  },
-  {
-    icon: Languages, color: '#FBBF24', bgColor: 'rgba(251,191,36,0.1)',
-    title: 'Translation Studio',
-    desc: 'Translate your manuscript while preserving tone, names, places, and story context.',
-  },
-  {
-    icon: Download, color: '#C9A96E', bgColor: 'rgba(201,169,110,0.12)',
-    title: 'Publishing Center',
-    desc: 'Prepare metadata, front matter, back matter, cover, synopsis, and export publishing-ready files.',
-  },
-  {
-    icon: Megaphone, color: '#A78BFA', bgColor: 'rgba(167,139,250,0.1)',
-    title: 'Marketing Kit',
-    desc: 'Create launch copy, Amazon KDP descriptions, Goodreads descriptions, taglines, and social captions.',
   },
 ];
 
@@ -215,9 +169,7 @@ function scrollTo(id: string) {
 }
 
 export function Hero() {
-  const { data: session } = useSession();
   const router = useRouter();
-  const setCurrentView = useNovelifyStore((s) => s.setCurrentView);
   const typewriterRef = useTypewriter();
   useScrollReveal();
 
@@ -225,11 +177,17 @@ export function Hero() {
 
   useEffect(() => {
     if (drawerOpen) {
-      document.body.style.overflow = 'hidden';
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
+      document.documentElement.style.overflow = 'hidden';
+      document.documentElement.style.paddingRight = `${scrollbarWidth}px`;
     } else {
-      document.body.style.overflow = '';
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.paddingRight = '';
     }
-    return () => { document.body.style.overflow = ''; };
+    return () => {
+      document.documentElement.style.overflow = '';
+      document.documentElement.style.paddingRight = '';
+    };
   }, [drawerOpen]);
 
   useEffect(() => {
@@ -241,16 +199,10 @@ export function Hero() {
   }, []);
 
   const goToApp = useCallback(() => {
-    trackEvent('hero_cta_click', { destination: session ? 'dashboard' : 'signup' });
-    if (session) {
-      setCurrentView('dashboard');
-    } else {
-      router.push('/signup');
-    }
-  }, [session, router, setCurrentView]);
+    router.push('/signup');
+  }, [router]);
 
   const goToPricing = useCallback(() => {
-    trackEvent('pricing_click', { source: 'hero' });
     router.push('/pricing');
   }, [router]);
 
@@ -280,7 +232,6 @@ export function Hero() {
           font-size: 16px;
           line-height: 1.6;
           -webkit-font-smoothing: antialiased;
-          overflow-x: hidden;
         }
         .lp-serif {
           font-family: var(--font-playfair), 'Playfair Display', serif;
@@ -289,7 +240,7 @@ export function Hero() {
           content: '';
           position: absolute;
           top: -20%; left: 50%; transform: translateX(-50%);
-          width: 800px; height: 600px;
+          width: min(800px, 90vw); height: 600px;
           background: radial-gradient(ellipse, rgba(167,139,250,0.08) 0%, transparent 70%);
           pointer-events: none;
         }
@@ -297,7 +248,7 @@ export function Hero() {
           content: '';
           position: absolute;
           bottom: 0; left: 30%;
-          width: 400px; height: 400px;
+          width: min(400px, 60vw); height: 400px;
           background: radial-gradient(ellipse, rgba(201,169,110,0.06) 0%, transparent 70%);
           pointer-events: none;
         }
@@ -350,36 +301,21 @@ export function Hero() {
         .reveal.visible {
           opacity: 1; transform: translateY(0);
         }
-        .lp-progress-fill {
-          height: 100%; border-radius: 3px;
-          background: linear-gradient(90deg, var(--lp-gold), var(--lp-gold-light));
-          animation: lp-fillBar 1.4s ease both;
-        }
-        @keyframes lp-fillBar { from { width: 0 !important; } }
         .lp-card-hover:hover {
           border-color: var(--lp-border-bright);
           transform: translateY(-3px);
           box-shadow: 0 16px 40px rgba(0,0,0,0.35);
         }
-        .lp-tcard-hover:hover {
-          border-color: var(--lp-border-bright);
-          transform: translateY(-2px);
-        }
         .lp-pcard-hover:hover {
           transform: translateY(-4px);
           box-shadow: 0 20px 50px rgba(0,0,0,0.4);
-        }
-        .faq-answer {
-          max-height: 0; overflow: hidden;
-          transition: max-height .3s ease, padding .3s ease;
-        }
-        .faq-open .faq-answer {
-          max-height: 300px;
         }
         .lp-mobile-visible { display: none !important; }
         @media (max-width: 768px) {
           .lp-mobile-hidden { display: none !important; }
           .lp-mobile-visible { display: inline-flex !important; }
+          .lp-hero-br { display: none; }
+          .lp-hero h1 { font-size: clamp(30px, 10vw, 42px) !important; }
         }
         @keyframes lp-drawerIn {
           from { opacity: 0; transform: scale(0.96); }
@@ -388,6 +324,52 @@ export function Hero() {
         @keyframes lp-drawerOverlay {
           from { opacity: 0; }
           to { opacity: 1; }
+        }
+        @media (max-width: 768px) {
+          .lp-grid-features {
+            grid-template-columns: 1fr !important;
+          }
+          .lp-grid-workflow {
+            grid-template-columns: 1fr !important;
+          }
+          .lp-grid-pricing {
+            grid-template-columns: 1fr !important;
+          }
+          .lp-grid-trust {
+            grid-template-columns: 1fr !important;
+          }
+          .lp-grid-footer-links {
+            flex-direction: column !important;
+            gap: 20px !important;
+          }
+          .lp-section {
+            padding: 60px 16px !important;
+          }
+          .lp-hero-section {
+            padding: 100px 16px 60px !important;
+          }
+          .lp-pricing-card {
+            max-width: 400px !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+          }
+          .lp-strip-item {
+            min-width: 50% !important;
+            max-width: 100% !important;
+            flex: 1 0 50% !important;
+            border-right: none !important;
+            border-bottom: 1px solid var(--lp-border);
+          }
+          .lp-strip-item:last-child {
+            border-bottom: none !important;
+          }
+          .lp-border-mobile-none {
+            border-left: none !important;
+            border-top: 1px solid var(--lp-border);
+            padding-left: 0 !important;
+            padding-top: 20px !important;
+            margin-top: 16px !important;
+          }
         }
       `}</style>
 
@@ -417,33 +399,31 @@ export function Hero() {
                 >{f.label}</button>
               </li>
             ))}
-            {!session && (
-              <li>
-                <button onClick={() => router.push('/login')}
-                  style={{ color: 'var(--lp-muted)', fontSize: 14, fontWeight: 500, padding: '6px 14px', borderRadius: 20, background: 'transparent', border: '1px solid var(--lp-border)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
-                  onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
-                  onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
-                >Sign in</button>
-              </li>
-            )}
+            <li>
+              <button onClick={() => router.push('/login')}
+                style={{ color: 'var(--lp-muted)', fontSize: 14, fontWeight: 500, padding: '6px 14px', borderRadius: 20, background: 'transparent', border: '1px solid var(--lp-border)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
+                onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
+              >Sign in</button>
+            </li>
             <li>
               <button onClick={goToApp}
                 style={{ background: 'var(--lp-white)', color: '#000', fontWeight: 600, padding: '6px 16px', borderRadius: 20, border: 'none', fontSize: 14, cursor: 'pointer', transition: 'background .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,245,247,0.85)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-white)'; }}
-               >{session ? 'Dashboard' : 'Start Free'}</button>
+               >Start Free</button>
              </li>
              <li className="lp-mobile-visible">
                <button onClick={() => setDrawerOpen(true)} aria-label="Toggle menu"
-                 style={{
-                   width: 44, height: 44,
-                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                   background: 'transparent', border: 'none', cursor: 'pointer',
-                   color: 'var(--lp-white)',
-                 }}
-               >
-                 <Menu size={22} />
-               </button>
+                style={{
+                  width: 44, height: 44,
+                  display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                  background: 'transparent', border: 'none', cursor: 'pointer',
+                  color: 'var(--lp-white)',
+                }}
+              >
+                <Menu size={22} aria-hidden={true} />
+              </button>
              </li>
            </ul>
          </nav>
@@ -502,7 +482,7 @@ export function Hero() {
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--lp-glass-hover)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-surface)'; }}
                 >
-                  <X size={20} />
+                  <X size={20} aria-hidden={true} />
                 </button>
               </div>
 
@@ -535,21 +515,19 @@ export function Hero() {
                 padding: '12px 20px',
                 display: 'flex', flexDirection: 'column', gap: 10,
               }}>
-                {!session && (
-                  <button onClick={() => router.push('/login')}
-                    style={{
-                      width: '100%', padding: '14px', borderRadius: 12,
-                      fontSize: 15, fontWeight: 500, color: 'var(--lp-white)',
-                      background: 'var(--lp-surface2)',
-                      border: '1px solid var(--lp-border)', cursor: 'pointer',
-                      transition: 'all .2s',
-                    }}
-                    onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
-                    onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
-                  >
-                    Sign in
-                  </button>
-                )}
+                <button onClick={() => router.push('/login')}
+                  style={{
+                    width: '100%', padding: '14px', borderRadius: 12,
+                    fontSize: 15, fontWeight: 500, color: 'var(--lp-white)',
+                    background: 'var(--lp-surface2)',
+                    border: '1px solid var(--lp-border)', cursor: 'pointer',
+                    transition: 'all .2s',
+                  }}
+                  onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
+                  onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
+                >
+                  Sign in
+                </button>
                 <button onClick={goToApp}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 12,
@@ -561,7 +539,7 @@ export function Hero() {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.3)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  {session ? 'Dashboard' : 'Start Free'}
+                  Start Free
                 </button>
               </div>
             </div>
@@ -569,18 +547,18 @@ export function Hero() {
         )}
 
         {/* HERO */}
-        <section className="lp-hero" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 80px', position: 'relative', overflow: 'hidden' }}>
+        <section className="lp-hero lp-hero-section" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 80px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-glass)', border: '1px solid var(--lp-border-bright)', borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 500, color: 'var(--lp-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 32, animation: 'lp-fadeUp .6s ease both' }}>
             <span className="lp-eyebrow-dot"></span>
             AI-Powered Novel Writing Platform
           </div>
 
-          <h1 className="lp-serif" style={{ fontSize: 'clamp(36px, 6vw, 72px)', fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.03em', maxWidth: 840, color: 'var(--lp-white)', animation: 'lp-fadeUp .7s .1s ease both' }}>
-            Write, revise, translate, and publish your novel<br />
+          <h1 className="lp-serif" style={{ fontSize: 'clamp(30px, 6vw, 72px)', fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.03em', maxWidth: 840, color: 'var(--lp-white)', animation: 'lp-fadeUp .7s .1s ease both' }}>
+            Write, revise, translate, and publish your novel<span className="lp-hero-br"><br /></span>
             with an <em style={{ fontStyle: 'italic', color: 'var(--lp-gold)', position: 'relative' }}>AI-powered writing studio</em>.
           </h1>
 
-          <p style={{ marginTop: 24, fontSize: 18, fontWeight: 400, color: 'var(--lp-muted)', maxWidth: 520, lineHeight: 1.6, animation: 'lp-fadeUp .7s .2s ease both' }}>
+          <p style={{ marginTop: 24, fontSize: 'clamp(15px, 2vw, 18px)', fontWeight: 400, color: 'var(--lp-muted)', maxWidth: 520, lineHeight: 1.6, padding: '0 4px', animation: 'lp-fadeUp .7s .2s ease both' }}>
             Plan your story, build your world, draft chapters, revise with confidence, translate to global markets, and prepare publishing-ready exports — all in one focused platform.
           </p>
 
@@ -607,16 +585,16 @@ export function Hero() {
           </p>
 
           <div style={{ marginTop: 40, animation: 'lp-fadeUp .7s .4s ease both', width: '100%', maxWidth: 640 }}>
-            <div className="lp-editor-mock" style={{ background: 'var(--lp-surface)', border: '1px solid var(--lp-border-bright)', borderRadius: 'var(--lp-r)', padding: '24px 28px', textAlign: 'left', position: 'relative', boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
+            <div className="lp-editor-mock" style={{ background: 'var(--lp-surface)', border: '1px solid var(--lp-border-bright)', borderRadius: 'var(--lp-r)', padding: 'clamp(16px, 3vw, 28px)', textAlign: 'left', position: 'relative', boxShadow: '0 32px 80px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06)' }}>
               <div style={{ display: 'flex', gap: 6, marginBottom: 16 }}>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FF5F57' }}></span>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#FEBC2E' }}></span>
                 <span style={{ width: 10, height: 10, borderRadius: '50%', background: '#28C840' }}></span>
               </div>
-              <div ref={typewriterRef} className="lp-serif" style={{ fontSize: 15, color: 'rgba(245,245,247,0.75)', lineHeight: 1.8, minHeight: 80 }}>
+              <div ref={typewriterRef} className="lp-serif" style={{ fontSize: 'clamp(13px, 2vw, 15px)', color: 'rgba(245,245,247,0.75)', lineHeight: 1.8, minHeight: 110 }}>
                 <span className="cursor"></span>
               </div>
-              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <div style={{ marginTop: 14, display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                 <div style={{ display: 'inline-flex', alignItems: 'center', gap: 6, background: 'var(--lp-purple-dim)', border: '1px solid rgba(167,139,250,0.2)', borderRadius: 8, padding: '4px 10px', fontSize: 11, fontWeight: 500, color: 'var(--lp-purple)' }}>
                   <svg fill="none" viewBox="0 0 12 12" width="12" height="12"><circle cx="6" cy="6" r="5" stroke="currentColor" strokeWidth="1.2"/><path d="M4 6.5l1.5 1.5L8 5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/></svg>
                   AI Assist
@@ -637,10 +615,10 @@ export function Hero() {
           ].map((item) => {
             const Icon = item.icon;
             return (
-              <div key={item.text}
-                style={{ flex: 1, minWidth: 160, maxWidth: 260, padding: '20px 24px', textAlign: 'center', borderRight: '1px solid var(--lp-border)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+              <div key={item.text} className="lp-strip-item"
+                style={{ flex: 1, minWidth: 160, maxWidth: 260, padding: '20px 24px', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
               >
-                <Icon size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0 }} />
+                <Icon size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0 }} />
                 <span style={{ fontSize: 12, fontWeight: 500, color: 'var(--lp-muted)' }}>{item.text}</span>
               </div>
             );
@@ -648,7 +626,7 @@ export function Hero() {
         </div>
 
         {/* FEATURES */}
-        <section id="features" style={{ padding: '100px 24px' }}>
+        <section id="features" className="lp-section" style={{ padding: '100px 24px' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Platform</div>
@@ -656,11 +634,11 @@ export function Hero() {
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65 }}>From the first idea to the published page — Novelify handles the complexity so you stay in the story.</p>
             </div>
 
-            <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14, marginTop: 56 }}>
+            <div className="reveal lp-grid-features" style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: 14, marginTop: 56 }}>
               {/* Translation — widened */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 7', background: 'linear-gradient(135deg, var(--lp-surface2) 0%, #0f0f14 100%)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
-                  <Globe2 size={20} style={{ color: 'var(--lp-gold)' }} />
+                  <Globe2 size={20} aria-hidden={true} style={{ color: 'var(--lp-gold)' }} />
                 </div>
                 <h3 className="lp-serif" style={{ fontSize: 26, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>AI Translation</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Translate your manuscript while preserving tone, idiom, names, and narrative voice. Publish in multiple languages without losing your voice.</p>
@@ -677,7 +655,7 @@ export function Hero() {
               {/* Writing Studio */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 5', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
-                  <PenTool size={20} style={{ color: 'var(--lp-purple)' }} />
+                  <PenTool size={20} aria-hidden={true} style={{ color: 'var(--lp-purple)' }} />
                 </div>
                 <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Writing Studio</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Draft chapters and scenes in a focused editor with autosave, word goals, AI assistance, and full version history.</p>
@@ -686,7 +664,7 @@ export function Hero() {
               {/* Story Bible */}
               <div className="lp-card-hover" style={{ gridColumn: 'span 5', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
-                  <BookMarked size={20} style={{ color: '#34D399' }} />
+                  <BookMarked size={20} aria-hidden={true} style={{ color: '#34D399' }} />
                 </div>
                 <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Story Bible</h3>
                 <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Build characters, locations, timelines, lore, and research — all connected and accessible while you write.</p>
@@ -697,14 +675,16 @@ export function Hero() {
                 <div style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
                   <div style={{ flex: 1, minWidth: 200 }}>
                     <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
-                      <Sparkles size={20} style={{ color: 'var(--lp-purple)' }} />
+                      <Sparkles size={20} aria-hidden={true} style={{ color: 'var(--lp-purple)' }} />
                     </div>
                     <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>AI Co-Writer</h3>
                     <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Get contextual suggestions, continue scenes, improve dialogue, and overcome writer&apos;s block — all without leaving your flow.</p>
                   </div>
-                  <div style={{ flex: 1, minWidth: 200, borderLeft: '1px solid var(--lp-border)', paddingLeft: 24 }}>
+                  <div style={{ flex: 1, minWidth: 200, borderLeft: '1px solid var(--lp-border)', paddingLeft: 24 }}
+                    className="lp-border-mobile-none"
+                  >
                     <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
-                      <Layers size={20} style={{ color: 'var(--lp-gold)' }} />
+                      <Layers size={20} aria-hidden={true} style={{ color: 'var(--lp-gold)' }} />
                     </div>
                     <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Plot Board</h3>
                     <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Visualize your story structure with templates like Three-Act, Hero&apos;s Journey, and Romance Beats.</p>
@@ -712,28 +692,34 @@ export function Hero() {
                 </div>
               </div>
 
-              {/* Publishing + Export */}
-              <div className="lp-card-hover" style={{ gridColumn: 'span 12', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s', display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'center' }}>
-                <div style={{ flex: 1, minWidth: 220 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
-                    <Download size={20} style={{ color: 'var(--lp-gold)' }} />
+              {/* Publishing + Export + Revision + Marketing */}
+              <div className="lp-card-hover" style={{ gridColumn: 'span 12', background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, position: 'relative', overflow: 'hidden', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
+                <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap', alignItems: 'flex-start' }}>
+                  <div style={{ flex: 1, minWidth: 220 }}>
+                    <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(201,169,110,0.12)', border: '1px solid rgba(201,169,110,0.2)' }}>
+                      <Download size={20} aria-hidden={true} style={{ color: 'var(--lp-gold)' }} />
+                    </div>
+                    <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Publishing Center</h3>
+                    <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Prepare metadata, front matter, back matter, cover, and export EPUB, PDF, or DOCX files — formatted and publishing-ready.</p>
                   </div>
-                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Publishing Center</h3>
-                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Prepare metadata, front matter, back matter, cover, and export EPUB, PDF, or DOCX files — formatted and publishing-ready.</p>
-                </div>
-                <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
-                    <Megaphone size={20} style={{ color: 'var(--lp-purple)' }} />
+                  <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}
+                    className="lp-border-mobile-none"
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(167,139,250,0.1)', border: '1px solid rgba(167,139,250,0.18)' }}>
+                      <Megaphone size={20} aria-hidden={true} style={{ color: 'var(--lp-purple)' }} />
+                    </div>
+                    <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Revision Engine</h3>
+                    <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Check continuity, pacing, dialogue, style, and publishing readiness before you export or publish.</p>
                   </div>
-                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Revision Engine</h3>
-                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Check continuity, pacing, dialogue, style, and publishing readiness before you export or publish.</p>
-                </div>
-                <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}>
-                  <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
-                    <Package size={20} style={{ color: '#34D399' }} />
+                  <div style={{ flex: 1, minWidth: 220, borderLeft: '1px solid var(--lp-border)', paddingLeft: 40 }}
+                    className="lp-border-mobile-none"
+                  >
+                    <div style={{ width: 40, height: 40, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 18, background: 'rgba(52,211,153,0.1)', border: '1px solid rgba(52,211,153,0.18)' }}>
+                      <Package size={20} aria-hidden={true} style={{ color: '#34D399' }} />
+                    </div>
+                    <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Marketing Kit</h3>
+                    <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Generate blurbs, taglines, Amazon KDP descriptions, and social captions to prepare your launch.</p>
                   </div>
-                  <h3 className="lp-serif" style={{ fontSize: 20, fontWeight: 600, letterSpacing: '-0.01em', color: 'var(--lp-white)', marginBottom: 8 }}>Marketing Kit</h3>
-                  <p style={{ fontSize: 14, color: 'var(--lp-muted)', lineHeight: 1.65 }}>Generate blurbs, taglines, Amazon KDP descriptions, and social captions to prepare your launch.</p>
                 </div>
               </div>
             </div>
@@ -751,7 +737,7 @@ export function Hero() {
         </section>
 
         {/* WORKFLOW */}
-        <section id="workflow" style={{ padding: '100px 24px', background: 'var(--lp-surface)' }}>
+        <section id="workflow" className="lp-section" style={{ padding: '100px 24px', background: 'var(--lp-surface)' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Workflow</div>
@@ -759,13 +745,13 @@ export function Hero() {
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65 }}>A complete writing workflow in one focused platform.</p>
             </div>
 
-            <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 56 }}>
+            <div className="reveal lp-grid-workflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 56 }}>
               {workflowSteps.map((step) => {
                 const Icon = step.icon;
                 return (
                   <div key={step.title} className="lp-card-hover" style={{ background: 'var(--lp-surface2)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 24, transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: step.bgColor, border: `1px solid ${step.color}25` }}>
-                      <Icon size={18} style={{ color: step.color }} />
+                      <Icon size={18} aria-hidden={true} style={{ color: step.color }} />
                     </div>
                     <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', marginBottom: 6, margin: '0 0 6px' }}>{step.title}</h4>
                     <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
@@ -777,20 +763,20 @@ export function Hero() {
         </section>
 
         {/* TRUST & MANUSCRIPT PRIVACY */}
-        <section id="trust" style={{ padding: '100px 24px' }}>
+        <section id="trust" className="lp-section" style={{ padding: '100px 24px' }}>
           <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Trust</div>
               <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>Your story belongs to you.</h2>
             </div>
 
-            <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 48 }}>
+            <div className="reveal lp-grid-trust" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 48 }}>
               {trustItems.map((item) => {
                 const Icon = item.icon;
                 return (
                   <div key={item.title} className="lp-card-hover" style={{ background: 'var(--lp-surface)', border: '1px solid var(--lp-border)', borderRadius: 'var(--lp-r)', padding: 28, textAlign: 'left', transition: 'border-color .25s, transform .25s, box-shadow .25s' }}>
                     <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: `${item.color}15`, border: `1px solid ${item.color}25` }}>
-                      <Icon size={18} style={{ color: item.color }} />
+                      <Icon size={18} aria-hidden={true} style={{ color: item.color }} />
                     </div>
                     <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', margin: '0 0 6px' }}>{item.title}</h4>
                     <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
@@ -819,7 +805,7 @@ export function Hero() {
         </section>
 
         {/* PRICING */}
-        <section id="pricing" style={{ padding: '100px 24px', background: 'var(--lp-surface)' }}>
+        <section id="pricing" className="lp-section" style={{ padding: '100px 24px', background: 'var(--lp-surface)' }}>
           <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Pricing</div>
@@ -827,12 +813,12 @@ export function Hero() {
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65, margin: '16px auto 0' }}>No hidden fees. No surprises. Cancel anytime.</p>
             </div>
 
-            <div className="reveal" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 56 }}>
+            <div className="reveal lp-grid-pricing" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 56 }}>
               {(['free', 'starter', 'pro', 'studio'] as const).map((tier) => {
                 const plan = PLANS[tier];
                 const isFeatured = plan.highlighted;
                 return (
-                  <div key={tier} className="lp-pcard-hover" style={{
+                  <div key={tier} className="lp-pcard-hover lp-pricing-card" style={{
                     background: isFeatured ? 'linear-gradient(160deg, #16102A 0%, #0f0f14 100%)' : 'var(--lp-surface)',
                     border: `1px solid ${isFeatured ? 'rgba(201,169,110,0.3)' : 'var(--lp-border)'}`,
                     borderRadius: 'var(--lp-r)',
@@ -842,7 +828,7 @@ export function Hero() {
                     boxShadow: isFeatured ? '0 0 40px rgba(201,169,110,0.06)' : 'none',
                   }}>
                     {isFeatured && (
-                      <div style={{ position: 'absolute', top: -1, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, var(--lp-gold), var(--lp-gold-light))', borderRadius: '0 0 10px 10px', padding: '4px 16px', fontSize: 11, fontWeight: 700, color: '#000', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+                      <div style={{ position: 'absolute', top: -1, left: '50%', transform: 'translateX(-50%)', background: 'linear-gradient(90deg, var(--lp-gold), var(--lp-gold-light))', borderRadius: '0 0 10px 10px', padding: '4px 16px', fontSize: 11, fontWeight: 700, color: '#000', letterSpacing: '0.06em', textTransform: 'uppercase', whiteSpace: 'nowrap' }}>
                         Most Popular
                       </div>
                     )}
@@ -862,42 +848,42 @@ export function Hero() {
                     <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8, padding: 0, textAlign: 'left' }}>
                       {tier === 'free' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />1 project</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Writing Studio + AI Co-Writer</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Story Bible + Plot Board</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />EPUB + Markdown export</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />1 project</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Writing Studio + AI Co-Writer</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Story Bible + Plot Board</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />EPUB + Markdown export</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.5)' }}><span style={{ color: 'var(--lp-muted)', flexShrink: 0 }}>–</span>Full revision</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.5)' }}><span style={{ color: 'var(--lp-muted)', flexShrink: 0 }}>–</span>PDF/DOCX export</li>
                         </>
                       )}
                       {tier === 'starter' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />5 projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />500 AI credits / mo</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Full manuscript revision</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />PDF export</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Marketing assets</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />5 projects</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />500 AI credits / mo</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Full manuscript revision</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />PDF export</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Marketing assets</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.5)' }}><span style={{ color: 'var(--lp-muted)', flexShrink: 0 }}>–</span>DOCX export</li>
                         </>
                       )}
                       {tier === 'pro' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />20 projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3,000 AI credits / mo</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />DOCX export</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Amazon metadata optimization</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Priority support</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3 team seats</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />20 projects</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3,000 AI credits / mo</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />DOCX export</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Amazon metadata optimization</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Priority support</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3 team seats</li>
                         </>
                       )}
                       {tier === 'studio' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited AI credits</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited exports</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited translation</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Team collaboration (10 seats)</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />API access</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited projects</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited AI credits</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited exports</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited translation</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Team collaboration (10 seats)</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />API access</li>
                         </>
                       )}
                     </ul>
@@ -931,7 +917,7 @@ export function Hero() {
         </section>
 
         {/* FAQ */}
-        <section id="faq" style={{ padding: '100px 24px' }}>
+        <section id="faq" className="lp-section" style={{ padding: '100px 24px' }}>
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>FAQ</div>
@@ -947,12 +933,12 @@ export function Hero() {
         </section>
 
         {/* CTA */}
-        <section style={{ padding: '120px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 700, height: 400, background: 'radial-gradient(ellipse, rgba(167,139,250,0.07) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
+        <section className="lp-section" style={{ padding: '120px 24px', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+          <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(700px, 90vw)', height: 400, background: 'radial-gradient(ellipse, rgba(167,139,250,0.07) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
           <div className="reveal" style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Begin</div>
             <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 560, margin: '0 auto' }}>Start your first novel today.</h2>
-            <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 400, lineHeight: 1.65, margin: '16px auto 0' }}>Join a growing community of writers using Novelify to plan, write, revise, translate, and publish their work.</p>
+            <p style={{ marginTop: 16, fontSize: 'clamp(14px, 2vw, 16px)', color: 'var(--lp-muted)', maxWidth: 400, lineHeight: 1.65, margin: '16px auto 0', padding: '0 8px' }}>Join a growing community of writers using Novelify to plan, write, revise, translate, and publish their work.</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 36, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={goToApp}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-white)', color: '#000', fontSize: 15, fontWeight: 600, padding: '14px 28px', borderRadius: 50, border: 'none', cursor: 'pointer', transition: 'transform .2s, box-shadow .2s, background .2s', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
@@ -973,7 +959,7 @@ export function Hero() {
         {/* FOOTER */}
         <footer style={{ borderTop: '1px solid var(--lp-border)', padding: '40px 24px', background: 'var(--lp-surface)' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto', display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
+            <div className="lp-grid-footer-links" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
               <div>
                 <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
                   <span style={{ width: 24, height: 24, background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>N</span>

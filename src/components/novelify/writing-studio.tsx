@@ -18,20 +18,20 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 
-const chapterStatusCfg: Record<string, { label: string; cls: string }> = {
-  idea: { label: 'Idea', cls: 'bg-gray-100 text-gray-500 border-gray-200' },
-  drafting: { label: 'Drafting', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  revised: { label: 'Revised', cls: 'bg-amber-100 text-amber-700 border-amber-200' },
-  edited: { label: 'Edited', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  locked: { label: 'Locked', cls: 'bg-purple-100 text-purple-700 border-purple-200' },
+const chapterStatusCfg: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  idea: { label: 'Idea', bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: 'rgba(255,255,255,0.06)' },
+  drafting: { label: 'Drafting', bg: 'rgba(96,165,250,0.10)', color: '#60A5FA', border: 'rgba(96,165,250,0.2)' },
+  revised: { label: 'Revised', bg: 'rgba(200,135,58,0.10)', color: '#C8873A', border: 'rgba(200,135,58,0.2)' },
+  edited: { label: 'Edited', bg: 'rgba(52,211,153,0.10)', color: '#34D399', border: 'rgba(52,211,153,0.2)' },
+  locked: { label: 'Locked', bg: 'rgba(167,139,250,0.10)', color: '#A78BFA', border: 'rgba(167,139,250,0.2)' },
 };
 
-const sceneStatusCfg: Record<string, { label: string; cls: string }> = {
-  idea: { label: 'Idea', cls: 'bg-gray-100 text-gray-500 border-gray-200' },
-  drafting: { label: 'Drafting', cls: 'bg-blue-100 text-blue-700 border-blue-200' },
-  revised: { label: 'Revised', cls: 'bg-amber-100 text-amber-700 border-amber-200' },
-  edited: { label: 'Edited', cls: 'bg-emerald-100 text-emerald-700 border-emerald-200' },
-  locked: { label: 'Locked', cls: 'bg-purple-100 text-purple-700 border-purple-200' },
+const sceneStatusCfg: Record<string, { label: string; bg: string; color: string; border: string }> = {
+  idea: { label: 'Idea', bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: 'rgba(255,255,255,0.06)' },
+  drafting: { label: 'Drafting', bg: 'rgba(96,165,250,0.10)', color: '#60A5FA', border: 'rgba(96,165,250,0.2)' },
+  revised: { label: 'Revised', bg: 'rgba(200,135,58,0.10)', color: '#C8873A', border: 'rgba(200,135,58,0.2)' },
+  edited: { label: 'Edited', bg: 'rgba(52,211,153,0.10)', color: '#34D399', border: 'rgba(52,211,153,0.2)' },
+  locked: { label: 'Locked', bg: 'rgba(167,139,250,0.10)', color: '#A78BFA', border: 'rgba(167,139,250,0.2)' },
 };
 
 const aiPresets = [
@@ -551,7 +551,7 @@ export function WritingStudio() {
                       <p className="text-[12px] font-medium truncate">{chapter.title}</p>
                       <p className="text-[10px]" style={{ color: '#636366' }}>{chapter.wordCount}w</p>
                     </div>
-                    <span className="text-[9px] px-1.5 py-0.5 rounded border" style={{ background: chStat.cls.split(' ')[0], color: chStat.cls.split(' ')[1], borderColor: chStat.cls.split(' ')[2] || 'transparent', whiteSpace: 'nowrap' }}>{chStat.label}</span>
+                    <span className="text-[9px] px-1.5 py-0.5 rounded border" style={{ background: chStat.bg, color: chStat.color, borderColor: chStat.border, whiteSpace: 'nowrap' }}>{chStat.label}</span>
                   </button>
                 </div>
 
@@ -572,7 +572,7 @@ export function WritingStudio() {
                           >
                             <CircleDot className="size-2.5 shrink-0" style={{ color: isSceneSelected ? '#C8873A' : '#48484a' }} />
                             <span className="text-[11px] truncate flex-1">{scene.title || `Scene ${scene.sceneNumber}`}</span>
-                            <span className="text-[9px]" style={{ color: scStat.cls.split(' ')[1] || '#636366' }}>{scStat.label}</span>
+                            <span className="text-[9px]" style={{ color: scStat.color }}>{scStat.label}</span>
                           </button>
                         );
                       })}

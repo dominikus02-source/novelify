@@ -230,7 +230,7 @@ export function CommandCenter() {
 
         {/* ─── B. Writing Progress Overview ─── */}
         <FadeIn delay={0.05}>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: 10 }}>
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" style={{ gap: 10 }}>
             <MetricCard icon={BookOpen} label="Active Novels" value={totalProjects} sub={`${activeProjects} in progress`} color="gold" loading={isLoading} />
             <MetricCard icon={AlignLeft} label="Total Words" value={fmtWords(totalWords)} sub={`${fmtWords(wordsToday)} today`} color="teal" loading={isLoading} />
             <MetricCard icon={Clock} label="Today Written" value={fmtWords(wordsToday)} sub={`of ${fmtWords(dailyGoal)} goal`} color="amber" loading={isLoading} />

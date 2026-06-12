@@ -1,5 +1,7 @@
 'use client';
 
+// Note: page is 'use client' so metadata is set via root layout template
+
 import { useState, useEffect } from 'react';
 import { AlertCircle, CheckCircle, XCircle, Globe, Database, CreditCard, Brain, Mail, Webhook } from 'lucide-react';
 

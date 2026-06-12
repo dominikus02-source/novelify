@@ -1,5 +1,7 @@
 'use client';
 
+// Note: page is 'use client' so metadata is set via root layout template
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';

@@ -20,12 +20,14 @@ const playfair = Playfair_Display({
   variable: "--font-playfair",
   subsets: ["latin"],
   display: "swap",
+  adjustFontFallback: true,
 });
 
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   themeColor: '#080808',
+  colorScheme: 'dark',
 }
 
 export const metadata: Metadata = {
@@ -48,6 +50,9 @@ export const metadata: Metadata = {
   ],
   authors: [{ name: "Novelify" }],
   metadataBase: new URL('https://novelify.online'),
+  alternates: {
+    canonical: '/',
+  },
   icons: {
     icon: "/images/novelify-icon.png",
   },
@@ -57,6 +62,7 @@ export const metadata: Metadata = {
     type: "website",
     siteName: "Novelify",
     url: "https://novelify.online",
+    locale: 'en_US',
     images: [
       {
         url: "/og-image.svg",
@@ -85,6 +91,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} ${playfair.variable} antialiased bg-background text-foreground`}
       >

@@ -1,5 +1,7 @@
 'use client';
 
+// Note: page is 'use client' so metadata is set via root layout template
+
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { Search, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';

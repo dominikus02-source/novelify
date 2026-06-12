@@ -1,5 +1,7 @@
 'use client';
 
+// Note: page is 'use client' so metadata is set via root layout template
+
 import { useState, useEffect, useCallback } from 'react';
 import { Brain, FileEdit, Languages, Download, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
 

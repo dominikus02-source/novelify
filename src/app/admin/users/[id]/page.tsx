@@ -1,5 +1,7 @@
 'use client';
 
+// Note: page is 'use client' so metadata is set via root layout template
+
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { ArrowLeft, Mail, Calendar, FolderOpen, MessageSquare, Download, CreditCard, AlertCircle } from 'lucide-react';

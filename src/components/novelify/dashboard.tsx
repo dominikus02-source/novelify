@@ -331,16 +331,15 @@ export function Dashboard() {
                   <span style={{ fontSize: 11, fontWeight: 600, color: '#C9A96E' }}>🔥 {streak} days</span>
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(14, 1fr)', gap: 4 }}>
-                  {Array.from({ length: 14 }).map((_, i) => {
-                    const level = i < 8 ? Math.floor(Math.random() * 3) + 1 : 0;
-                    return (
-                      <div key={i} style={{
-                        aspectRatio: 1, borderRadius: 4,
-                        background: level === 3 ? '#C9A96E' : level === 2 ? 'rgba(201,169,110,0.50)' : level === 1 ? 'rgba(201,169,110,0.25)' : 'rgba(255,255,255,0.05)',
-                        border: `1px solid ${level === 3 ? '#E8C98A' : level > 0 ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.07)'}`,
-                      }} />
-                    );
-                  })}
+                  {[
+                    0,0,1,0,1,2,0,0,1,3,2,1,0,0,
+                  ].map((level, i) => (
+                    <div key={i} style={{
+                      aspectRatio: 1, borderRadius: 4,
+                      background: level === 3 ? '#C9A96E' : level === 2 ? 'rgba(201,169,110,0.50)' : level === 1 ? 'rgba(201,169,110,0.25)' : 'rgba(255,255,255,0.05)',
+                      border: `1px solid ${level === 3 ? '#E8C98A' : level > 0 ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.07)'}`,
+                    }} />
+                  ))}
                 </div>
               </div>
             </div>

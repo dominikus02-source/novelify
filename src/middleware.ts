@@ -6,8 +6,17 @@ export default withAuth(
     const token = req.nextauth.token;
     const pathname = req.nextUrl.pathname;
 
+    const isDashboardRoute = pathname.startsWith('/dashboard');
     const isAdminRoute = pathname.startsWith('/admin');
     const isAdminApiRoute = pathname.startsWith('/api/admin');
+
+    if (isDashboardRoute) {
+      if (!token) {
+        const loginUrl = new URL('/login', req.url);
+        loginUrl.searchParams.set('callbackUrl', pathname);
+        return NextResponse.redirect(loginUrl);
+      }
+    }
 
     if (isAdminRoute || isAdminApiRoute) {
       if (!token) {
@@ -35,5 +44,5 @@ export default withAuth(
 );
 
 export const config = {
-  matcher: ['/admin/:path*', '/api/admin/:path*'],
+  matcher: ['/dashboard/:path*', '/admin/:path*', '/api/admin/:path*'],
 };
