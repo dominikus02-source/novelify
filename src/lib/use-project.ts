@@ -4,7 +4,15 @@ import { useEffect } from 'react';
 import { useNovelifyStore, resolveActiveProject, type Project } from '@/lib/store';
 
 export function useProject(projectId?: string) {
-  const { projects, selectedProject, setSelectedProject, lastActiveProjectId } = useNovelifyStore();
+  const { projects, selectedProject, setSelectedProject, lastActiveProjectId, setProjects } = useNovelifyStore();
+
+  useEffect(() => {
+    if (projectId && projects.length === 0) {
+      fetch('/api/projects').then(r => r.ok ? r.json() : []).then(data => {
+        setProjects(data);
+      }).catch(() => {});
+    }
+  }, [projectId, projects.length, setProjects]);
 
   useEffect(() => {
     if (projectId) {

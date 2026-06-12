@@ -172,10 +172,12 @@ export function CommandCenter() {
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+        .dashboard-topbar { top: 0; }
+        @media (max-width: 767px) { .dashboard-topbar { top: 56px !important; } }
       `}</style>
 
       {/* ─── Topbar ─── */}
-      <header style={{ position: 'sticky', top: 0, zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}` }}>
+      <header className="dashboard-topbar" style={{ position: 'sticky', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}` }}>
         <div>
           <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>Dashboard</h1>
           <p style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {session?.user?.name || 'Writer'}</p>
