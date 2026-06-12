@@ -30,7 +30,7 @@ export async function GET() {
       },
       aiProvider: {
         configured: Boolean(
-          process.env.Z_AI_API_KEY ||
+          process.env.AI_API_KEY ||
           process.env.OPENAI_API_KEY ||
           process.env.ANTHROPIC_API_KEY
         ),

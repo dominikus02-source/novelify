@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getUserId } from '@/lib/session';
 import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
 import { trackUsage } from '@/lib/billing/usage';
+import { createChatCompletion } from '@/lib/ai';
 
 const SYNOPSIS_TYPES = ['blurb', 'amazon', 'logline', 'tagline'] as const;
 
@@ -101,31 +102,10 @@ ${TYPE_PROMPTS[type]}`;
     if (project.theme) userMessage += `\nTheme: ${project.theme}`;
     if (plotOutline) userMessage += `\n\nPlot Outline:\n${plotOutline}`;
 
-    const apiKey = process.env.ZAI_API_KEY;
-    const baseUrl = process.env.ZAI_BASE_URL || 'https://api.deepseek.com';
-
-    const response = await fetch(`${baseUrl}/v1/chat/completions`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`,
-      },
-      body: JSON.stringify({
-        model: process.env.ZAI_MODEL || 'deepseek-chat',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userMessage },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`AI API request failed: ${response.status} ${errorText}`);
-    }
-
-    const data = await response.json();
-    const generatedText = data.choices?.[0]?.message?.content || '';
+    const generatedText = await createChatCompletion([
+      { role: 'system', content: systemPrompt },
+      { role: 'user', content: userMessage },
+    ]);
 
     // Optionally update publishingMetadata
     const metadataUpdate: Record<string, string> = {};
