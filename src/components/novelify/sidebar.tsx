@@ -236,6 +236,7 @@ export function Sidebar() {
           <SheetContent side="left" data-mobile-sheet="true" className="p-0" style={{
             background: '#0a0a0a', width: 280, maxWidth: 280,
             borderRight: '1px solid rgba(255,255,255,0.06)',
+            paddingTop: 56,
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Logo */}
