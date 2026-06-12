@@ -5,6 +5,27 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum UserRole {
+  USER
+  ADMIN
+  SUPER_ADMIN
+}
+
+enum FeedbackStatus {
+  NEW
+  REVIEWED
+  IN_PROGRESS
+  RESOLVED
+  DISMISSED
+}
+
+enum FeedbackPriority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
 datasource db {
   provider     = "postgresql"
   url          = env("DATABASE_URL")
@@ -18,6 +39,7 @@ model User {
   password        String?
   image           String?
   emailVerified   DateTime?
+  role            UserRole  @default(USER)
   plan            String    @default("free")
   subscriptionStatus String @default("free") // free | trialing | active | past_due | canceled | expired
   wordCountUsed   Int       @default(0)
@@ -32,6 +54,9 @@ model User {
   settings        UserSettings?
   subscription    Subscription?
   usageTracking   UsageTracking[]
+  feedbackSubmitted   Feedback[]          @relation("userFeedback")
+  auditLogsAsAdmin    AdminAuditLog[]     @relation("adminActions")
+  auditLogsAsTarget   AdminAuditLog[]     @relation("adminTargets")
 }
 
 model UserSettings {
@@ -259,6 +284,7 @@ model Project {
   updatedAt      DateTime   @updatedAt
   chapters       Chapter[]
   characters     Character[]
+  feedback       Feedback[]
   exportJobs     ExportJob[]
   writingGoals   WritingGoal[]
   versions       ManuscriptVersion[]
@@ -621,6 +647,45 @@ model PlotBeat {
   updatedAt       DateTime @updatedAt
 
   @@index([projectId])
+}
+
+model Feedback {
+  id         String           @id @default(cuid())
+  userId     String?
+  projectId  String?
+  category   String
+  message    String
+  pageUrl    String?
+  userAgent  String?
+  status     FeedbackStatus   @default(NEW)
+  priority   FeedbackPriority @default(MEDIUM)
+  adminNote  String?
+  createdAt  DateTime         @default(now())
+  updatedAt  DateTime         @updatedAt
+
+  user    User?    @relation("userFeedback", fields: [userId], references: [id], onDelete: SetNull)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+model AdminAuditLog {
+  id              String   @id @default(cuid())
+  adminUserId     String
+  targetUserId    String?
+  targetProjectId String?
+  action          String
+  metadataJson    String?
+  createdAt       DateTime @default(now())
+
+  adminUser  User     @relation("adminActions", fields: [adminUserId], references: [id], onDelete: Cascade)
+  targetUser User?    @relation("adminTargets", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminUserId])
+  @@index([targetUserId])
+  @@index([createdAt])
 }
 
 model Relationship {

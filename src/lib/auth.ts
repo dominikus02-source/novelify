@@ -3,6 +3,12 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import { PrismaAdapter } from '@auth/prisma-adapter';
 import { compare } from 'bcryptjs';
 import { db } from '@/lib/db';
+import { UserRole } from '@prisma/client';
+
+function getAdminEmails(): string[] {
+  const raw = process.env.ADMIN_EMAILS || '';
+  return raw.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
+}
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db) as NextAuthOptions['adapter'],
@@ -40,22 +46,43 @@ export const authOptions: NextAuthOptions = {
           email: user.email,
           name: user.name,
           image: user.image,
+          role: user.role,
         };
       },
     }),
   ],
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
         token.id = user.id;
+        token.role = user.role;
       }
+
+      if (trigger === 'update' && session?.role) {
+        token.role = session.role;
+      }
+
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
         session.user.id = token.id as string;
+        session.user.role = token.role as UserRole;
       }
       return session;
+    },
+    async signIn({ user }) {
+      if (!user.email) return false;
+
+      const adminEmails = getAdminEmails();
+      if (adminEmails.includes(user.email.toLowerCase())) {
+        await db.user.update({
+          where: { id: user.id },
+          data: { role: UserRole.SUPER_ADMIN },
+        });
+      }
+
+      return true;
     },
   },
 };

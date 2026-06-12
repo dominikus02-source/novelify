@@ -5,7 +5,7 @@ import { useState, useEffect } from 'react';
 import {
   LayoutDashboard, BookOpen, PenTool, FileText, Layout, Sparkles,
   FileEdit, Languages, Download, Layers, Megaphone,
-  Settings, ChevronLeft, LogOut, Menu,
+  Settings, Shield, ChevronLeft, LogOut, Menu,
 } from 'lucide-react';
 import { useNovelifyStore, type AppView, PROJECT_VIEWS, resolveActiveProject } from '@/lib/store';
 import { useSession } from 'next-auth/react';
@@ -21,6 +21,7 @@ interface NavItemDef {
   view: AppView;
   section: 'workspace' | 'tools' | 'publishing' | 'resources' | 'account';
   path: string;
+  adminOnly?: boolean;
 }
 
 const navItems: NavItemDef[] = [
@@ -39,6 +40,7 @@ const navItems: NavItemDef[] = [
   { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'resources', path: '/dashboard/marketing' },
 
   { icon: Settings, label: 'Settings', view: 'settings', section: 'account', path: '/dashboard/settings' },
+  { icon: Shield, label: 'Admin Console', view: 'settings', section: 'account', path: '/admin', adminOnly: true },
 ];
 
 const sectionLabels: Record<string, string> = {
@@ -188,6 +190,8 @@ export function Sidebar() {
     );
   };
 
+  const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
+
   const renderNavSections = (renderFn: (item: NavItemDef) => React.ReactNode, showLabel: boolean = true) => (
     (['workspace', 'tools', 'resources', 'account'] as const).map((section) => (
       <div key={section}>
@@ -197,7 +201,7 @@ export function Sidebar() {
           </div>
         )}
         <nav style={{ padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {navItems.filter((item) => item.section === section).map(renderFn)}
+          {navItems.filter((item) => item.section === section && (!item.adminOnly || isAdmin)).map(renderFn)}
         </nav>
       </div>
     ))
@@ -250,6 +254,27 @@ export function Sidebar() {
                 <div style={{ padding: '0 6px', marginTop: 4, marginBottom: 4 }}>
                   <PlanBadge />
                 </div>
+
+                {isAdmin && (
+                  <SheetClose asChild>
+                    <button
+                      onClick={() => { setMobileSheetOpen(false); router.push('/admin'); }}
+                      style={{
+                        display: 'flex', alignItems: 'center', gap: 8,
+                        padding: '8px 8px', borderRadius: 10, cursor: 'pointer',
+                        border: 'none', width: '100%', fontSize: 12, fontWeight: 500,
+                        textAlign: 'left', color: '#8E8E93',
+                        background: 'transparent', transition: 'background .15s',
+                        marginBottom: 4,
+                      }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; }}
+                    >
+                      <Shield style={{ width: 16, height: 16, flexShrink: 0, opacity: 0.7 }} />
+                      <span>Admin Console</span>
+                    </button>
+                  </SheetClose>
+                )}
 
                 {selectedProject && (
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 8, background: 'rgba(201,169,110,0.08)', border: '1px solid rgba(201,169,110,0.15)', margin: '0 0 4px 0' }}>
