@@ -214,7 +214,7 @@ export function Sidebar() {
       {/* Mobile header bar */}
       <div className="md:hidden" style={{
         position: 'fixed', top: 0, left: 0, right: 0, height: 56,
-        zIndex: 50, background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.06)',
+        zIndex: 40, background: '#0a0a0a', borderBottom: '1px solid rgba(255,255,255,0.06)',
         display: 'flex', alignItems: 'center', padding: '0 14px', justifyContent: 'space-between',
       }}>
         <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, textDecoration: 'none' }}>
@@ -236,7 +236,6 @@ export function Sidebar() {
           <SheetContent side="left" data-mobile-sheet="true" className="p-0" style={{
             background: '#0a0a0a', width: 280, maxWidth: 280,
             borderRight: '1px solid rgba(255,255,255,0.06)',
-            paddingTop: 56,
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
               {/* Logo */}
