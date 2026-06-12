@@ -32,25 +32,7 @@ export function AuthLayout({ children, title, subtitle, backLink = true }: AuthL
           {/* Brand */}
           <div className="mb-10">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <div
-                className="flex items-center justify-center w-9 h-9 rounded-[9px] transition-shadow duration-200 group-hover:shadow-lg"
-                style={{
-                  background: 'linear-gradient(135deg, #C9A96E, #E8C98A)',
-                  boxShadow: '0 2px 8px rgba(201,169,110,0.2)',
-                }}
-              >
-                <span className="text-sm font-bold text-[#1a0f00] font-serif">N</span>
-              </div>
-              <span
-                className="text-xl font-semibold tracking-tight"
-                style={{
-                  fontFamily: "'Playfair Display', serif",
-                  color: '#F5F5F7',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                Novelify
-              </span>
+              <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
             </Link>
           </div>
 

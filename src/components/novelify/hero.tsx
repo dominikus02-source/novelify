@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 import { PLANS } from '@/lib/billing/plans';
 import Link from 'next/link';
 import {
@@ -386,10 +387,7 @@ export function Hero() {
             borderBottom: '1px solid var(--lp-border)',
           }}
         >
-          <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <span style={{ width: 28, height: 28, background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', borderRadius: 7, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 13, fontWeight: 700, color: '#000', flexShrink: 0 }}>N</span>
-            <span className="lp-serif" style={{ fontSize: 18, fontWeight: 600, letterSpacing: '-0.02em', color: 'var(--lp-white)' }}>Novelify</span>
-          </span>
+          <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
           <ul style={{ display: 'flex', alignItems: 'center', gap: 4, listStyle: 'none', margin: 0 }}>
             {navLinks.map((f) => (
               <li key={f.key} className="lp-mobile-hidden">
@@ -457,19 +455,7 @@ export function Hero() {
                 padding: '14px 20px',
                 borderBottom: '1px solid var(--lp-border)',
               }}>
-                <span style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{
-                    width: 28, height: 28,
-                    background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))',
-                    borderRadius: 7,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: 13, fontWeight: 700, color: '#000', flexShrink: 0,
-                  }}>N</span>
-                  <span className="lp-serif" style={{
-                    fontSize: 18, fontWeight: 600,
-                    letterSpacing: '-0.02em', color: 'var(--lp-white)',
-                  }}>Novelify</span>
-                </span>
+                <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
                 <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
                   style={{
                     width: 44, height: 44,
@@ -962,8 +948,7 @@ export function Hero() {
             <div className="lp-grid-footer-links" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
               <div>
                 <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ width: 24, height: 24, background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', borderRadius: 6, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 11, fontWeight: 700, color: '#000', flexShrink: 0 }}>N</span>
-                  <span className="lp-serif" style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)' }}>Novelify</span>
+                  <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={100} height={26} style={{ objectFit: 'contain' }} />
                 </Link>
                 <p style={{ fontSize: 11, color: 'var(--lp-muted)', margin: '8px 0 0', maxWidth: 260, lineHeight: 1.5 }}>
                   AI-powered writing studio for novelists. Plan, write, revise, translate, and publish.

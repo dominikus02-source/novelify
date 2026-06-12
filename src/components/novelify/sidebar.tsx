@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { useNovelifyStore, type AppView, PROJECT_VIEWS, resolveActiveProject } from '@/lib/store';
 import { useSession } from 'next-auth/react';
+import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { colors } from './dashboard-components';
@@ -87,16 +88,6 @@ export function Sidebar() {
 
   const isActive = (view: AppView) => currentView === view;
 
-  const navLogo = (
-    <div style={{
-      width: 30, height: 30, flexShrink: 0,
-      background: 'linear-gradient(135deg, #C9A96E, #E8C98A)',
-      borderRadius: 9, display: 'flex', alignItems: 'center', justifyContent: 'center',
-      fontSize: 14, fontWeight: 700, color: '#1a0f00',
-      boxShadow: '0 2px 8px rgba(201,169,110,0.3)',
-    }}>N</div>
-  );
-
   const renderNavItem = (item: NavItemDef, showLabel: boolean) => {
     const Icon = item.icon;
     const active = isActive(item.view);
@@ -168,18 +159,7 @@ export function Sidebar() {
         }}
       >
         <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '18px 14px 20px' : '18px 0 20px', justifyContent: sidebarOpen ? 'flex-start' : 'center', textDecoration: 'none', flexShrink: 0 }}>
-          {navLogo}
-          <AnimatePresence>
-            {sidebarOpen && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={{ opacity: 0, width: 0 }}
-                transition={{ duration: 0.2 }}
-                style={{ fontFamily: "'Playfair Display',serif", fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em', overflow: 'hidden', whiteSpace: 'nowrap' }}
-              >Novelify</motion.span>
-            )}
-          </AnimatePresence>
+          <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={sidebarOpen ? 120 : 30} height={30} style={{ objectFit: 'contain', flexShrink: 0, borderRadius: sidebarOpen ? 0 : 6 }} />
         </a>
 
         {renderNavSections((item) => renderNavItem(item, sidebarOpen), sidebarOpen)}

@@ -54,7 +54,7 @@ export const metadata: Metadata = {
     canonical: '/',
   },
   icons: {
-    icon: "/images/novelify-icon.png",
+    icon: "/images/Novelify_logo.jpeg",
   },
   openGraph: {
     title: "Novelify — AI Novel Writing, Revision, Translation, and Publishing Studio",
@@ -65,7 +65,7 @@ export const metadata: Metadata = {
     locale: 'en_US',
     images: [
       {
-        url: "/og-image.svg",
+        url: "/images/Novelify_logo.jpeg",
         width: 1200,
         height: 630,
         alt: "Novelify — AI-powered novel writing studio",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Novelify — AI Novel Writing Studio",
     description: "Plan, write, revise, translate, and publish novels with Novelify, an AI-powered writing studio for authors.",
-    images: ["/og-image.svg"],
+    images: ["/images/Novelify_logo.jpeg"],
   },
   robots: {
     index: true,
