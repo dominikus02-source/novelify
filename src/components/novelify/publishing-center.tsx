@@ -624,7 +624,7 @@ export function PublishingCenterPage() {
   // Load front matter
   useEffect(() => {
     if (!projectId) return;
-    fetch(`/api/publishing/frontmatter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
+    fetch(`/api/publishing/front-matter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
           setFrontMatter(data);
@@ -638,7 +638,7 @@ export function PublishingCenterPage() {
   // Load back matter
   useEffect(() => {
     if (!projectId) return;
-    fetch(`/api/publishing/backmatter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
+    fetch(`/api/publishing/back-matter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data) {
           setBackMatter(data);
@@ -691,7 +691,7 @@ export function PublishingCenterPage() {
   const autoSaveFrontMatter = useCallback(async (items: FrontMatterItem[]) => {
     if (!projectId) return;
     try {
-      await fetch('/api/publishing/frontmatter', {
+      await fetch('/api/publishing/front-matter', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, items }),
@@ -721,7 +721,7 @@ export function PublishingCenterPage() {
   const autoSaveBackMatter = useCallback(async (items: BackMatterItem[]) => {
     if (!projectId) return;
     try {
-      await fetch('/api/publishing/backmatter', {
+      await fetch('/api/publishing/back-matter', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ projectId, items }),

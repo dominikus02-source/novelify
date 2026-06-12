@@ -3,6 +3,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { updateProjectSchema } from '@/lib/validations';
 import { getUserId } from '@/lib/session';
 
+// GET /api/projects/[id] - Get a project
+export async function GET(
+  _request: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  try {
+    const userId = await getUserId();
+    if (!userId) return new Response(null, { status: 401 });
+
+    const { id } = await params;
+
+    const project = await db.project.findUnique({
+      where: { id },
+      include: {
+        chapters: true,
+        characters: true,
+      },
+    });
+
+    if (!project) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 });
+    }
+
+    if (project.userId !== userId) return new Response(null, { status: 403 });
+
+    return NextResponse.json(project);
+  } catch (error) {
+    console.error('Error fetching project:', error);
+    return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });
+  }
+}
+
 // PATCH /api/projects/[id] - Update a project
 export async function PATCH(
   request: NextRequest,
