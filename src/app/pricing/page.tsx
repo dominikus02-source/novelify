@@ -4,8 +4,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Loader2, Check, X, Star, Zap, Crown, Sparkles } from 'lucide-react';
-import { PLANS, FEATURES, hasFeature, getCurrencyPrice, formatPrice, type PlanTier, type Currency } from '@/lib/billing/plans';
+import { Loader2, Check, X, Star, Zap, Crown, Sparkles, ArrowLeft } from 'lucide-react';
+import { PLANS, FEATURES, hasFeature, type PlanTier, type Currency } from '@/lib/billing/plans';
 
 const GROUP_LABELS: Record<string, string> = {
   writing: 'Writing',
@@ -124,6 +124,26 @@ export default function PricingPage() {
       }}
     >
       <div className="mx-auto max-w-7xl px-4 py-20 sm:px-6 lg:px-8">
+        {/* Back */}
+        <div style={{ marginBottom: 16 }}>
+          <button
+            onClick={() => router.back()}
+            style={{
+              display: 'inline-flex', alignItems: 'center', gap: 6,
+              padding: '6px 12px', borderRadius: 8,
+              border: '1px solid rgba(255,255,255,0.08)',
+              background: 'transparent', color: '#8E8E93',
+              fontSize: 13, fontWeight: 500, cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; }}
+          >
+            <ArrowLeft size={16} />
+            Back
+          </button>
+        </div>
+
         {/* Hero */}
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <h1
@@ -292,10 +312,11 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginBottom: 80 }}>
           {TIERS.map((tier) => {
             const plan = PLANS[tier];
-            const price = getCurrencyPrice(tier, yearly ? 'yearly' : 'monthly', currency);
             const displayPrice = currency === 'IDR'
-              ? `Rp ${(yearly ? plan.yearlyPriceIdr / 12 : plan.monthlyPriceIdr).toLocaleString('id-ID')}`
-              : `$${yearly ? plan.yearlyPrice / 12 : plan.monthlyPrice}`;
+              ? `Rp ${Math.round(yearly ? plan.yearlyPriceIdr / 12 : plan.monthlyPriceIdr).toLocaleString('id-ID')}`
+              : yearly
+                ? `$${(plan.yearlyPrice / 12).toFixed(2)}`
+                : `$${plan.monthlyPrice}`;
             const isCurrent = userPlan === tier;
             const isLoading = loading === tier;
             const IconComponent = PLAN_ICONS[tier];

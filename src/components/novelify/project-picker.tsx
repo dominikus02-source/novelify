@@ -70,7 +70,7 @@ export function ProjectPicker({ title, description, targetRoute, createLabel }: 
   }
 
   return (
-    <div style={{ padding: '32px 40px', maxWidth: 800, margin: '0 auto' }}>
+    <div className="px-5 py-8 md:px-10" style={{ maxWidth: 800, margin: '0 auto' }}>
       <div style={{ marginBottom: 28 }}>
         <h1 style={{ fontFamily: "'Playfair Display',serif", fontSize: 24, fontWeight: 600, color: '#F5F5F7', margin: '0 0 6px' }}>
           {title}

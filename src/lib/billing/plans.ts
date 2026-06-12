@@ -47,7 +47,7 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
   free: {
     id: 'free',
     name: 'Free',
-    description: 'Perfect for trying Novelify',
+    description: 'Basic writing tools for getting started',
     monthlyPrice: 0,
     yearlyPrice: 0,
     monthlyPriceIdr: 0,
@@ -56,21 +56,21 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     highlighted: false,
     limits: {
       maxProjects: 1,
-      maxChaptersPerProject: 10,
-      aiCreditsMonthly: 50,
-      exportsMonthly: 3,
-      revisionChecksMonthly: 5,
+      maxChaptersPerProject: 5,
+      aiCreditsMonthly: 10,
+      exportsMonthly: 2,
+      revisionChecksMonthly: 0,
       fullRevisionChecksMonthly: 0,
-      translationWordsMonthly: 1000,
+      translationWordsMonthly: 0,
       marketingAssetsMonthly: 0,
       maxTeamMembers: 1,
-      storagePerProjectMb: 50,
+      storagePerProjectMb: 25,
     },
   },
   starter: {
     id: 'starter',
     name: 'Starter',
-    description: 'For serious writers',
+    description: 'AI-powered writing for serious authors',
     monthlyPrice: 9,
     yearlyPrice: 90,
     monthlyPriceIdr: 129000,
@@ -81,19 +81,19 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
       maxProjects: 5,
       maxChaptersPerProject: 'unlimited',
       aiCreditsMonthly: 500,
-      exportsMonthly: 20,
-      revisionChecksMonthly: 50,
-      fullRevisionChecksMonthly: 1,
-      translationWordsMonthly: 10000,
-      marketingAssetsMonthly: 5,
+      exportsMonthly: 50,
+      revisionChecksMonthly: 100,
+      fullRevisionChecksMonthly: 3,
+      translationWordsMonthly: 15000,
+      marketingAssetsMonthly: 10,
       maxTeamMembers: 1,
-      storagePerProjectMb: 200,
+      storagePerProjectMb: 500,
     },
   },
   pro: {
     id: 'pro',
     name: 'Pro',
-    description: 'For published authors',
+    description: 'Full publishing suite for published authors',
     monthlyPrice: 19,
     yearlyPrice: 190,
     monthlyPriceIdr: 249000,
@@ -101,22 +101,22 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     badge: 'Pro',
     highlighted: true,
     limits: {
-      maxProjects: 20,
+      maxProjects: 50,
       maxChaptersPerProject: 'unlimited',
-      aiCreditsMonthly: 3000,
-      exportsMonthly: 100,
-      revisionChecksMonthly: 200,
-      fullRevisionChecksMonthly: 10,
-      translationWordsMonthly: 50000,
-      marketingAssetsMonthly: 20,
-      maxTeamMembers: 3,
-      storagePerProjectMb: 1000,
+      aiCreditsMonthly: 5000,
+      exportsMonthly: 500,
+      revisionChecksMonthly: 'unlimited',
+      fullRevisionChecksMonthly: 50,
+      translationWordsMonthly: 200000,
+      marketingAssetsMonthly: 50,
+      maxTeamMembers: 5,
+      storagePerProjectMb: 2000,
     },
   },
   studio: {
     id: 'studio',
     name: 'Studio',
-    description: 'For professional writers & teams',
+    description: 'Unlimited everything for professional teams',
     monthlyPrice: 49,
     yearlyPrice: 490,
     monthlyPriceIdr: 649000,
@@ -139,41 +139,41 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
 }
 
 export const FEATURES: PlanFeature[] = [
-  // Writing
+  // Writing — Free gets core tools only
   { key: 'writing_studio', label: 'Writing Studio', description: 'Full writing studio with chapters & scenes', group: 'writing', planRequired: 'free' },
   { key: 'story_bible', label: 'Story Bible', description: 'Characters, locations, research, timeline', group: 'writing', planRequired: 'free' },
   { key: 'plot_board', label: 'Plot Board', description: 'Visual plot board with beats & acts', group: 'writing', planRequired: 'free' },
-  { key: 'writing_goals', label: 'Writing Goals', description: 'Daily/weekly/project writing targets', group: 'writing', planRequired: 'free' },
   { key: 'version_history', label: 'Version History', description: 'Save & restore manuscript versions', group: 'writing', planRequired: 'free' },
+  { key: 'writing_goals', label: 'Writing Goals', description: 'Daily/weekly/project writing targets', group: 'writing', planRequired: 'starter' },
 
-  // AI
-  { key: 'ai_cowriter', label: 'AI Co-Writer', description: 'AI-assisted writing with scene generation', group: 'ai', planRequired: 'free' },
-  { key: 'ai_starter_outline', label: 'AI Starter Outline', description: 'AI-generated story outline to begin', group: 'ai', planRequired: 'free' },
-  { key: 'ai_translation', label: 'AI Translation', description: 'Translate your manuscript to other languages', group: 'ai', planRequired: 'free' },
-  { key: 'revision_basic', label: 'Revision — Basic', description: 'Check grammar, style, and readability', group: 'ai', planRequired: 'free' },
-  { key: 'revision_full_manuscript', label: 'Revision — Full Manuscript', description: 'Deep revision with pacing, plot holes, character arc analysis', group: 'ai', planRequired: 'starter' },
-  { key: 'ai_synopsis', label: 'AI Synopsis & Blurb', description: 'Generate professional synopsis and blurbs', group: 'ai', planRequired: 'free' },
+  // AI — Free gets none; Starter unlocks basic AI
+  { key: 'ai_starter_outline', label: 'AI Story Outline', description: 'AI-generated story outline to kickstart your book', group: 'ai', planRequired: 'starter' },
+  { key: 'ai_cowriter', label: 'AI Co-Writer', description: 'AI-assisted writing with scene generation & suggestions', group: 'ai', planRequired: 'starter' },
+  { key: 'revision_basic', label: 'Revision — Grammar & Style', description: 'Check grammar, style, and readability', group: 'ai', planRequired: 'starter' },
+  { key: 'ai_synopsis', label: 'AI Synopsis & Blurb', description: 'Generate professional synopsis and book blurbs', group: 'ai', planRequired: 'starter' },
+  { key: 'ai_translation', label: 'AI Translation', description: 'Translate your manuscript to other languages', group: 'ai', planRequired: 'starter' },
+  { key: 'revision_full_manuscript', label: 'Revision — Full Manuscript', description: 'Deep revision with pacing, plot holes, character arc analysis', group: 'ai', planRequired: 'pro' },
 
-  // Export
+  // Export — each tier unlocks more formats
   { key: 'export_epub', label: 'EPUB Export', description: 'Export to EPUB format', group: 'export', planRequired: 'free' },
+  { key: 'export_markdown', label: 'Markdown Export', description: 'Export to Markdown format', group: 'export', planRequired: 'free' },
   { key: 'export_pdf', label: 'PDF Export', description: 'Export to PDF with professional formatting', group: 'export', planRequired: 'starter' },
   { key: 'export_docx', label: 'DOCX Export', description: 'Export to Microsoft Word format', group: 'export', planRequired: 'pro' },
-  { key: 'export_markdown', label: 'Markdown Export', description: 'Export to Markdown format', group: 'export', planRequired: 'free' },
 
   // Publishing
-  { key: 'publishing_center', label: 'Publishing Center', description: 'Metadata, cover, checklist, front/back matter', group: 'publishing', planRequired: 'free' },
-  { key: 'publishing_template', label: 'Custom Publishing Templates', description: 'Custom templates for front/back matter', group: 'publishing', planRequired: 'starter' },
+  { key: 'publishing_center', label: 'Publishing Center', description: 'Metadata, cover, checklist, front/back matter', group: 'publishing', planRequired: 'starter' },
+  { key: 'publishing_template', label: 'Custom Publishing Templates', description: 'Custom templates for front/back matter', group: 'publishing', planRequired: 'pro' },
 
-  // Team
-  { key: 'team_collaboration', label: 'Team Collaboration', description: 'Invite editors, beta readers, co-authors', group: 'team', planRequired: 'studio' },
+  // Marketing — Starter gets basic, Pro gets Amazon optimization
+  { key: 'marketing_assets', label: 'Marketing Assets', description: 'Generate book descriptions, social posts, ad copy', group: 'marketing', planRequired: 'starter' },
+  { key: 'amazon_metadata', label: 'Amazon KDP Optimization', description: 'Optimize metadata for Amazon KDP discoverability', group: 'marketing', planRequired: 'pro' },
 
-  // Marketing
-  { key: 'marketing_assets', label: 'Marketing Asset Generator', description: 'Generate book descriptions, social posts, ad copy', group: 'marketing', planRequired: 'starter' },
-  { key: 'amazon_metadata', label: 'Amazon Metadata Optimization', description: 'Optimize metadata for Amazon KDP', group: 'marketing', planRequired: 'pro' },
+  // Team — Studio only
+  { key: 'team_collaboration', label: 'Team Collaboration', description: 'Invite editors, beta readers, and co-authors', group: 'team', planRequired: 'studio' },
 
   // Support
   { key: 'priority_support', label: 'Priority Support', description: 'Fast email & chat support', group: 'support', planRequired: 'pro' },
-  { key: 'api_access', label: 'API Access', description: 'Access Novelify API for integrations', group: 'support', planRequired: 'studio' },
+  { key: 'api_access', label: 'API Access', description: 'Access Novelify API for custom integrations', group: 'support', planRequired: 'studio' },
 ]
 
 export function getPlanConfig(plan: string): PlanConfig {

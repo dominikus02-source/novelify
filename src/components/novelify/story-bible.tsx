@@ -485,7 +485,7 @@ export function StoryBiblePage() {
         {projects.length === 0 ? (
           <EmptyState icon={BookMarked} title="No projects yet" desc="Create a novel to start building your story bible" />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
             {projects.map((p) => (
               <Card key={p.id} hover onClick={() => go('story-bible', p)}>
                 <div style={{ padding: 16 }}>
@@ -520,7 +520,7 @@ export function StoryBiblePage() {
       />
 
       {/* Quick Stats */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 22 }}>
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" style={{ gap: 12, marginBottom: 22 }}>
         <MetricCard icon={Users} label="Characters" value={statCharacters} color="gold" loading={loading} />
         <MetricCard icon={MapPin} label="Locations" value={statLocations} color="amber" loading={loading} />
         <MetricCard icon={Clock} label="Timeline Events" value={statTimeline} color="teal" loading={loading} />
@@ -575,7 +575,7 @@ export function StoryBiblePage() {
     if (overviewLoading) {
       return (
         <FadeIn>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginBottom: 20 }}>
             {[1, 2, 3, 4].map(i => (
               <Card key={i} style={{ padding: 16 }}>
                 <div className="skeleton-pulse" style={{ height: 12, width: '40%', background: '#2a2a2a', borderRadius: 4, marginBottom: 8 }} />
@@ -583,7 +583,7 @@ export function StoryBiblePage() {
               </Card>
             ))}
           </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginBottom: 20 }}>
             {[1, 2].map(i => (
               <Card key={i} style={{ padding: 16 }}>
                 <div className="skeleton-pulse" style={{ height: 12, width: '30%', background: '#2a2a2a', borderRadius: 4, marginBottom: 8 }} />
@@ -604,7 +604,7 @@ export function StoryBiblePage() {
 
     return (
       <FadeIn>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginBottom: 20 }}>
           {fields.map(f => (
             <Card key={f.key} style={{ padding: 16 }}>
               <FormField label={f.label}>
@@ -636,7 +636,7 @@ export function StoryBiblePage() {
           ))}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginBottom: 20 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginBottom: 20 }}>
           <Card style={{ padding: 16 }}>
             <FormField label="Point of View">
               <select
@@ -675,7 +675,7 @@ export function StoryBiblePage() {
           </Card>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
           <Card style={{ padding: 16 }}>
             <FormField label="Tone">
               <textarea
@@ -708,7 +708,7 @@ export function StoryBiblePage() {
           </Card>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14, marginTop: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14, marginTop: 14 }}>
           <Card style={{ padding: 16 }}>
             <FormField label="Central Conflict">
               <textarea
@@ -794,7 +794,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setCharDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Character</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {filtered.map((ch) => (
               <Card key={ch.id} hover onClick={() => setCharDrawer({ open: true, item: ch })}>
                 <div style={{ padding: 14, display: 'flex', gap: 12, alignItems: 'flex-start' }}>
@@ -863,7 +863,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setLocDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Location</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {filtered.map((loc) => (
               <Card key={loc.id} hover onClick={() => setLocDrawer({ open: true, item: loc })}>
                 <div style={{ padding: 14 }}>
@@ -1017,7 +1017,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setLoreDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Lore Note</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {filtered.map((note) => (
               <Card key={note.id} hover onClick={() => setLoreDrawer({ open: true, item: note })}>
                 <div style={{ padding: 14 }}>
@@ -1083,7 +1083,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setResearchDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Research</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {filtered.map((r) => {
               const rc = relevanceColors[r.relevance] || colors.muted;
               return (
@@ -1161,7 +1161,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setRelDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Relationship</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 12 }}>
             {filtered.map((rel) => {
               const charA = charMap.get(rel.characterAId);
               const charB = charMap.get(rel.characterBId);
@@ -1255,7 +1255,7 @@ export function StoryBiblePage() {
             action={<GlassButton small onClick={() => setObjDrawer({ open: true, item: null })}><Plus style={{ width: 11, height: 11 }} /> Create Object</GlassButton>}
           />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 12 }}>
             {filtered.map((note) => (
               <Card key={note.id} hover onClick={() => setObjDrawer({ open: true, item: note })}>
                 <div style={{ padding: 14 }}>
@@ -1391,7 +1391,7 @@ export function StoryBiblePage() {
         <FormField label="Name"><Input value={name} onChange={setName} placeholder="Character name" /></FormField>
         <FormField label="Role"><Select value={role} onChange={setRole} options={CHARACTER_ROLES} /></FormField>
         <FormField label="Description"><Input value={description} onChange={setDescription} placeholder="Brief description" multiline rows={2} /></FormField>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 10 }}>
           <FormField label="Age"><Input value={age} onChange={setAge} placeholder="Age" /></FormField>
           <FormField label="Gender"><Input value={gender} onChange={setGender} placeholder="Gender" /></FormField>
         </div>
@@ -1407,7 +1407,7 @@ export function StoryBiblePage() {
         <FormField label="Character Arc"><Input value={characterArc} onChange={setCharacterArc} placeholder="How do they change?" multiline rows={2} /></FormField>
         <FormField label="Relationship to Protagonist"><Input value={relationshipToProtagonist} onChange={setRelationshipToProtagonist} placeholder="Connection to the protagonist" multiline rows={2} /></FormField>
         <FormField label="First Appearance"><Input value={firstAppearanceChapter} onChange={setFirstAppearanceChapter} placeholder="Chapter they first appear" /></FormField>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 10 }}>
           <FormField label="Status"><Select value={status} onChange={setStatus} options={CHARACTER_STATUSES} /></FormField>
           <FormField label="Color Tag"><Input value={colorTag} onChange={setColorTag} placeholder="e.g. #C9A96E" /></FormField>
         </div>
@@ -1455,7 +1455,7 @@ export function StoryBiblePage() {
       <div>
         {error && <div style={{ fontSize: 11, color: '#F87171', marginBottom: 10 }}>{error}</div>}
         <FormField label="Name"><Input value={name} onChange={setName} placeholder="Location name" /></FormField>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 10 }}>
           <FormField label="Type"><Select value={type} onChange={setType} options={LOCATION_TYPES} /></FormField>
           <FormField label="Importance"><Select value={importance} onChange={setImportance} options={IMPORTANCE_LEVELS} /></FormField>
         </div>
@@ -1507,7 +1507,7 @@ export function StoryBiblePage() {
         <FormField label="Title"><Input value={title} onChange={setTitle} placeholder="Event title" /></FormField>
         <FormField label="Type"><Select value={type} onChange={setType} options={TIMELINE_TYPES} /></FormField>
         <FormField label="Description"><Input value={description} onChange={setDescription} placeholder="Describe the event" multiline rows={3} /></FormField>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 10 }}>
           <FormField label="Event Order"><Input value={eventOrder} onChange={setEventOrder} placeholder="Numeric order" type="number" /></FormField>
           <FormField label="Date Text"><Input value={eventDateText} onChange={setEventDateText} placeholder="e.g. 'Year 3000'" /></FormField>
         </div>

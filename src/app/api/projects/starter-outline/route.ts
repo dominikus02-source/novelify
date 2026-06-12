@@ -6,6 +6,7 @@ import { createChatCompletion } from '@/lib/ai';
 import { getStructureBeats } from '@/lib/templates';
 import { db } from '@/lib/db';
 import { trackUsage } from '@/lib/billing/usage';
+import { requireFeature } from '@/lib/billing/feature-gates';
 
 const starterOutlineSchema = z.object({
   storyType: z.string(),
@@ -36,6 +37,7 @@ export async function POST(request: NextRequest) {
 
     const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
     const userPlan = user?.plan || 'free';
+    try { requireFeature(userId, userPlan, 'ai_starter_outline'); } catch { return NextResponse.json({ error: 'AI Story Outline requires at least the Starter plan' }, { status: 403 }); }
     await trackUsage(userId, userPlan, 'starter_outline', 1);
 
     const body = await request.json();

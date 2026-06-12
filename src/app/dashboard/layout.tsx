@@ -1,18 +1,28 @@
 'use client';
 
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter, usePathname } from 'next/navigation';
 import { Sidebar } from '@/components/novelify/sidebar';
 import { useNovelifyStore } from '@/lib/store';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Toaster } from 'sonner';
+import { UsageMonitor } from '@/components/novelify/usage-monitor';
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const { data: session, status } = useSession();
   const router = useRouter();
   const pathname = usePathname();
   const { sidebarOpen, currentView, setCurrentView } = useNovelifyStore();
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const handler = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', handler);
+    handler();
+    return () => mq.removeEventListener('change', handler);
+  }, []);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -53,16 +63,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   if (status === 'unauthenticated') return null;
 
   return (
-    <div className="min-h-screen" style={{ background: '#080808' }}>
-      <style>{`
-        @media (max-width: 767px) {
-          .dashboard-main { padding-top: 56px !important; }
-        }
-      `}</style>
+    <div className="min-h-screen overflow-x-hidden" style={{ background: '#080808' }}>
+      <UsageMonitor />
       <Sidebar />
       <main
-        className="dashboard-main transition-all duration-300 max-md:!ml-0"
-        style={{ marginLeft: sidebarOpen ? 240 : 64 }}
+        className="dashboard-main transition-all duration-300"
+        style={{ marginLeft: isMobile ? 0 : (sidebarOpen ? 240 : 64) }}
       >
         <AnimatePresence mode="popLayout">
           <motion.div

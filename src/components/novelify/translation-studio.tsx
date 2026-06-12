@@ -119,9 +119,9 @@ export function TranslationStudio() {
   const translatedWords = chapters.reduce((s, c) => s + (c.contentTranslated?.split(/\s+/).filter(Boolean).length || 0), 0);
 
   return (
-    <div className="flex h-screen" style={{ background: colors.darkBg }}>
+    <div className="flex flex-col md:flex-row h-screen" style={{ background: colors.darkBg }}>
       {/* Left Panel — Chapter List */}
-      <div style={{ width: 280, flexShrink: 0, background: '#0a0a0a', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' }}>
+      <div className="w-full md:w-[280px]" style={{ flexShrink: 0, background: '#0a0a0a', borderRight: '1px solid rgba(255,255,255,0.06)', display: 'flex', flexDirection: 'column' }}>
         <div style={{ padding: '16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
           <div className="flex items-center gap-2 mb-2">
             <BookOpen className="size-4 shrink-0" style={{ color: '#C9A96E' }} />

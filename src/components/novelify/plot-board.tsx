@@ -217,7 +217,7 @@ Chapters: ${chapters.map(c => `${c.chapterNumber}. ${c.title}`).join('\n')}`;
         {projects.length === 0 ? (
           <EmptyState icon={Layout} title="No projects yet" desc="Create a novel to start plotting" />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
             {projects.map(p => (
               <Card key={p.id} hover onClick={() => { setSelectedProject(p); router.push(`/dashboard/plot/${p.id}`); }}>
                 <div style={{ padding: 16 }}>

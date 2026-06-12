@@ -194,7 +194,7 @@ export function CommandCenter() {
 
         {/* ─── A. Welcome + Quick Actions ─── */}
         <FadeIn>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', gap: 16, alignItems: 'center', background: 'linear-gradient(135deg, rgba(201,169,110,0.08), rgba(201,169,110,0.02))', border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: '24px 28px' }}>
+          <div className="grid-cols-1 md:grid-cols-[1fr_auto]" style={{ display: 'grid', gap: 16, alignItems: 'center', background: 'linear-gradient(135deg, rgba(201,169,110,0.08), rgba(201,169,110,0.02))', border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: '24px 28px' }}>
             <div>
               <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: '#F5F5F7', marginBottom: 6 }}>
                 {lastEdited ? `Continue "${lastEdited.title}"` : 'Welcome to Novelify'}
@@ -278,7 +278,7 @@ export function CommandCenter() {
           <div>
             <SectionHeader title="Active Projects" count={totalProjects} action={<a href="#" onClick={() => navigate('my-novels')} style={{ fontSize: 12, color: colors.gold, cursor: 'pointer', fontWeight: 500, textDecoration: 'none' }}>View all →</a>} />
             {isLoading ? (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 16, overflow: 'hidden' }}>
                     <div style={{ height: 96, background: 'rgba(255,255,255,0.03)' }} />
@@ -293,7 +293,7 @@ export function CommandCenter() {
             ) : totalProjects === 0 ? (
               <EmptyState icon={BookOpen} title="No novels yet" desc="Create your first novel project to get started" action={<GlassButton onClick={() => setCreateOpen(true)}><Plus style={{ width: 13, height: 13 }} /> Create Novel</GlassButton>} />
             ) : (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
                 {sortedProjects.slice(0, 6).map((project, i) => {
                   const wc = project.chapters.reduce((s, c) => s + c.wordCount, 0);
                   const cc = project.chapters.length;
@@ -345,7 +345,7 @@ export function CommandCenter() {
         </FadeIn>
 
         {/* ─── Bottom Grid ─── */}
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 14 }}>
 
           {/* Left Column */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -379,7 +379,7 @@ export function CommandCenter() {
             <FadeIn delay={0.14}>
               <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
                 <SectionHeader title="AI Tools" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
+                <div className="grid grid-cols-2 sm:grid-cols-3" style={{ gap: 6 }}>
                   {aiTools.map((tool) => {
                     const Icon = tool.icon;
                     const c = iconColors[tool.color] || colors.gold;
@@ -460,7 +460,7 @@ export function CommandCenter() {
             <FadeIn delay={0.15}>
               <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
                 <SectionHeader title="Templates" action={<button onClick={() => navigate('templates')} style={{ fontSize: 11, color: colors.gold, cursor: 'pointer', fontWeight: 500, background: 'none', border: 'none' }}>All →</button>} />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
+                <div className="grid grid-cols-2" style={{ gap: 6 }}>
                   {templates.map((t) => (
                     <button key={t.name} onClick={() => navigate('templates')}
                       style={{ display: 'flex', flexDirection: 'column', padding: '10px 12px', borderRadius: 10, background: '#161616', border: `1px solid ${colors.border}`, cursor: 'pointer', textAlign: 'left', transition: 'border-color .15s' }}
@@ -480,7 +480,7 @@ export function CommandCenter() {
             <FadeIn delay={0.17}>
               <div style={{ background: colors.cardBg, border: `1px solid ${colors.border}`, borderRadius: 16, padding: 20 }}>
                 <SectionHeader title="Writer Insights" />
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 10 }}>
+                <div className="grid grid-cols-2" style={{ gap: 10 }}>
                   {[
                     { label: 'Avg Chapter Length', value: `${fmtWords(avgChapterLength)} words` },
                     { label: 'Estimated Reading', value: `${readingTime} min` },

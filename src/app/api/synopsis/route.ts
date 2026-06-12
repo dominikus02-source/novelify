@@ -6,6 +6,7 @@ import { createChatCompletion } from '@/lib/ai';
 import { getUserId, unauthorized } from '@/lib/session';
 import { resolveLanguageContext, buildNovelSystemPrompt } from '@/lib/language-resolver';
 import { trackUsage } from '@/lib/billing/usage';
+import { requireFeature } from '@/lib/billing/feature-gates';
 
 const limiter = rateLimit({ interval: 30000, maxRequests: 5 });
 
@@ -37,6 +38,8 @@ export async function POST(request: NextRequest) {
 
     const user = await db.user.findUnique({ where: { id: userId }, select: { plan: true } });
     const userPlan = user?.plan || 'free';
+
+    try { requireFeature(userId, userPlan, 'ai_synopsis'); } catch { return NextResponse.json({ error: 'AI Synopsis requires at least the Starter plan' }, { status: 403 }); }
 
     // Resolve language from project or user settings
     const language = await resolveLanguageContext(userId, parsed.data.projectId);

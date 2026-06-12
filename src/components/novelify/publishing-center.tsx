@@ -111,6 +111,89 @@ const BACK_MATTER_DEFAULTS: BackMatterItem[] = [
   { key: 'alsoByBack', label: 'Also By', enabled: false, content: '' },
 ];
 
+// ─── Front Matter / Back Matter conversion helpers ───
+function fromFrontMatterData(data: Record<string, any>): FrontMatterItem[] {
+  const map: Record<string, { enabledKey?: string; contentKey?: string }> = {
+    titlePage: { enabledKey: 'includeTitlePage' },
+    copyrightPage: { enabledKey: 'includeCopyrightPage', contentKey: 'copyrightNotice' },
+    dedication: { enabledKey: 'includeDedication', contentKey: 'dedication' },
+    epigraph: { enabledKey: 'includeEpigraph', contentKey: 'epigraph' },
+    foreword: { enabledKey: 'includeForeword', contentKey: 'foreword' },
+    preface: { enabledKey: 'includePreface', contentKey: 'preface' },
+    acknowledgments: { enabledKey: 'includeAcknowledgments', contentKey: 'acknowledgments' },
+    toc: { enabledKey: 'includeTableOfContents' },
+    alsoBy: { contentKey: 'alsoByAuthor' },
+  };
+  return FRONT_MATTER_DEFAULTS.map(item => {
+    const field = map[item.key];
+    return {
+      ...item,
+      enabled: field?.enabledKey ? data[field.enabledKey] !== false : true,
+      content: field?.contentKey ? (data[field.contentKey] ?? '') : item.content,
+    };
+  });
+}
+
+function toFrontMatterPayload(items: FrontMatterItem[]): Record<string, any> {
+  const payload: Record<string, any> = {};
+  const map: Record<string, { enabledKey?: string; contentKey?: string }> = {
+    titlePage: { enabledKey: 'includeTitlePage' },
+    copyrightPage: { enabledKey: 'includeCopyrightPage', contentKey: 'copyrightNotice' },
+    dedication: { enabledKey: 'includeDedication', contentKey: 'dedication' },
+    epigraph: { enabledKey: 'includeEpigraph', contentKey: 'epigraph' },
+    foreword: { enabledKey: 'includeForeword', contentKey: 'foreword' },
+    preface: { enabledKey: 'includePreface', contentKey: 'preface' },
+    acknowledgments: { enabledKey: 'includeAcknowledgments', contentKey: 'acknowledgments' },
+    toc: { enabledKey: 'includeTableOfContents' },
+    alsoBy: { contentKey: 'alsoByAuthor' },
+  };
+  for (const item of items) {
+    const field = map[item.key];
+    if (field?.enabledKey) payload[field.enabledKey] = item.enabled;
+    if (field?.contentKey) payload[field.contentKey] = item.content || null;
+  }
+  return payload;
+}
+
+function fromBackMatterData(data: Record<string, any>): BackMatterItem[] {
+  const map: Record<string, { enabledKey?: string; contentKey?: string }> = {
+    aboutAuthor: { enabledKey: 'includeAboutAuthor', contentKey: 'aboutAuthor' },
+    authorWebsite: { enabledKey: 'includeAuthorWebsite', contentKey: 'authorWebsite' },
+    reviewRequest: { enabledKey: 'includeReviewRequest', contentKey: 'reviewRequest' },
+    newsletterSignup: { enabledKey: 'includeNewsletterSignup', contentKey: 'newsletterSignup' },
+    thankYou: { enabledKey: 'includeThankYou', contentKey: 'thankYouNote' },
+    nextBookTeaser: { enabledKey: 'includeNextBookTeaser', contentKey: 'nextBookTeaser' },
+    alsoByBack: { enabledKey: 'includeAlsoByAuthor', contentKey: 'alsoByAuthor' },
+  };
+  return BACK_MATTER_DEFAULTS.map(item => {
+    const field = map[item.key];
+    return {
+      ...item,
+      enabled: field?.enabledKey ? data[field.enabledKey] !== false : true,
+      content: field?.contentKey ? (data[field.contentKey] ?? '') : item.content,
+    };
+  });
+}
+
+function toBackMatterPayload(items: BackMatterItem[]): Record<string, any> {
+  const payload: Record<string, any> = {};
+  const map: Record<string, { enabledKey?: string; contentKey?: string }> = {
+    aboutAuthor: { enabledKey: 'includeAboutAuthor', contentKey: 'aboutAuthor' },
+    authorWebsite: { enabledKey: 'includeAuthorWebsite', contentKey: 'authorWebsite' },
+    reviewRequest: { enabledKey: 'includeReviewRequest', contentKey: 'reviewRequest' },
+    newsletterSignup: { enabledKey: 'includeNewsletterSignup', contentKey: 'newsletterSignup' },
+    thankYou: { enabledKey: 'includeThankYou', contentKey: 'thankYouNote' },
+    nextBookTeaser: { enabledKey: 'includeNextBookTeaser', contentKey: 'nextBookTeaser' },
+    alsoByBack: { enabledKey: 'includeAlsoByAuthor', contentKey: 'alsoByAuthor' },
+  };
+  for (const item of items) {
+    const field = map[item.key];
+    if (field?.enabledKey) payload[field.enabledKey] = item.enabled;
+    if (field?.contentKey) payload[field.contentKey] = item.content || null;
+  }
+  return payload;
+}
+
 const CHECKLIST_ITEMS: ChecklistItem[] = [
   { id: 'metadata', label: 'Metadata Complete', description: 'Fill in book title, author name, genre, and description', completed: false },
   { id: 'cover', label: 'Cover Ready', description: 'Upload a cover image for your book', completed: false },
@@ -275,7 +358,7 @@ function FormField({ label, children }: { label: string; children: React.ReactNo
 }
 
 function Input({ value, onChange, placeholder, multiline, rows = 2, type, style: extStyle, disabled }: {
-  value: string; onChange: (v: string) => void; placeholder?: string;
+  value: string | null | undefined; onChange: (v: string) => void; placeholder?: string;
   multiline?: boolean; rows?: number; type?: string; style?: React.CSSProperties; disabled?: boolean;
 }) {
   const base: React.CSSProperties = {
@@ -284,9 +367,10 @@ function Input({ value, onChange, placeholder, multiline, rows = 2, type, style:
     borderRadius: 10, outline: 'none', transition: 'border-color .2s',
     fontFamily: 'inherit', resize: multiline ? 'vertical' : 'none', ...extStyle, cursor: disabled ? 'not-allowed' : 'auto',
   };
+  const v = value ?? '';
   if (multiline) {
     return (
-      <textarea value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+      <textarea value={v} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
         rows={rows} style={base} disabled={disabled}
         onFocus={(e) => !disabled && (e.currentTarget.style.borderColor = colors.goldBorder)}
         onBlur={(e) => !disabled && (e.currentTarget.style.borderColor = colors.border)}
@@ -294,7 +378,7 @@ function Input({ value, onChange, placeholder, multiline, rows = 2, type, style:
     );
   }
   return (
-    <input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
+    <input value={v} onChange={(e) => onChange(e.target.value)} placeholder={placeholder}
       type={type || 'text'} style={base} disabled={disabled}
       onFocus={(e) => !disabled && (e.currentTarget.style.borderColor = colors.goldBorder)}
       onBlur={(e) => !disabled && (e.currentTarget.style.borderColor = colors.border)}
@@ -303,11 +387,11 @@ function Input({ value, onChange, placeholder, multiline, rows = 2, type, style:
 }
 
 function Select({ value, onChange, options, placeholder }: {
-  value: string; onChange: (v: string) => void; options: { value: string; label: string }[] | string[]; placeholder?: string;
+  value: string | null | undefined; onChange: (v: string) => void; options: { value: string; label: string }[] | string[]; placeholder?: string;
 }) {
   const opts = Array.isArray(options) ? (typeof options[0] === 'string' ? (options as string[]).map(o => ({ value: o, label: o.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()) })) : options as { value: string; label: string }[]) : [];
   return (
-    <select value={value} onChange={(e) => onChange(e.target.value)}
+    <select value={value ?? ''} onChange={(e) => onChange(e.target.value)}
       style={{
         width: '100%', background: '#161616', border: `1px solid ${colors.border}`,
         color: value ? '#F5F5F7' : '#636366', fontSize: 12, padding: '8px 12px',
@@ -455,7 +539,7 @@ function Divider() {
 }
 
 function CharacterCount({ text, max }: { text: string; max: number }) {
-  const count = text.length;
+  const count = (text || '').length;
   const pct = count / max;
   const color = pct > 0.9 ? '#F87171' : pct > 0.7 ? '#C9A96E' : '#636366';
   return (
@@ -598,7 +682,7 @@ export function PublishingCenterPage() {
       fetch(`/api/projects/${projectId}`).then(r => r.ok ? r.json() : null),
     ]).then(([metaData, checklistData, exportsData, projectData]) => {
       if (metaData) {
-        setMetadata({ ...metaData });
+        setMetadata(prev => ({ ...prev, ...metaData }));
         setSaveStatus('saved');
       }
       if (checklistData) {
@@ -626,7 +710,9 @@ export function PublishingCenterPage() {
     if (!projectId) return;
     fetch(`/api/publishing/front-matter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data) {
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          setFrontMatter(fromFrontMatterData(data));
+        } else if (Array.isArray(data)) {
           setFrontMatter(data);
         } else {
           setFrontMatter(FRONT_MATTER_DEFAULTS.map(i => ({ ...i })));
@@ -640,7 +726,9 @@ export function PublishingCenterPage() {
     if (!projectId) return;
     fetch(`/api/publishing/back-matter?projectId=${projectId}`).then(r => r.ok ? r.json() : null)
       .then(data => {
-        if (data) {
+        if (data && typeof data === 'object' && !Array.isArray(data)) {
+          setBackMatter(fromBackMatterData(data));
+        } else if (Array.isArray(data)) {
           setBackMatter(data);
         } else {
           setBackMatter(BACK_MATTER_DEFAULTS.map(i => ({ ...i })));
@@ -691,10 +779,11 @@ export function PublishingCenterPage() {
   const autoSaveFrontMatter = useCallback(async (items: FrontMatterItem[]) => {
     if (!projectId) return;
     try {
+      const payload = toFrontMatterPayload(items);
       await fetch('/api/publishing/front-matter', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, items }),
+        body: JSON.stringify({ projectId, ...payload }),
       });
     } catch {
       showToast('Failed to save front matter', 'error');
@@ -721,10 +810,11 @@ export function PublishingCenterPage() {
   const autoSaveBackMatter = useCallback(async (items: BackMatterItem[]) => {
     if (!projectId) return;
     try {
+      const payload = toBackMatterPayload(items);
       await fetch('/api/publishing/back-matter', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, items }),
+        body: JSON.stringify({ projectId, ...payload }),
       });
     } catch {
       showToast('Failed to save back matter', 'error');
@@ -931,7 +1021,7 @@ export function PublishingCenterPage() {
         {projects.length === 0 ? (
           <EmptyState icon={BookOpen} title="No projects yet" desc="Create a novel to start preparing for publication" />
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14 }}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3" style={{ gap: 14 }}>
             {projects.map((p) => (
               <Card key={p.id} hover onClick={() => { setSelectedProject(p); router.push(`/dashboard/publishing/${p.id}`); }}>
                 <div style={{ padding: 16 }}>
@@ -970,10 +1060,10 @@ export function PublishingCenterPage() {
       />
 
       {/* Publishing Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 22 }}>
-        <MetricCard icon={FileText} label="Metadata Fields" value={Object.values(metadata).filter(v => v && v.length > 0).length.toString() + '/24'} color="gold" />
-        <MetricCard icon={BookMarked} label="Front Matter" value={frontMatter.filter(f => f.enabled).length + '/9'} sub={`${frontMatter.filter(f => f.enabled && f.content.length > 0).length} with content`} color="amber" />
-        <MetricCard icon={Layers} label="Back Matter" value={backMatter.filter(b => b.enabled).length + '/7'} sub={`${backMatter.filter(b => b.enabled && b.content.length > 0).length} with content`} color="teal" />
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4" style={{ gap: 12, marginBottom: 22 }}>
+        <MetricCard icon={FileText} label="Metadata Fields" value={Object.values(metadata || {}).filter(v => v && v.length > 0).length.toString() + '/24'} color="gold" />
+        <MetricCard icon={BookMarked} label="Front Matter" value={(Array.isArray(frontMatter) ? frontMatter.filter(f => f.enabled).length : 0) + '/9'} sub={`${Array.isArray(frontMatter) ? frontMatter.filter(f => f.enabled && f.content?.length > 0).length : 0} with content`} color="amber" />
+        <MetricCard icon={Layers} label="Back Matter" value={(Array.isArray(backMatter) ? backMatter.filter(b => b.enabled).length : 0) + '/7'} sub={`${Array.isArray(backMatter) ? backMatter.filter(b => b.enabled && b.content?.length > 0).length : 0} with content`} color="teal" />
         <MetricCard icon={CheckCircle2} label="Readiness" value={checklistScore + '/9'} color={checklistScore >= 7 ? 'teal' : checklistScore >= 4 ? 'gold' : 'red'} />
       </div>
 
@@ -1003,7 +1093,7 @@ export function PublishingCenterPage() {
 
       {/* ─── Content ─── */}
       {tab === 'metadata' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
           <Card>
             <div style={{ padding: 24 }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
@@ -1018,7 +1108,7 @@ export function PublishingCenterPage() {
                   <FormField label="Subtitle">
                     <Input value={metadata.subtitle} onChange={(v) => updateMetadataField('subtitle', v)} placeholder="Optional subtitle" />
                   </FormField>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12 }}>
                     <FormField label="Series">
                       <Input value={metadata.series} onChange={(v) => updateMetadataField('series', v)} placeholder="Series name" />
                     </FormField>
@@ -1032,7 +1122,7 @@ export function PublishingCenterPage() {
                   <FormField label="Publisher">
                     <Input value={metadata.publisher} onChange={(v) => updateMetadataField('publisher', v)} placeholder="Self-published or imprint name" />
                   </FormField>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12 }}>
                     <FormField label="Language">
                       <Select value={metadata.language} onChange={(v) => updateMetadataField('language', v)} options={LANGUAGE_OPTIONS} placeholder="Select language" />
                     </FormField>
@@ -1068,7 +1158,7 @@ export function PublishingCenterPage() {
                     <Select value={metadata.ageRange} onChange={(v) => updateMetadataField('ageRange', v)} options={['0-3', '4-8', '9-12', '13-17', '18-25', '25-40', '40-60', '60+']} placeholder="Select age range" />
                   </FormField>
                   <FieldHint text="Age range helps retailers categorize your book correctly" />
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginTop: 14 }}>
+                  <div className="grid grid-cols-1 sm:grid-cols-2" style={{ gap: 12, marginTop: 14 }}>
                     <FormField label="ISBN">
                       <Input value={metadata.isbn} onChange={(v) => updateMetadataField('isbn', v)} placeholder="ISBN if assigned" />
                     </FormField>
@@ -1177,7 +1267,7 @@ export function PublishingCenterPage() {
               Front matter appears at the beginning of your book, before the main content. Toggle sections on or off and customize their content.
             </div>
           </Card>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
             {frontMatter.map((item, index) => (
               <Card key={item.key}>
                 <div style={{ padding: 20 }}>
@@ -1213,7 +1303,7 @@ export function PublishingCenterPage() {
               Back matter appears at the end of your book, after the main content. Use these sections to engage readers and promote your other work.
             </div>
           </Card>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
             {backMatter.map((item, index) => (
               <Card key={item.key}>
                 <div style={{ padding: 20 }}>
@@ -1242,7 +1332,7 @@ export function PublishingCenterPage() {
       )}
 
       {tab === 'cover' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
           <Card>
             <div style={{ padding: 24 }}>
               <SectionHeader title="Book Cover Image" />
@@ -1356,7 +1446,7 @@ export function PublishingCenterPage() {
       {tab === 'synopsis' && (
         <div>
           {/* AI Context Input */}
-          <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 20, marginBottom: 20 }}>
+          <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr]" style={{ gap: 20, marginBottom: 20 }}>
             <Card>
               <div style={{ padding: 20 }}>
                 <SectionHeader title="AI Generation Context" />
@@ -1391,7 +1481,7 @@ export function PublishingCenterPage() {
             </Card>
           </div>
 
-          <div style={{ marginTop: 20, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+          <div className="grid grid-cols-1 md:grid-cols-2" style={{ marginTop: 20, gap: 24 }}>
             <Card>
               <div style={{ padding: 24 }}>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
@@ -1513,7 +1603,7 @@ export function PublishingCenterPage() {
       )}
 
       {tab === 'export' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
           <Card>
             <div style={{ padding: 24 }}>
               <SectionHeader title="Export Your Book" />
@@ -1646,7 +1736,7 @@ export function PublishingCenterPage() {
       )}
 
       {tab === 'checklist' && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24 }}>
+        <div className="grid grid-cols-1 md:grid-cols-2" style={{ gap: 24 }}>
           <Card>
             <div style={{ padding: 24 }}>
               <SectionHeader title="Readiness Checklist" />
