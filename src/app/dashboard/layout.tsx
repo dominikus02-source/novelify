@@ -54,9 +54,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="min-h-screen" style={{ background: '#080808' }}>
+      <style>{`
+        @media (max-width: 767px) {
+          .dashboard-main { padding-top: 56px !important; }
+        }
+      `}</style>
       <Sidebar />
       <main
-        className="transition-all duration-300 max-md:!ml-0 max-md:pt-14"
+        className="dashboard-main transition-all duration-300 max-md:!ml-0"
         style={{ marginLeft: sidebarOpen ? 240 : 64 }}
       >
         <AnimatePresence mode="popLayout">
