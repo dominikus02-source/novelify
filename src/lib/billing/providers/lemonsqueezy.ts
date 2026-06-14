@@ -1,5 +1,6 @@
 import { createHmac, timingSafeEqual } from 'crypto'
 import { db } from '@/lib/db'
+import { processAffiliateCommission, reverseAffiliateCommission } from '@/lib/affiliate/commissions'
 
 export type LemonSqueezyPlan = 'starter' | 'pro' | 'studio'
 export type LemonSqueezyInterval = 'monthly' | 'yearly'
@@ -10,6 +11,9 @@ export interface LemonSqueezyCheckoutParams {
   userName?: string
   plan: LemonSqueezyPlan
   interval: LemonSqueezyInterval
+  affiliateId?: string
+  referralId?: string
+  referralCode?: string
 }
 
 export interface LemonSqueezyWebhookPayload {
@@ -20,6 +24,9 @@ export interface LemonSqueezyWebhookPayload {
       plan?: string
       interval?: string
       app?: string
+      affiliateId?: string
+      referralId?: string
+      referralCode?: string
     }
     test_mode?: boolean
   }
@@ -185,6 +192,9 @@ export async function createLemonSqueezyCheckout(params: LemonSqueezyCheckoutPar
               plan: params.plan,
               interval: params.interval,
               app: 'novelify',
+              ...(params.affiliateId && { affiliateId: params.affiliateId }),
+              ...(params.referralId && { referralId: params.referralId }),
+              ...(params.referralCode && { referralCode: params.referralCode }),
             },
           },
           product_options: {
@@ -249,7 +259,7 @@ export function parseLemonSqueezyEventName(payload: LemonSqueezyWebhookPayload):
   return payload?.meta?.event_name || 'unknown'
 }
 
-export function extractCustomData(payload: LemonSqueezyWebhookPayload): { userId?: string; plan?: string; interval?: string } {
+export function extractCustomData(payload: LemonSqueezyWebhookPayload): { userId?: string; plan?: string; interval?: string; affiliateId?: string; referralId?: string; referralCode?: string } {
   return payload?.meta?.custom_data || {}
 }
 
@@ -313,6 +323,23 @@ export async function handleSubscriptionCreated(payload: LemonSqueezyWebhookPayl
         trialEndsAt: trialEndsAt ? new Date(trialEndsAt as string) : undefined,
       },
     })
+
+    if (customData.affiliateId && customData.referralId) {
+      try {
+        await processAffiliateCommission({
+          referredUserId: userId,
+          provider: 'lemonsqueezy',
+          providerSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
+          providerOrderId: attributes.order_id ? String(attributes.order_id) : undefined,
+          plan,
+          grossAmount: Number((attributes.totals as any)?.total || 0),
+          netAmount: Number((attributes.totals as any)?.subtotal || 0),
+          currency: String(attributes.currency || 'USD'),
+        })
+      } catch (error) {
+        console.error('Failed to process affiliate commission on subscription created:', error)
+      }
+    }
   }
 
   return { userId, plan, status }
@@ -398,11 +425,15 @@ export async function handleSubscriptionPaymentSuccess(payload: LemonSqueezyWebh
   const currentPeriodEnd = attributes.renews_at || attributes.ends_at
 
   let userId: string | null = null
+  let subPlan: string = ''
   if (subscriptionId) {
     const sub = await db.subscription.findFirst({
       where: { providerSubscriptionId: String(subscriptionId) },
     })
-    if (sub) userId = sub.userId
+    if (sub) {
+      userId = sub.userId
+      subPlan = sub.plan
+    }
   }
 
   if (userId) {
@@ -410,6 +441,31 @@ export async function handleSubscriptionPaymentSuccess(payload: LemonSqueezyWebh
     if (currentPeriodEnd) updateData.currentPeriodEnd = new Date(currentPeriodEnd as string)
     await db.subscription.update({ where: { userId }, data: updateData as any })
     await db.user.update({ where: { id: userId }, data: { subscriptionStatus: 'active' } })
+
+    try {
+      const referral = await db.affiliateReferral.findUnique({
+        where: { referredUserId: userId },
+        include: { affiliate: true },
+      })
+
+      if (referral && referral.status === 'CONVERTED' && referral.affiliate.status === 'ACTIVE' && referral.commissionEndsAt) {
+        const now = new Date()
+        if (now <= referral.commissionEndsAt) {
+          await processAffiliateCommission({
+            referredUserId: userId,
+            provider: 'lemonsqueezy',
+            providerSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
+            providerOrderId: attributes.order_id ? String(attributes.order_id) : undefined,
+            plan: subPlan || 'unknown',
+            grossAmount: Number((attributes.totals as any)?.total || 0),
+            netAmount: Number((attributes.totals as any)?.subtotal || 0),
+            currency: String(attributes.currency || 'USD'),
+          })
+        }
+      }
+    } catch (error) {
+      console.error('Failed to process affiliate commission on payment success:', error)
+    }
   }
 
   return { userId, plan: '', status: 'active' }
@@ -465,6 +521,34 @@ export async function handleSubscriptionResumed(payload: LemonSqueezyWebhookPayl
   return { userId, plan: '', status: 'active' }
 }
 
+export async function handleSubscriptionPaymentRefunded(payload: LemonSqueezyWebhookPayload): Promise<{ userId: string | null; plan: string; status: string }> {
+  const subscriptionId = payload?.data?.id
+  const attributes = payload?.data?.attributes || {}
+  let userId: string | null = null
+
+  if (subscriptionId) {
+    const sub = await db.subscription.findFirst({
+      where: { providerSubscriptionId: String(subscriptionId) },
+    })
+    if (sub) userId = sub.userId
+  }
+
+  if (userId) {
+    try {
+      await reverseAffiliateCommission({
+        providerSubscriptionId: subscriptionId ? String(subscriptionId) : undefined,
+        providerOrderId: attributes.order_id ? String(attributes.order_id) : undefined,
+        referredUserId: userId,
+        reason: 'subscription_payment_refunded',
+      })
+    } catch (error) {
+      console.error('Failed to reverse affiliate commission on refund:', error)
+    }
+  }
+
+  return { userId, plan: '', status: 'refunded' }
+}
+
 export async function handleSubscriptionPaused(payload: LemonSqueezyWebhookPayload): Promise<{ userId: string | null; plan: string; status: string }> {
   const subscriptionId = payload?.data?.id
   let userId: string | null = null
@@ -492,7 +576,39 @@ export async function handleSubscriptionPaused(payload: LemonSqueezyWebhookPaylo
 
 export async function handleOrderCreated(payload: LemonSqueezyWebhookPayload): Promise<{ userId: string | null; plan: string; status: string }> {
   const customData = extractCustomData(payload)
-  return { userId: customData.userId || null, plan: customData.plan || '', status: 'active' }
+  const attributes = payload?.data?.attributes || {}
+  const orderId = payload?.data?.id
+  const total = Number((attributes.totals as any)?.total || 0)
+  const subtotal = Number((attributes.totals as any)?.subtotal || 0)
+
+  const userId = customData.userId || null
+  let plan = customData.plan || ''
+
+  if (!plan) {
+    const variantId = attributes.variant_id
+    if (variantId) {
+      const mapping = getPlanFromLemonSqueezyVariantId(variantId)
+      if (mapping) plan = mapping.plan
+    }
+  }
+
+  if (userId && customData.affiliateId && customData.referralId && total > 0) {
+    try {
+      await processAffiliateCommission({
+        referredUserId: userId,
+        provider: 'lemonsqueezy',
+        providerOrderId: orderId ? String(orderId) : undefined,
+        plan: plan || 'unknown',
+        grossAmount: total,
+        netAmount: subtotal || total,
+        currency: String(attributes.currency || 'USD'),
+      })
+    } catch (error) {
+      console.error('Failed to process affiliate commission on order created:', error)
+    }
+  }
+
+  return { userId, plan: plan || '', status: 'active' }
 }
 
 export async function saveBillingEvent(
@@ -575,8 +691,14 @@ export async function processLemonSqueezyWebhook(rawBody: string, signature: str
       case 'subscription_payment_recovered':
         result = await handleSubscriptionResumed(payload)
         break
+      case 'subscription_payment_refunded':
+        result = await handleSubscriptionPaymentRefunded(payload)
+        break
       case 'order_created':
         result = await handleOrderCreated(payload)
+        break
+      case 'order_refunded':
+        result = await handleSubscriptionPaymentRefunded(payload)
         break
       default:
         break

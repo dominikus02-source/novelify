@@ -57,6 +57,8 @@ model User {
   feedbackSubmitted   Feedback[]          @relation("userFeedback")
   auditLogsAsAdmin    AdminAuditLog[]     @relation("adminActions")
   auditLogsAsTarget   AdminAuditLog[]     @relation("adminTargets")
+  affiliateProfile    AffiliateProfile?   @relation("userAffiliate")
+  affiliateReferrals  AffiliateReferral[] @relation("referredUsers")
 }
 
 model UserSettings {
@@ -726,4 +728,191 @@ model ResearchItem {
   updatedAt       DateTime @updatedAt
 
   @@index([projectId])
+}
+
+model AffiliateProfile {
+  id                    String           @id @default(cuid())
+  userId                String           @unique
+  user                  User             @relation("userAffiliate", fields: [userId], references: [id], onDelete: Cascade)
+  code                  String           @unique
+  status                AffiliateStatus  @default(PENDING)
+  tier                  AffiliateTier    @default(STANDARD)
+  commissionRate        Decimal          @default(0.30)
+  commissionDurationMonths Int           @default(12)
+  cookieDurationDays    Int              @default(60)
+  payoutMethod          String?
+  payoutEmail           String?
+  payoutName            String?
+  payoutNotes           String?
+  totalClicks           Int              @default(0)
+  totalSignups          Int              @default(0)
+  totalPaidCustomers    Int              @default(0)
+  totalCommissionEarned Decimal          @default(0)
+  totalCommissionPaid   Decimal          @default(0)
+  approvedAt            DateTime?
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  clicks      AffiliateClick[]
+  referrals   AffiliateReferral[]
+  commissions AffiliateCommission[]
+  payouts     AffiliatePayout[]
+
+  @@index([code])
+  @@index([status])
+}
+
+model AffiliateClick {
+  id            String   @id @default(cuid())
+  affiliateId   String
+  affiliate     AffiliateProfile @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referralCode  String
+  visitorId     String?
+  ipHash        String?
+  userAgent     String?
+  landingPage   String?
+  referrer      String?
+  createdAt     DateTime @default(now())
+
+  @@index([affiliateId])
+  @@index([referralCode])
+  @@index([visitorId])
+}
+
+model AffiliateReferral {
+  id                String            @id @default(cuid())
+  affiliateId       String
+  affiliate         AffiliateProfile  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredUserId    String            @unique
+  referredUser      User              @relation("referredUsers", fields: [referredUserId], references: [id], onDelete: Cascade)
+  referralCode      String
+  visitorId         String?
+  status            AffiliateReferralStatus @default(SIGNED_UP)
+  firstClickAt      DateTime?
+  signupAt          DateTime
+  convertedAt       DateTime?
+  commissionEndsAt  DateTime?
+  disqualifiedReason String?
+  notes             String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  @@index([affiliateId])
+  @@index([referredUserId])
+  @@index([status])
+}
+
+model AffiliateCommission {
+  id                      String                  @id @default(cuid())
+  affiliateId             String
+  affiliate               AffiliateProfile        @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredUserId          String
+  subscriptionId          String?
+  billingEventId          String?
+  provider                String                  @default("lemonsqueezy")
+  providerOrderId         String?
+  providerSubscriptionId  String?
+  plan                    String
+  grossAmount             Decimal
+  netAmount               Decimal?
+  currency                String                  @default("USD")
+  commissionRate          Decimal
+  commissionAmount        Decimal
+  status                  AffiliateCommissionStatus @default(PENDING)
+  reason                  String?
+  eligibleAt              DateTime?
+  paidAt                  DateTime?
+  payoutItems             AffiliatePayoutItem[] @relation("commissionPayoutItems")
+  createdAt               DateTime                @default(now())
+  updatedAt               DateTime                @updatedAt
+
+  @@index([affiliateId])
+  @@index([referredUserId])
+  @@index([status])
+  @@index([providerOrderId])
+  @@index([providerSubscriptionId])
+}
+
+model AffiliatePayout {
+  id              String            @id @default(cuid())
+  affiliateId     String
+  affiliate       AffiliateProfile  @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  amount          Decimal
+  currency        String            @default("USD")
+  status          AffiliatePayoutStatus @default(PENDING)
+  payoutMethod    String?
+  payoutReference String?
+  notes           String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  paidAt          DateTime?
+
+  items           AffiliatePayoutItem[]
+
+  @@index([affiliateId])
+  @@index([status])
+}
+
+model AffiliatePayoutItem {
+  id           String             @id @default(cuid())
+  payoutId     String
+  payout       AffiliatePayout    @relation(fields: [payoutId], references: [id], onDelete: Cascade)
+  commissionId String
+  commission   AffiliateCommission @relation("commissionPayoutItems", fields: [commissionId], references: [id], onDelete: Cascade)
+  amount       Decimal
+  createdAt    DateTime           @default(now())
+
+  @@index([payoutId])
+  @@index([commissionId])
+  @@unique([payoutId, commissionId])
+}
+
+model AffiliateSettings {
+  id                       Int      @id @default(autoincrement())
+  standardCommissionRate   Decimal  @default(0.30)
+  topPartnerCommissionRate Decimal  @default(0.35)
+  commissionDurationMonths Int      @default(12)
+  cookieDurationDays       Int      @default(60)
+  minimumPayoutAmount      Decimal  @default(50.00)
+  commissionHoldingDays    Int      @default(14)
+  payoutCurrency           String   @default("USD")
+  createdAt                DateTime @default(now())
+  updatedAt                DateTime @updatedAt
+}
+
+enum AffiliateStatus {
+  PENDING
+  ACTIVE
+  SUSPENDED
+  REJECTED
+}
+
+enum AffiliateTier {
+  STANDARD
+  TOP_PARTNER
+  CUSTOM
+}
+
+enum AffiliateReferralStatus {
+  SIGNED_UP
+  CONVERTED
+  EXPIRED
+  DISQUALIFIED
+}
+
+enum AffiliateCommissionStatus {
+  PENDING
+  APPROVED
+  PAYABLE
+  PAID
+  REVERSED
+  CANCELLED
+}
+
+enum AffiliatePayoutStatus {
+  PENDING
+  PROCESSING
+  PAID
+  FAILED
+  CANCELLED
 }

@@ -44,13 +44,26 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid plan' }, { status: 400 })
     }
 
-    const result = await createLemonSqueezyCheckout({
+    const referral = await db.affiliateReferral.findUnique({
+      where: { referredUserId: session.user.id },
+      include: { affiliate: true },
+    })
+
+    const checkoutParams: Parameters<typeof createLemonSqueezyCheckout>[0] = {
       userId: session.user.id,
       userEmail: session.user.email || '',
       userName: session.user.name || undefined,
       plan: planLower as 'starter' | 'pro' | 'studio',
       interval: intervalLower as 'monthly' | 'yearly',
-    })
+    }
+
+    if (referral?.affiliate.status === 'ACTIVE') {
+      checkoutParams.affiliateId = referral.affiliate.id
+      checkoutParams.referralId = referral.id
+      checkoutParams.referralCode = referral.affiliate.code
+    }
+
+    const result = await createLemonSqueezyCheckout(checkoutParams)
 
     await saveBillingEvent(
       'lemonsqueezy',
