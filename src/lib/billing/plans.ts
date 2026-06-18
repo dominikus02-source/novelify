@@ -73,8 +73,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'AI-powered writing for serious authors',
     monthlyPrice: 9,
     yearlyPrice: 90,
-    monthlyPriceIdr: 129000,
-    yearlyPriceIdr: 1290000,
+    monthlyPriceIdr: 149000,
+    yearlyPriceIdr: 1490000,
     badge: 'Starter',
     highlighted: false,
     limits: {
@@ -96,8 +96,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'Full publishing suite for published authors',
     monthlyPrice: 19,
     yearlyPrice: 190,
-    monthlyPriceIdr: 249000,
-    yearlyPriceIdr: 2490000,
+    monthlyPriceIdr: 299000,
+    yearlyPriceIdr: 2990000,
     badge: 'Pro',
     highlighted: true,
     limits: {
@@ -119,8 +119,8 @@ export const PLANS: Record<PlanTier, PlanConfig> = {
     description: 'Unlimited everything for professional teams',
     monthlyPrice: 49,
     yearlyPrice: 490,
-    monthlyPriceIdr: 649000,
-    yearlyPriceIdr: 6490000,
+    monthlyPriceIdr: 799000,
+    yearlyPriceIdr: 7990000,
     badge: 'Studio',
     highlighted: false,
     limits: {

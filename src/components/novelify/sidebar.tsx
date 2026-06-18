@@ -1,62 +1,84 @@
 'use client';
 
 import { motion, AnimatePresence } from 'framer-motion';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import {
   LayoutDashboard, BookOpen, PenTool, FileText, Layout, Sparkles,
   FileEdit, Languages, Download, Layers, Megaphone,
-  Settings, Shield, ChevronLeft, LogOut,
+  Settings, Shield, ChevronLeft, LogOut, ChevronDown,
 } from 'lucide-react';
 import { useNovelifyStore, type AppView, PROJECT_VIEWS, resolveActiveProject } from '@/lib/store';
 import { useSession } from 'next-auth/react';
+import { useTheme } from 'next-themes';
 import Image from 'next/image';
 import { signOut } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { colors } from './dashboard-components';
 import { PlanBadge } from './plan-badge';
+import { getStageFromProjects, shouldShowFeature, STAGE_LABELS, type UserStage } from '@/lib/user-stage';
+import { ThemeToggle } from '@/components/novelify/theme-toggle';
 
 interface NavItemDef {
   icon: React.ElementType;
   label: string;
   view: AppView;
-  section: 'workspace' | 'tools' | 'publishing' | 'resources' | 'account';
+  section: 'workspace' | 'tools' | 'publishing' | 'resources' | 'account' | 'more';
   path: string;
   adminOnly?: boolean;
+  featureKey?: string;
 }
 
-const navItems: NavItemDef[] = [
-  { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard', section: 'workspace', path: '/dashboard' },
-  { icon: BookOpen, label: 'My Novels', view: 'my-novels', section: 'workspace', path: '/dashboard/novels' },
-  { icon: PenTool, label: 'Writing Studio', view: 'writing', section: 'workspace', path: '/dashboard/writing' },
-  { icon: FileText, label: 'Story Bible', view: 'story-bible', section: 'workspace', path: '/dashboard/bible' },
-  { icon: Layout, label: 'Plot Board', view: 'plot-board', section: 'workspace', path: '/dashboard/plot' },
+const ALL_NAV_ITEMS: NavItemDef[] = [
+  { icon: LayoutDashboard, label: 'Dashboard', view: 'dashboard', section: 'workspace', path: '/dashboard', featureKey: 'dashboard' },
+  { icon: BookOpen, label: 'My Novels', view: 'my-novels', section: 'workspace', path: '/dashboard/novels', featureKey: 'my-novels' },
+  { icon: PenTool, label: 'Writing Studio', view: 'writing', section: 'workspace', path: '/dashboard/writing', featureKey: 'writing' },
+  { icon: FileText, label: 'Story Bible', view: 'story-bible', section: 'workspace', path: '/dashboard/bible', featureKey: 'story-bible' },
+  { icon: Layout, label: 'Plot Board', view: 'plot-board', section: 'workspace', path: '/dashboard/plot', featureKey: 'plot-board' },
 
-  { icon: Sparkles, label: 'AI Co-Writer', view: 'ai-cowriter', section: 'tools', path: '/dashboard/ai' },
-  { icon: FileEdit, label: 'Revision', view: 'revision', section: 'tools', path: '/dashboard/revision' },
-  { icon: Languages, label: 'Translation', view: 'translation', section: 'tools', path: '/dashboard/translation' },
-  { icon: Download, label: 'Publishing', view: 'publishing', section: 'tools', path: '/dashboard/publishing' },
+  { icon: FileEdit, label: 'Revision', view: 'revision', section: 'publishing', path: '/dashboard/revision', featureKey: 'revision' },
+  { icon: Languages, label: 'Translation', view: 'translation', section: 'publishing', path: '/dashboard/translation', featureKey: 'translation' },
+  { icon: Download, label: 'Publishing', view: 'publishing', section: 'publishing', path: '/dashboard/publishing', featureKey: 'publishing' },
+  { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'publishing', path: '/dashboard/marketing', featureKey: 'marketing' },
 
-  { icon: Layers, label: 'Templates', view: 'templates', section: 'resources', path: '/dashboard/templates' },
-  { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'resources', path: '/dashboard/marketing' },
+  { icon: Layers, label: 'Templates', view: 'templates', section: 'resources', path: '/dashboard/templates', featureKey: 'templates' },
+  { icon: Sparkles, label: 'AI Co-Writer', view: 'ai-cowriter', section: 'resources', path: '/dashboard/ai', featureKey: 'ai-cowriter' },
 
-  { icon: Settings, label: 'Settings', view: 'settings', section: 'account', path: '/dashboard/settings' },
+  { icon: Settings, label: 'Settings', view: 'settings', section: 'account', path: '/dashboard/settings', featureKey: 'settings' },
   { icon: Shield, label: 'Admin Console', view: 'settings', section: 'account', path: '/admin', adminOnly: true },
+];
+
+const MORE_ITEMS: NavItemDef[] = [
+  { icon: FileEdit, label: 'Revision', view: 'revision', section: 'more', path: '/dashboard/revision', featureKey: 'revision' },
+  { icon: Languages, label: 'Translation', view: 'translation', section: 'more', path: '/dashboard/translation', featureKey: 'translation' },
+  { icon: Download, label: 'Publishing', view: 'publishing', section: 'more', path: '/dashboard/publishing', featureKey: 'publishing' },
+  { icon: Layers, label: 'Templates', view: 'templates', section: 'more', path: '/dashboard/templates', featureKey: 'templates' },
+  { icon: Sparkles, label: 'AI Co-Writer', view: 'ai-cowriter', section: 'more', path: '/dashboard/ai', featureKey: 'ai-cowriter' },
+  { icon: Megaphone, label: 'Marketing Kit', view: 'marketing', section: 'more', path: '/dashboard/marketing', featureKey: 'marketing' },
+  { icon: Languages, label: 'Affiliate', view: 'settings', section: 'more', path: '/dashboard/affiliate', featureKey: 'affiliate' },
 ];
 
 const sectionLabels: Record<string, string> = {
   workspace: 'Workspace',
-  tools: 'AI & Production',
+  publishing: 'Publishing',
   resources: 'Resources',
   account: 'Account',
+  more: 'More Tools',
 };
 
 export function Sidebar() {
   const router = useRouter();
   const { data: session } = useSession();
+  const { theme } = useTheme();
   const {
     currentView, setCurrentView, sidebarOpen, setSidebarOpen,
     selectedProject, setSelectedProject, projects, lastActiveProjectId,
   } = useNovelifyStore();
+
+  const userStage = useMemo<UserStage>(() => {
+    return getStageFromProjects(projects, false);
+  }, [projects]);
+
+  const isFirstProjectCreated = userStage !== 'NEW_USER';
 
   const handleSignOut = async () => {
     await signOut({ redirect: false });
@@ -129,20 +151,48 @@ export function Sidebar() {
 
   const isAdmin = session?.user?.role === 'ADMIN' || session?.user?.role === 'SUPER_ADMIN';
 
-  const renderNavSections = (renderFn: (item: NavItemDef) => React.ReactNode, showLabel: boolean = true) => (
-    (['workspace', 'tools', 'resources', 'account'] as const).map((section) => (
-      <div key={section}>
-        {showLabel && (
-          <div style={{ fontSize: 9, fontWeight: 600, color: '#636366', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 14px', margin: '8px 0 4px' }}>
-            {sectionLabels[section]}
-          </div>
-        )}
-        <nav style={{ padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 1 }}>
-          {navItems.filter((item) => item.section === section && (!item.adminOnly || isAdmin)).map(renderFn)}
-        </nav>
-      </div>
-    ))
-  );
+  const getVisibleItems = () => {
+    if (!isFirstProjectCreated) {
+      return ALL_NAV_ITEMS.filter(item =>
+        item.section === 'workspace' || item.section === 'account'
+      ).filter(item =>
+        item.featureKey === 'my-novels' || item.featureKey === 'dashboard' || item.featureKey === 'settings' || item.adminOnly
+      );
+    }
+
+    const visible: NavItemDef[] = [];
+    const moreVisible: NavItemDef[] = [];
+
+    for (const item of ALL_NAV_ITEMS) {
+      if (item.adminOnly && !isAdmin) continue;
+      if (item.featureKey && shouldShowFeature(item.featureKey, userStage)) {
+        if (item.section === 'workspace' || item.section === 'account') {
+          visible.push(item);
+        } else {
+          visible.push({ ...item, section: 'publishing' });
+        }
+      } else if (item.featureKey && !shouldShowFeature(item.featureKey, userStage)) {
+        moreVisible.push(item);
+      }
+    }
+
+    return { visible, moreVisible };
+  };
+
+  const { visible: visibleItems, moreVisible } = getVisibleItems();
+
+  const sections = useMemo(() => {
+    const sectionOrder = ['workspace', 'publishing', 'resources', 'account'];
+    const grouped: Record<string, NavItemDef[]> = {};
+    sectionOrder.forEach(s => { grouped[s] = []; });
+    visibleItems.forEach(item => {
+      if (grouped[item.section]) grouped[item.section].push(item);
+    });
+    if (moreVisible.length > 0) {
+      grouped['more'] = moreVisible;
+    }
+    return Object.entries(grouped).filter(([, items]) => items.length > 0);
+  }, [visibleItems, moreVisible]);
 
   return (
     <>
@@ -162,7 +212,26 @@ export function Sidebar() {
           <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={sidebarOpen ? 120 : 30} height={30} style={{ objectFit: 'contain', flexShrink: 0, borderRadius: sidebarOpen ? 0 : 6 }} />
         </a>
 
-        {renderNavSections((item) => renderNavItem(item, sidebarOpen), sidebarOpen)}
+        {sidebarOpen && (
+          <div style={{ padding: '0 14px', marginBottom: 8 }}>
+            <div style={{ fontSize: 9, fontWeight: 600, color: '#636366', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
+              {STAGE_LABELS[userStage]}
+            </div>
+          </div>
+        )}
+
+        {sections.map(([section, items]) => (
+          <div key={section}>
+            {sidebarOpen && (
+              <div style={{ fontSize: 9, fontWeight: 600, color: '#636366', letterSpacing: '0.06em', textTransform: 'uppercase', padding: '0 14px', margin: '8px 0 4px' }}>
+                {sectionLabels[section] || section}
+              </div>
+            )}
+            <nav style={{ padding: '0 6px', display: 'flex', flexDirection: 'column', gap: 1 }}>
+              {items.map(item => renderNavItem(item, sidebarOpen))}
+            </nav>
+          </div>
+        ))}
 
         <div style={{ flex: 1 }} />
 
@@ -204,6 +273,15 @@ export function Sidebar() {
               </motion.div>
             )}
           </AnimatePresence>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, padding: '0 6px', marginBottom: 4 }}>
+            <ThemeToggle />
+            {sidebarOpen && (
+              <span style={{ fontSize: 10, color: '#636366', marginLeft: 4 }}>
+                {theme === 'dark' ? 'Dark' : 'Light'}
+              </span>
+            )}
+          </div>
 
           <button onClick={() => setSidebarOpen(!sidebarOpen)}
             title={sidebarOpen ? 'Collapse' : 'Expand'}

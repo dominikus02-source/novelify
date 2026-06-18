@@ -10,9 +10,16 @@ export function AuthRedirect() {
 
   useEffect(() => {
     if (status === 'authenticated') {
-      router.replace('/dashboard');
+      const user = session?.user as any;
+      const onboardingDone = user?.onboardingCompleted === true;
+
+      if (onboardingDone) {
+        router.replace('/dashboard');
+      } else {
+        router.replace('/onboarding');
+      }
     }
-  }, [status, router]);
+  }, [status, router, session]);
 
   if (status === 'loading') {
     return (

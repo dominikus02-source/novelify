@@ -24,6 +24,7 @@ import {
 } from './dashboard-components';
 import NextImage from "next/image";
 import { ActivationScreen } from './activation-screen';
+import { StageDashboardBanner } from './stage-dashboard-banner';
 
 
 const languageNames: Record<string, string> = {
@@ -192,43 +193,15 @@ export function CommandCenter() {
       {totalProjects === 0 && !isLoading ? <ActivationScreen /> : (
       <div style={{ padding: '24px 28px 48px', display: 'flex', flexDirection: 'column', gap: 24 }}>
 
-        {/* ─── A. Welcome + Quick Actions ─── */}
-        <FadeIn>
-          <div className="grid-cols-1 md:grid-cols-[1fr_auto]" style={{ display: 'grid', gap: 16, alignItems: 'center', background: 'linear-gradient(135deg, rgba(201,169,110,0.08), rgba(201,169,110,0.02))', border: `1px solid ${colors.goldBorder}`, borderRadius: 20, padding: '24px 28px' }}>
-            <div>
-              <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: '#F5F5F7', marginBottom: 6 }}>
-                {lastEdited ? `Continue "${lastEdited.title}"` : 'Welcome to Novelify'}
-              </h2>
-              <p style={{ fontSize: 12, color: colors.muted, lineHeight: 1.6 }}>
-                {lastChapter
-                  ? `Chapter ${lastChapter.chapterNumber}: ${lastChapter.title} · ${avgChapterLength > 0 ? `${fmtWords(lastChapter.wordCount)} words · Last saved ${timeAgo(lastChapter.updatedAt)}` : 'Start writing your next chapter'}`
-                  : lastEdited
-                    ? `${lastEdited.chapters.length} chapters · ${fmtWords(totalWords)} total words · Ready to add more?`
-                    : 'Create your first novel and start writing today'}
-              </p>
-              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                {lastEdited && (
-                  <GlassButton onClick={() => navigate('writing', lastEdited)}>
-                    <PenTool style={{ width: 13, height: 13 }} /> Continue Writing
-                  </GlassButton>
-                )}
-                <GlassButton onClick={() => setCreateOpen(true)}>
-                  <Plus style={{ width: 13, height: 13 }} /> Create New Novel
-                </GlassButton>
-                <button onClick={() => router.push('/dashboard/import')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', borderRadius: 20, border: `1px solid ${colors.border}`, background: '#161616', color: '#aeaeb2', fontSize: 12, fontWeight: 500, cursor: 'pointer', transition: 'background .15s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = '#1c1c1e'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = '#161616'}
-                ><Upload style={{ width: 13, height: 13 }} /> Import Novel</button>
-                <button onClick={() => navigate('ai-cowriter')}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: 5, padding: '8px 16px', borderRadius: 20, border: `1px solid ${colors.goldBorder}`, background: 'rgba(201,169,110,0.06)', color: colors.gold, fontSize: 12, fontWeight: 600, cursor: 'pointer', transition: 'background .15s' }}
-                  onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(201,169,110,0.12)'}
-                  onMouseLeave={(e) => e.currentTarget.style.background = 'rgba(201,169,110,0.06)'}
-                ><Sparkles style={{ width: 13, height: 13 }} /> AI Co-Writer</button>
-              </div>
-            </div>
-          </div>
-        </FadeIn>
+        {/* ─── A. Stage-Based Recommendation Banner ─── */}
+        <StageDashboardBanner
+          projects={projects}
+          totalWords={totalWords}
+          lastEdited={lastEdited}
+          lastChapter={lastChapter}
+          navigate={navigate}
+          onCreateNew={() => setCreateOpen(true)}
+        />
 
         {/* ─── B. Writing Progress Overview ─── */}
         <FadeIn delay={0.05}>

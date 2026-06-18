@@ -49,12 +49,14 @@ export async function POST(request: NextRequest) {
       include: { affiliate: true },
     })
 
+    const usdPrice = getPlanConfig(planLower)[intervalLower === 'monthly' ? 'monthlyPrice' : 'yearlyPrice']
     const checkoutParams: Parameters<typeof createLemonSqueezyCheckout>[0] = {
       userId: session.user.id,
       userEmail: session.user.email || '',
       userName: session.user.name || undefined,
       plan: planLower as 'starter' | 'pro' | 'studio',
       interval: intervalLower as 'monthly' | 'yearly',
+      customPriceCents: usdPrice * 100,
     }
 
     if (referral?.affiliate.status === 'ACTIVE') {

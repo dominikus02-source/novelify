@@ -5,7 +5,7 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import {
   LayoutDashboard, Users, FolderOpen, MessageSquare, CreditCard,
-  Repeat, BarChart3, Download, Brain, Settings, Shield, ArrowLeft, Menu, X,
+  Repeat, BarChart3, Download, Brain, Settings, Shield, ArrowLeft, Menu, X, Sliders,
 } from 'lucide-react';
 
 const navItems = [
@@ -18,6 +18,9 @@ const navItems = [
   { href: '/admin/usage', label: 'Usage', icon: BarChart3 },
   { href: '/admin/exports', label: 'Exports', icon: Download },
   { href: '/admin/ai-logs', label: 'AI Logs', icon: Brain },
+  { href: '/admin/affiliates', label: 'Affiliates', icon: Users },
+  { href: '/admin/affiliate-payouts', label: 'Affiliate Payouts', icon: CreditCard },
+  { href: '/admin/settings', label: 'Affiliate Settings', icon: Sliders },
   { href: '/admin/system', label: 'System', icon: Settings },
   { href: '/admin/audit-logs', label: 'Audit Logs', icon: Shield },
 ];

@@ -5,6 +5,9 @@ import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PLANS } from '@/lib/billing/plans';
 import Link from 'next/link';
+import { useI18n } from '@/lib/i18n/context';
+import { LocaleToggle, LocaleToggleMobile } from '@/components/novelify/locale-toggle';
+import { ThemeToggle } from '@/components/novelify/theme-toggle';
 import {
   Globe2, Package, Sparkles, FileText, Lock,
   PenTool, BookMarked, Wand2, Languages, Download, Megaphone,
@@ -12,10 +15,10 @@ import {
 } from 'lucide-react';
 
 const navLinks = [
-  { key: 'features', label: 'Features' },
-  { key: 'workflow', label: 'How it works' },
-  { key: 'faq', label: 'FAQ' },
-  { key: 'pricing', label: 'Pricing' },
+  { key: 'features', label: 'Features', labelKey: 'nav_features' },
+  { key: 'workflow', label: 'How it works', labelKey: 'nav_workflow' },
+  { key: 'faq', label: 'FAQ', labelKey: 'nav_faq' },
+  { key: 'pricing', label: 'Pricing', labelKey: 'nav_pricing' },
 ];
 
 const langPills = [
@@ -31,84 +34,56 @@ const langPills = [
 const workflowSteps = [
   {
     icon: BookMarked, color: '#A78BFA', bgColor: 'rgba(167,139,250,0.1)',
-    title: 'Plan',
-    desc: 'Build outlines, Story Bible, character profiles, locations, and plot beats with structure templates.',
+    title: 'Bring an idea', titleKey: 'workflow_step1_title',
+    desc: 'Answer a few simple questions about your story type, genre, and style.', descKey: 'workflow_step1_desc',
   },
   {
     icon: PenTool, color: '#C9A96E', bgColor: 'rgba(201,169,110,0.1)',
-    title: 'Write',
-    desc: 'Draft chapters and scenes in a focused writing studio with AI assistance and autosave.',
+    title: 'Generate workspace', titleKey: 'workflow_step2_title',
+    desc: 'Novelify creates your outline, characters, plot, and first chapter starter.', descKey: 'workflow_step2_desc',
   },
   {
     icon: Wand2, color: '#34D399', bgColor: 'rgba(52,211,153,0.1)',
-    title: 'Revise',
-    desc: 'Check continuity, pacing, dialogue, prose, and publishing readiness with the revision engine.',
+    title: 'Start Chapter 1', titleKey: 'workflow_step3_title',
+    desc: 'Open Writing Studio with guided prompts and a ready-to-use scene.', descKey: 'workflow_step3_desc',
   },
   {
     icon: Languages, color: '#60A5FA', bgColor: 'rgba(96,165,250,0.1)',
-    title: 'Translate',
-    desc: 'Translate chapters while preserving tone, names, places, and story context.',
-  },
-  {
-    icon: Download, color: '#F87171', bgColor: 'rgba(248,113,113,0.1)',
-    title: 'Publish',
-    desc: 'Prepare metadata, front and back matter, cover, and export EPUB, PDF, or DOCX.',
-  },
-  {
-    icon: Megaphone, color: '#FBBF24', bgColor: 'rgba(251,191,36,0.1)',
-    title: 'Market',
-    desc: 'Generate blurbs, taglines, Amazon descriptions, and social captions for launch.',
+    title: 'Keep writing', titleKey: 'workflow_step4_title',
+    desc: 'Revise, translate, and publish when your story is ready.', descKey: 'workflow_step4_desc',
   },
 ];
 
 const trustItems = [
   {
     icon: Lock, color: '#C9A96E',
-    title: 'You keep ownership',
-    desc: 'Novelify does not claim ownership of your manuscripts, characters, notes, outlines, or exports.',
+    title: 'You keep ownership', titleKey: 'trust_1_title',
+    desc: 'Novelify does not claim ownership of your manuscripts, characters, notes, outlines, or exports.', descKey: 'trust_1_desc',
   },
   {
     icon: Sparkles, color: '#A78BFA',
-    title: 'AI only assists when requested',
-    desc: 'Manuscript context is only sent to AI providers when you use an AI feature. Your content is not used for training without explicit opt-in.',
+    title: 'AI only assists when requested', titleKey: 'trust_2_title',
+    desc: 'Manuscript context is only sent to AI providers when you use an AI feature. Your content is not used for training without explicit opt-in.', descKey: 'trust_2_desc',
   },
   {
     icon: Download, color: '#34D399',
-    title: 'Export anytime',
-    desc: 'Prepare and export your work in publishing-ready formats depending on your plan.',
+    title: 'Export anytime', titleKey: 'trust_3_title',
+    desc: 'Prepare and export your work in publishing-ready formats depending on your plan.', descKey: 'trust_3_desc',
   },
   {
     icon: FileText, color: '#60A5FA',
-    title: 'Clear billing and policies',
-    desc: 'Subscription billing, refund rules, and manuscript privacy are explained in our policies.',
+    title: 'Clear billing and policies', titleKey: 'trust_4_title',
+    desc: 'Subscription billing, refund rules, and manuscript privacy are explained in our policies.', descKey: 'trust_4_desc',
   },
 ];
 
 const faqItems = [
-  {
-    q: 'Who owns my manuscript?',
-    a: 'You do. Novelify does not claim ownership of your creative work. Your manuscripts, characters, story bibles, outlines, and exports remain yours.',
-  },
-  {
-    q: 'Do you train AI on my writing?',
-    a: 'Novelify does not use your manuscripts to train AI models unless you explicitly opt in. AI features may send selected context to AI providers to generate requested outputs.',
-  },
-  {
-    q: 'Can I export my novel?',
-    a: 'Yes. Novelify supports publishing workflows and export options including EPUB, PDF, and DOCX depending on your plan.',
-  },
-  {
-    q: 'Can Novelify translate my novel?',
-    a: 'Yes. Translation tools are designed to preserve names, places, tone, and story context where supported.',
-  },
-  {
-    q: 'How does billing work?',
-    a: 'Novelify offers Free, Starter, Pro, and Studio plans. Paid subscriptions are processed through our billing provider. You can upgrade, downgrade, or cancel at any time.',
-  },
-  {
-    q: 'Can I cancel my subscription?',
-    a: 'Yes. You can cancel at any time. Access continues through the end of your billing period. See our Refund Policy for details on refunds.',
-  },
+  { qKey: 'faq_1_q', aKey: 'faq_1_a', q: 'Who owns my manuscript?', a: 'You do.' },
+  { qKey: 'faq_2_q', aKey: 'faq_2_a', q: 'Do you train AI on my writing?', a: 'Novelify does not use your manuscripts to train AI models unless you explicitly opt in.' },
+  { qKey: 'faq_3_q', aKey: 'faq_3_a', q: 'Can I export my novel?', a: 'Yes. Novelify supports publishing workflows and export options including EPUB, PDF, and DOCX depending on your plan.' },
+  { qKey: 'faq_4_q', aKey: 'faq_4_a', q: 'Can Novelify translate my novel?', a: 'Yes. Translation tools are designed to preserve names, places, tone, and story context where supported.' },
+  { qKey: 'faq_5_q', aKey: 'faq_5_a', q: 'How does billing work?', a: 'Novelify offers Free, Starter, Pro, and Studio plans. Paid subscriptions are processed through our billing provider.' },
+  { qKey: 'faq_6_q', aKey: 'faq_6_a', q: 'Can I cancel my subscription?', a: 'Yes. You can cancel at any time. Access continues through the end of your billing period.' },
 ];
 
 const typewriterLines = [
@@ -171,6 +146,7 @@ function scrollTo(id: string) {
 
 export function Hero() {
   const router = useRouter();
+  const { t } = useI18n();
   const typewriterRef = useTypewriter();
   useScrollReveal();
 
@@ -225,6 +201,21 @@ export function Hero() {
           --lp-glass: rgba(255,255,255,0.04);
           --lp-glass-hover: rgba(255,255,255,0.07);
           --lp-r: 18px;
+        }
+        .light {
+          --lp-black: #F5F0EB;
+          --lp-surface: #FFFFFF;
+          --lp-surface2: #FAFAFA;
+          --lp-border: rgba(0,0,0,0.08);
+          --lp-border-bright: rgba(0,0,0,0.14);
+          --lp-white: #1A1A1A;
+          --lp-muted: #636366;
+          --lp-gold: #C9A96E;
+          --lp-gold-light: #C8873A;
+          --lp-purple: #8B5CF6;
+          --lp-purple-dim: rgba(139,92,246,0.1);
+          --lp-glass: rgba(0,0,0,0.03);
+          --lp-glass-hover: rgba(0,0,0,0.06);
         }
         .lp-body {
           background: var(--lp-black);
@@ -394,7 +385,7 @@ export function Hero() {
                 <button onClick={() => scrollTo(f.key)} style={{ color: 'var(--lp-muted)', textDecoration: 'none', fontSize: 14, fontWeight: 500, padding: '6px 12px', borderRadius: 8, background: 'transparent', border: 'none', cursor: 'pointer', transition: 'color .2s, background .2s' }}
                   onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.background = 'var(--lp-glass-hover)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.background = 'transparent'; }}
-                >{f.label}</button>
+                >{t(f.labelKey as any) || f.label}</button>
               </li>
             ))}
             <li>
@@ -402,17 +393,23 @@ export function Hero() {
                 style={{ color: 'var(--lp-muted)', fontSize: 14, fontWeight: 500, padding: '6px 14px', borderRadius: 20, background: 'transparent', border: '1px solid var(--lp-border)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
-              >Sign in</button>
+              >{t('sign_in')}</button>
             </li>
             <li>
               <button onClick={goToApp}
                 style={{ background: 'var(--lp-white)', color: '#000', fontWeight: 600, padding: '6px 16px', borderRadius: 20, border: 'none', fontSize: 14, cursor: 'pointer', transition: 'background .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,245,247,0.85)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-white)'; }}
-               >Start Free</button>
+               >{t('start_free')}</button>
              </li>
-             <li className="lp-mobile-visible">
-               <button onClick={() => setDrawerOpen(true)} aria-label="Toggle menu"
+               <li className="lp-mobile-hidden">
+                 <LocaleToggle />
+               </li>
+               <li className="lp-mobile-hidden">
+                 <ThemeToggle />
+               </li>
+              <li className="lp-mobile-visible">
+                <button onClick={() => setDrawerOpen(true)} aria-label="Toggle menu"
                 style={{
                   width: 44, height: 44,
                   display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
@@ -490,7 +487,7 @@ export function Hero() {
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--lp-glass-hover)'; }}
                     onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
                   >
-                    {f.label}
+                    {t(f.labelKey as any) || f.label}
                   </button>
                 ))}
               </div>
@@ -512,7 +509,7 @@ export function Hero() {
                   onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
                 >
-                  Sign in
+                  {t('sign_in')}
                 </button>
                 <button onClick={goToApp}
                   style={{
@@ -525,8 +522,9 @@ export function Hero() {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.3)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  Start Free
+                  {t('start_free')}
                 </button>
+                <LocaleToggleMobile />
               </div>
             </div>
           </div>
@@ -536,16 +534,16 @@ export function Hero() {
         <section className="lp-hero lp-hero-section" style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', textAlign: 'center', padding: '120px 24px 80px', position: 'relative', overflow: 'hidden' }}>
           <div style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-glass)', border: '1px solid var(--lp-border-bright)', borderRadius: 20, padding: '6px 14px', fontSize: 12, fontWeight: 500, color: 'var(--lp-muted)', letterSpacing: '0.04em', textTransform: 'uppercase', marginBottom: 32, animation: 'lp-fadeUp .6s ease both' }}>
             <span className="lp-eyebrow-dot"></span>
-            AI-Powered Novel Writing Platform
+            {t('eyebrow')}
           </div>
 
           <h1 className="lp-serif" style={{ fontSize: 'clamp(30px, 6vw, 72px)', fontWeight: 600, lineHeight: 1.1, letterSpacing: '-0.03em', maxWidth: 840, color: 'var(--lp-white)', animation: 'lp-fadeUp .7s .1s ease both' }}>
-            Write, revise, translate, and publish your novel<span className="lp-hero-br"><br /></span>
-            with an <em style={{ fontStyle: 'italic', color: 'var(--lp-gold)', position: 'relative' }}>AI-powered writing studio</em>.
+            {t('hero_headline')}<span className="lp-hero-br"><br /></span>
+            <em style={{ fontStyle: 'italic', color: 'var(--lp-gold)', position: 'relative' }}>{t('hero_headline_em')}</em>
           </h1>
 
           <p style={{ marginTop: 24, fontSize: 'clamp(15px, 2vw, 18px)', fontWeight: 400, color: 'var(--lp-muted)', maxWidth: 520, lineHeight: 1.6, padding: '0 4px', animation: 'lp-fadeUp .7s .2s ease both' }}>
-            Plan your story, build your world, draft chapters, revise with confidence, translate to global markets, and prepare publishing-ready exports — all in one focused platform.
+            {t('hero_sub')}
           </p>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 40, animation: 'lp-fadeUp .7s .3s ease both', flexWrap: 'wrap', justifyContent: 'center' }}>
@@ -555,14 +553,14 @@ export function Hero() {
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}
             >
               <svg fill="none" viewBox="0 0 16 16" width="16" height="16"><path d="M8 2v6M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              Start Writing Free
+              {t('hero_cta')}
             </button>
             <button onClick={goToPricing}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'var(--lp-muted)', fontSize: 15, fontWeight: 500, padding: '14px 20px', borderRadius: 50, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
               onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'; }}
               onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
             >
-              View Pricing
+              {t('hero_cta_secondary')}
             </button>
           </div>
 
@@ -615,8 +613,8 @@ export function Hero() {
         <section id="features" className="lp-section" style={{ padding: '100px 24px' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div className="reveal">
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Platform</div>
-              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 520 }}>Every tool a novelist needs, unified.</h2>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>{t('features_title')}</div>
+              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 520 }}>{t('features_subtitle')}</h2>
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65 }}>From the first idea to the published page — Novelify handles the complexity so you stay in the story.</p>
             </div>
 
@@ -726,12 +724,12 @@ export function Hero() {
         <section id="workflow" className="lp-section" style={{ padding: '100px 24px', background: 'var(--lp-surface)' }}>
           <div style={{ maxWidth: 1040, margin: '0 auto' }}>
             <div className="reveal">
-              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Workflow</div>
-              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 520 }}>From first idea to export-ready manuscript.</h2>
-              <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65 }}>A complete writing workflow in one focused platform.</p>
+              <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>How It Works</div>
+              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 520 }}>How Novelify gets you writing</h2>
+              <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 480, lineHeight: 1.65 }}>From idea to first chapter in minutes. No complex setup, no overwhelming tools.</p>
             </div>
 
-            <div className="reveal lp-grid-workflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 14, marginTop: 56 }}>
+            <div className="reveal lp-grid-workflow" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 56 }}>
               {workflowSteps.map((step) => {
                 const Icon = step.icon;
                 return (
@@ -739,11 +737,17 @@ export function Hero() {
                     <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: step.bgColor, border: `1px solid ${step.color}25` }}>
                       <Icon size={18} aria-hidden={true} style={{ color: step.color }} />
                     </div>
-                    <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', marginBottom: 6, margin: '0 0 6px' }}>{step.title}</h4>
-                    <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{step.desc}</p>
+                    <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', marginBottom: 6, margin: '0 0 6px' }}>{t(step.titleKey as any) || step.title}</h4>
+                    <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{t(step.descKey as any) || step.desc}</p>
                   </div>
                 );
               })}
+            </div>
+
+            <div className="reveal" style={{ marginTop: 36, textAlign: 'center' }}>
+              <p style={{ fontSize: 13, color: 'var(--lp-muted)', fontStyle: 'italic', maxWidth: 520, margin: '0 auto', lineHeight: 1.7 }}>
+                Novelify does not overwhelm you with tools. It guides you from idea to first chapter, then reveals advanced features when your story needs them.
+              </p>
             </div>
           </div>
         </section>
@@ -753,7 +757,7 @@ export function Hero() {
           <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Trust</div>
-              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>Your story belongs to you.</h2>
+              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>{t('trust_title')}</h2>
             </div>
 
             <div className="reveal lp-grid-trust" style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14, marginTop: 48 }}>
@@ -764,8 +768,8 @@ export function Hero() {
                     <div style={{ width: 36, height: 36, borderRadius: 10, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 14, background: `${item.color}15`, border: `1px solid ${item.color}25` }}>
                       <Icon size={18} aria-hidden={true} style={{ color: item.color }} />
                     </div>
-                    <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', margin: '0 0 6px' }}>{item.title}</h4>
-                    <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{item.desc}</p>
+                    <h4 style={{ fontSize: 15, fontWeight: 600, color: 'var(--lp-white)', margin: '0 0 6px' }}>{t(item.titleKey as any) || item.title}</h4>
+                    <p style={{ fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6, margin: 0 }}>{t(item.descKey as any) || item.desc}</p>
                   </div>
                 );
               })}
@@ -773,12 +777,12 @@ export function Hero() {
 
             <div className="reveal" style={{ display: 'flex', gap: 20, flexWrap: 'wrap', justifyContent: 'center', marginTop: 36 }}>
               {[
-                { label: 'Manuscript Privacy', href: '/manuscript-privacy' },
-                { label: 'AI Usage Policy', href: '/ai-usage-policy' },
-                { label: 'Privacy Policy', href: '/privacy' },
-                { label: 'Terms of Service', href: '/terms' },
+                { label: t('footer_manuscript'), href: '/manuscript-privacy' },
+                { label: t('footer_ai'), href: '/ai-usage-policy' },
+                { label: t('footer_privacy'), href: '/privacy' },
+                { label: t('footer_terms'), href: '/terms' },
               ].map((link) => (
-                <Link key={link.label} href={link.href}
+                <Link key={link.href} href={link.href}
                   style={{ fontSize: 12, fontWeight: 500, color: 'var(--lp-gold)', textDecoration: 'none', padding: '6px 14px', borderRadius: 20, border: '1px solid rgba(201,169,110,0.25)', transition: 'all .2s' }}
                   onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(201,169,110,0.08)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
@@ -795,7 +799,7 @@ export function Hero() {
           <div style={{ maxWidth: 860, margin: '0 auto', textAlign: 'center' }}>
             <div className="reveal">
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Pricing</div>
-              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>Simple, transparent plans.</h2>
+              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>{t('pricing_title')}</h2>
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65, margin: '16px auto 0' }}>No hidden fees. No surprises. Cancel anytime.</p>
             </div>
 
@@ -907,12 +911,12 @@ export function Hero() {
           <div style={{ maxWidth: 720, margin: '0 auto' }}>
             <div className="reveal" style={{ textAlign: 'center', marginBottom: 48 }}>
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>FAQ</div>
-              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>Frequently Asked Questions</h2>
+              <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>{t('faq_title')}</h2>
             </div>
 
             <div className="reveal" style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {faqItems.map((faq) => (
-                <FaqItem key={faq.q} question={faq.q} answer={faq.a} />
+                <FaqItem key={faq.q} question={faq.q} answer={faq.a} qKey={faq.qKey} aKey={faq.aKey} />
               ))}
             </div>
           </div>
@@ -923,21 +927,21 @@ export function Hero() {
           <div style={{ position: 'absolute', top: '50%', left: '50%', transform: 'translate(-50%,-50%)', width: 'min(700px, 90vw)', height: 400, background: 'radial-gradient(ellipse, rgba(167,139,250,0.07) 0%, transparent 70%)', pointerEvents: 'none' }}></div>
           <div className="reveal" style={{ position: 'relative', zIndex: 1 }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Begin</div>
-            <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 560, margin: '0 auto' }}>Start your first novel today.</h2>
-            <p style={{ marginTop: 16, fontSize: 'clamp(14px, 2vw, 16px)', color: 'var(--lp-muted)', maxWidth: 400, lineHeight: 1.65, margin: '16px auto 0', padding: '0 8px' }}>Join a growing community of writers using Novelify to plan, write, revise, translate, and publish their work.</p>
+            <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)', maxWidth: 560, margin: '0 auto' }}>{t('cta_title')}</h2>
+            <p style={{ marginTop: 16, fontSize: 'clamp(14px, 2vw, 16px)', color: 'var(--lp-muted)', maxWidth: 400, lineHeight: 1.65, margin: '16px auto 0', padding: '0 8px' }}>{t('cta_sub')}</p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginTop: 36, justifyContent: 'center', flexWrap: 'wrap' }}>
               <button onClick={goToApp}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'var(--lp-white)', color: '#000', fontSize: 15, fontWeight: 600, padding: '14px 28px', borderRadius: 50, border: 'none', cursor: 'pointer', transition: 'transform .2s, box-shadow .2s, background .2s', boxShadow: '0 4px 24px rgba(0,0,0,0.4)' }}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; e.currentTarget.style.background = '#e8e8ea'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}
               >
-                Start Writing for Free
+                {t('cta_button')}
               </button>
               <button onClick={goToPricing}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'var(--lp-muted)', fontSize: 15, fontWeight: 500, padding: '14px 20px', borderRadius: 50, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', transition: 'color .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.22)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; }}
-              >View Pricing</button>
+              >{t('hero_cta_secondary')}</button>
             </div>
           </div>
         </section>
@@ -951,22 +955,22 @@ export function Hero() {
                   <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={100} height={26} style={{ objectFit: 'contain' }} />
                 </Link>
                 <p style={{ fontSize: 11, color: 'var(--lp-muted)', margin: '8px 0 0', maxWidth: 260, lineHeight: 1.5 }}>
-                  AI-powered writing studio for novelists. Plan, write, revise, translate, and publish.
+                  {t('footer_about')}
                 </p>
               </div>
 
               <div style={{ display: 'flex', gap: 40, flexWrap: 'wrap' }}>
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--lp-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Product</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--lp-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{t('footer_product')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Link href="/pricing" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Pricing</Link>
+                    >{t('nav_pricing')}</Link>
                     <Link href="/contact" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Contact</Link>
+                    >{t('footer_contact')}</Link>
                     <Link href="/support" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
@@ -975,39 +979,43 @@ export function Hero() {
                 </div>
 
                 <div>
-                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--lp-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>Legal</div>
+                  <div style={{ fontSize: 10, fontWeight: 600, color: 'var(--lp-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{t('footer_company')}</div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                     <Link href="/terms" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Terms</Link>
+                    >{t('footer_terms')}</Link>
                     <Link href="/privacy" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Privacy</Link>
+                    >{t('footer_privacy')}</Link>
                     <Link href="/refund" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Refund</Link>
+                    >{t('footer_refund')}</Link>
+                    <Link href="/affiliates" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
+                    >{t('footer_affiliate')}</Link>
                     <Link href="/billing-policy" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Billing</Link>
+                    >{t('footer_billing')}</Link>
                     <Link href="/ai-usage-policy" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >AI Usage</Link>
+                    >{t('footer_ai')}</Link>
                     <Link href="/manuscript-privacy" style={{ fontSize: 12, color: 'rgba(245,245,247,0.6)', textDecoration: 'none', transition: 'color .2s' }}
                       onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--lp-white)'; }}
                       onMouseLeave={(e) => { e.currentTarget.style.color = 'rgba(245,245,247,0.6)'; }}
-                    >Manuscript Privacy</Link>
+                    >{t('footer_manuscript')}</Link>
                   </div>
                 </div>
               </div>
             </div>
 
             <div style={{ borderTop: '1px solid var(--lp-border)', paddingTop: 16, textAlign: 'center' }}>
-              <span style={{ fontSize: 11, color: 'rgba(142,142,147,0.5)' }}>&copy; {new Date().getFullYear()} Novelify. All rights reserved.</span>
+              <span style={{ fontSize: 11, color: 'rgba(142,142,147,0.5)' }}>&copy; {new Date().getFullYear()} {t('footer_copyright')}</span>
             </div>
           </div>
         </footer>
@@ -1016,8 +1024,9 @@ export function Hero() {
   );
 }
 
-function FaqItem({ question, answer }: { question: string; answer: string }) {
+function FaqItem({ question, answer, qKey, aKey }: { question: string; answer: string; qKey?: string; aKey?: string }) {
   const detailsRef = useRef<HTMLDetailsElement>(null);
+  const { t } = useI18n();
 
   return (
     <details ref={detailsRef} style={{
@@ -1042,11 +1051,11 @@ function FaqItem({ question, answer }: { question: string; answer: string }) {
         justifyContent: 'space-between',
         gap: 12,
       }}>
-        {question}
+        {qKey ? t(qKey as any) : question}
         <ChevronDownIcon />
       </summary>
       <div style={{ padding: '0 24px 18px', fontSize: 13, color: 'var(--lp-muted)', lineHeight: 1.6 }}>
-        {answer}
+        {aKey ? t(aKey as any) : answer}
       </div>
     </details>
   );

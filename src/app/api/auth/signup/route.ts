@@ -2,11 +2,13 @@ import { db } from '@/lib/db';
 import { NextRequest, NextResponse } from 'next/server';
 import { hash } from 'bcryptjs';
 import { z } from 'zod';
+import { attributeSignupToAffiliate } from '@/lib/affiliate/attribution';
 
 const signupSchema = z.object({
   email: z.string().email('Invalid email'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
   name: z.string().min(1, 'Name is required'),
+  referralCode: z.string().optional(),
 });
 
 export async function POST(request: NextRequest) {
@@ -20,7 +22,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { email, password, name } = parsed.data;
+    const { email, password, name, referralCode } = parsed.data;
 
     const existing = await db.user.findUnique({ where: { email } });
     if (existing) {
@@ -39,6 +41,10 @@ export async function POST(request: NextRequest) {
         password: hashedPassword,
       },
     });
+
+    if (referralCode) {
+      await attributeSignupToAffiliate(user.id, referralCode);
+    }
 
     return NextResponse.json(
       { id: user.id, email: user.email, name: user.name },

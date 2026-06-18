@@ -10,6 +10,10 @@ function getAdminEmails(): string[] {
   return raw.split(',').map(e => e.trim().toLowerCase()).filter(Boolean);
 }
 
+function isSuperAdminEmail(email: string): boolean {
+  return getAdminEmails().includes(email.toLowerCase());
+}
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(db) as NextAuthOptions['adapter'],
   session: { strategy: 'jwt' },
@@ -41,12 +45,14 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const userRole = isSuperAdminEmail(credentials.email) ? UserRole.SUPER_ADMIN : user.role;
+
         return {
           id: user.id,
           email: user.email,
           name: user.name,
           image: user.image,
-          role: user.role,
+          role: userRole,
         };
       },
     }),
@@ -56,10 +62,37 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id;
         token.role = user.role;
+        token.onboardingCompleted = (user as any).onboardingCompleted;
       }
 
-      if (trigger === 'update' && session?.role) {
-        token.role = session.role;
+      if (trigger === 'update') {
+        const fresh = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { onboardingCompleted: true, role: true, email: true },
+        });
+        if (fresh) {
+          token.onboardingCompleted = fresh.onboardingCompleted;
+          if (isSuperAdminEmail(fresh.email || '')) {
+            token.role = UserRole.SUPER_ADMIN;
+          } else {
+            token.role = fresh.role;
+          }
+        }
+      }
+
+      if (!token.role || token.role === 'USER') {
+        const fresh = await db.user.findUnique({
+          where: { id: token.id as string },
+          select: { role: true, email: true, onboardingCompleted: true },
+        });
+        if (fresh) {
+          token.onboardingCompleted = fresh.onboardingCompleted;
+          if (isSuperAdminEmail(fresh.email || '')) {
+            token.role = UserRole.SUPER_ADMIN;
+          } else {
+            token.role = fresh.role;
+          }
+        }
       }
 
       return token;
@@ -68,14 +101,14 @@ export const authOptions: NextAuthOptions = {
       if (session.user) {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
+        (session.user as any).onboardingCompleted = token.onboardingCompleted as boolean;
       }
       return session;
     },
     async signIn({ user }) {
       if (!user.email) return false;
 
-      const adminEmails = getAdminEmails();
-      if (adminEmails.includes(user.email.toLowerCase())) {
+      if (isSuperAdminEmail(user.email)) {
         await db.user.update({
           where: { id: user.id },
           data: { role: UserRole.SUPER_ADMIN },

@@ -45,6 +45,10 @@ model User {
   wordCountUsed   Int       @default(0)
   dailyWordCount  Int       @default(0)
   dailyWordDate   String?
+  onboardingCompleted Boolean  @default(false)
+  firstNovelCreatedAt  DateTime?
+  firstChapterStartedAt DateTime?
+  firstSceneSavedAt   DateTime?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   projects        Project[]

@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import { FirstWritingGuide } from '@/components/novelify/first-writing-guide';
 
 const chapterStatusCfg: Record<string, { label: string; bg: string; color: string; border: string }> = {
   idea: { label: 'Idea', bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: 'rgba(255,255,255,0.06)' },
@@ -51,7 +52,7 @@ const templates = [
   { id: 'three-act', name: 'Three-Act Structure', genre: 'General', desc: 'Setup, confrontation, resolution' },
 ];
 
-export function WritingStudio() {
+export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
   const router = useRouter();
   const {
     selectedProject, setSelectedProject,
@@ -424,6 +425,22 @@ export function WritingStudio() {
             </div>
           </div>
         </div>
+
+        {/* Onboarding guide */}
+        {onboarding && selectedProject && (
+          <FirstWritingGuide
+            project={selectedProject}
+            onStartWriting={() => {
+              textareaRef.current?.focus();
+            }}
+            onAskAi={() => {
+              handleAiGenerate('Write an engaging opening scene that hooks the reader. Use vivid sensory details and establish the tone.');
+            }}
+            onEditOutline={() => {
+              setStudioTab('outline');
+            }}
+          />
+        )}
 
         {/* Editor textarea */}
         <div className="flex-1 overflow-y-auto" style={{ background: '#faf8f5' }}>

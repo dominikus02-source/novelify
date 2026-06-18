@@ -14,6 +14,7 @@ export interface LemonSqueezyCheckoutParams {
   affiliateId?: string
   referralId?: string
   referralCode?: string
+  customPriceCents?: number
 }
 
 export interface LemonSqueezyWebhookPayload {
@@ -186,6 +187,7 @@ export async function createLemonSqueezyCheckout(params: LemonSqueezyCheckoutPar
       data: {
         type: 'checkouts',
         attributes: {
+          ...(params.customPriceCents !== undefined && { custom_price: params.customPriceCents }),
           checkout_data: {
             custom: {
               userId: params.userId,
@@ -200,7 +202,6 @@ export async function createLemonSqueezyCheckout(params: LemonSqueezyCheckoutPar
           product_options: {
             enabled_variants: [Number(variantId)],
             redirect_url: `${appUrl}/dashboard/settings?billing=success`,
-            cancel_url: `${appUrl}/pricing?checkout=cancelled`,
           },
         },
         relationships: {

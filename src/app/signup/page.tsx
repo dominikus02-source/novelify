@@ -9,6 +9,7 @@ import { Loader2, Eye, EyeOff } from 'lucide-react';
 import { signIn } from 'next-auth/react';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/auth-layout';
+import { getStoredReferralCode } from '@/components/novelify/affiliate-referral-tracker';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -25,10 +26,11 @@ export default function SignupPage() {
     setLoading(true);
 
     try {
+      const referralCode = getStoredReferralCode();
       const res = await fetch('/api/auth/signup', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, password, name }),
+        body: JSON.stringify({ email, password, name, referralCode }),
       });
 
       const data = await res.json();

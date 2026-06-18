@@ -3,6 +3,7 @@ import { Geist, Geist_Mono, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { Providers } from "./providers";
+import { AffiliateReferralTracker } from "@/components/novelify/affiliate-referral-tracker";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -26,8 +27,11 @@ const playfair = Playfair_Display({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#080808',
-  colorScheme: 'dark',
+  themeColor: [
+    { media: '(prefers-color-scheme: dark)', color: '#080808' },
+    { media: '(prefers-color-scheme: light)', color: '#F5F0EB' },
+  ],
+  colorScheme: 'dark light',
 }
 
 export const metadata: Metadata = {
@@ -117,6 +121,7 @@ export default function RootLayout({
           }}
         />
         <Providers>
+          <AffiliateReferralTracker />
           {children}
         </Providers>
         <Toaster position="bottom-right" />

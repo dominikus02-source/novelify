@@ -81,6 +81,72 @@
   --sidebar-accent-foreground: #C9A96E;
   --sidebar-border: rgba(201, 169, 110, 0.15);
   --sidebar-ring: #C9A96E;
+  --novel-bg: #080808;
+  --novel-surface: #0a0a0a;
+  --novel-card: #161616;
+  --novel-card-hover: #1c1c1e;
+  --novel-border: rgba(255,255,255,0.06);
+  --novel-text: #F5F5F7;
+  --novel-text-secondary: #aeaeb2;
+  --novel-muted: #8E8E93;
+  --novel-muted-dark: #636366;
+  --novel-gold: #C9A96E;
+  --novel-gold-light: #E8C98A;
+  --novel-gold-border: rgba(201,169,110,0.2);
+  --novel-gold-bg: rgba(201,169,110,0.08);
+  --novel-input-bg: #121212;
+  --novel-editor-bg: #faf8f5;
+  --novel-editor-text: #1a1a1a;
+}
+
+.light {
+  --background: #F5F0EB;
+  --foreground: #1A1A1A;
+  --card: #FFFFFF;
+  --card-foreground: #1A1A1A;
+  --popover: #FFFFFF;
+  --popover-foreground: #1A1A1A;
+  --primary: #C9A96E;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F0EBE5;
+  --secondary-foreground: #1A1A1A;
+  --muted: #F0EBE5;
+  --muted-foreground: #8E8E93;
+  --accent: rgba(201, 169, 110, 0.15);
+  --accent-foreground: #C9A96E;
+  --destructive: #EF4444;
+  --border: rgba(0,0,0,0.08);
+  --input: rgba(0,0,0,0.06);
+  --ring: #C9A96E;
+  --chart-1: #C9A96E;
+  --chart-2: #10B981;
+  --chart-3: #8B5CF6;
+  --chart-4: #3B82F6;
+  --chart-5: #EF4444;
+  --sidebar: #FFFFFF;
+  --sidebar-foreground: #1A1A1A;
+  --sidebar-primary: #C9A96E;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: rgba(201, 169, 110, 0.12);
+  --sidebar-accent-foreground: #C9A96E;
+  --sidebar-border: rgba(201, 169, 110, 0.2);
+  --sidebar-ring: #C9A96E;
+  --novel-bg: #F5F0EB;
+  --novel-surface: #FFFFFF;
+  --novel-card: #FFFFFF;
+  --novel-card-hover: #F5F0EB;
+  --novel-border: rgba(0,0,0,0.06);
+  --novel-text: #1A1A1A;
+  --novel-text-secondary: #636366;
+  --novel-muted: #8E8E93;
+  --novel-muted-dark: #AEAEB2;
+  --novel-gold: #C9A96E;
+  --novel-gold-light: #C8873A;
+  --novel-gold-border: rgba(201,169,110,0.15);
+  --novel-gold-bg: rgba(201,169,110,0.06);
+  --novel-input-bg: #F0EBE5;
+  --novel-editor-bg: #FFFFFF;
+  --novel-editor-text: #1A1A1A;
 }
 
 @layer base {

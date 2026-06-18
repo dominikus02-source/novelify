@@ -1,14 +1,16 @@
 'use client';
 
 import dynamic from 'next/dynamic';
-import { useParams } from 'next/navigation';
+import { useParams, useSearchParams } from 'next/navigation';
 import { useProject } from '@/lib/use-project';
 
 const WritingStudio = dynamic(() => import('@/components/novelify/writing-studio').then(m => m.WritingStudio), { ssr: false });
 
 export default function WritingProjectPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const project = useProject(params.projectId as string);
+  const onboarding = searchParams.get('onboarding') === 'true';
 
   if (!project) {
     return (
@@ -18,5 +20,5 @@ export default function WritingProjectPage() {
     );
   }
 
-  return <WritingStudio />;
+  return <WritingStudio onboarding={onboarding} />;
 }

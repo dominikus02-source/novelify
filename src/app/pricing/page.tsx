@@ -5,7 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Check, X, Star, Zap, Crown, Sparkles, ArrowLeft } from 'lucide-react';
-import { PLANS, FEATURES, hasFeature, type PlanTier, type Currency } from '@/lib/billing/plans';
+import { PLANS, FEATURES, hasFeature, type PlanTier } from '@/lib/billing/plans';
 
 const GROUP_LABELS: Record<string, string> = {
   writing: 'Writing',
@@ -28,7 +28,6 @@ const TIERS: PlanTier[] = ['free', 'starter', 'pro', 'studio'];
 
 export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
-  const [currency, setCurrency] = useState<Currency>('USD');
   const [loading, setLoading] = useState<PlanTier | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const { data: session } = useSession();
@@ -46,9 +45,7 @@ export default function PricingPage() {
     setLoading(plan);
 
     try {
-      const endpoint = currency === 'IDR'
-        ? '/api/billing/create-checkout'
-        : '/api/billing/lemonsqueezy/checkout';
+      const endpoint = '/api/billing/lemonsqueezy/checkout';
 
       const res = await fetch(endpoint, {
         method: 'POST',
@@ -76,7 +73,7 @@ export default function PricingPage() {
     } finally {
       setLoading(null);
     }
-  }, [session, yearly, currency, router]);
+  }, [session, yearly, router]);
 
   // Note: page is 'use client' so metadata is set via root layout template
 
@@ -200,50 +197,9 @@ export default function PricingPage() {
             flexWrap: 'wrap',
           }}
         >
-          {/* Currency toggle */}
-          <div
-            style={{
-              display: 'flex',
-              gap: 0,
-              background: '#1a1a1a',
-              borderRadius: 10,
-              padding: 3,
-              border: '1px solid rgba(255,255,255,0.08)',
-            }}
-          >
-            <button
-              onClick={() => setCurrency('USD')}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                border: 'none',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                background: currency === 'USD' ? '#C9A96E' : 'transparent',
-                color: currency === 'USD' ? '#1a0f00' : '#8E8E93',
-              }}
-            >
-              USD $
-            </button>
-            <button
-              onClick={() => setCurrency('IDR')}
-              style={{
-                padding: '6px 14px',
-                borderRadius: 8,
-                border: 'none',
-                fontSize: 12,
-                fontWeight: 600,
-                cursor: 'pointer',
-                transition: 'all 0.15s',
-                background: currency === 'IDR' ? '#C9A96E' : 'transparent',
-                color: currency === 'IDR' ? '#1a0f00' : '#8E8E93',
-              }}
-            >
-              IDR Rp
-            </button>
-          </div>
+          <span style={{ fontSize: 12, fontWeight: 600, color: '#8E8E93', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+            USD
+          </span>
 
           <span
             style={{
@@ -312,11 +268,9 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginBottom: 80 }}>
           {TIERS.map((tier) => {
             const plan = PLANS[tier];
-            const displayPrice = currency === 'IDR'
-              ? `Rp ${Math.round(yearly ? plan.yearlyPriceIdr / 12 : plan.monthlyPriceIdr).toLocaleString('id-ID')}`
-              : yearly
-                ? `$${(plan.yearlyPrice / 12).toFixed(2)}`
-                : `$${plan.monthlyPrice}`;
+            const displayPrice = yearly
+              ? `$${(plan.yearlyPrice / 12).toFixed(2)}`
+              : `$${plan.monthlyPrice}`;
             const isCurrent = userPlan === tier;
             const isLoading = loading === tier;
             const IconComponent = PLAN_ICONS[tier];
@@ -408,7 +362,7 @@ export default function PricingPage() {
                       marginLeft: 6,
                     }}
                   >
-                    {currency === 'IDR' ? '/bulan' : '/month'}
+                    /month
                   </span>
                 </div>
 
@@ -690,7 +644,7 @@ export default function PricingPage() {
               },
               {
                 q: 'What payment methods do you accept?',
-                a: 'We accept two payment options: pay in USD via Lemon Squeezy (credit/debit cards) or pay in IDR via Midtrans (GoPay, OVO, DANA, ShopeePay, bank transfer, credit card). Choose your preferred currency using the toggle above.',
+                a: 'We accept payments in USD via Lemon Squeezy (credit/debit cards, PayPal, and more).',
               },
               {
                 q: 'Can I cancel anytime?',
