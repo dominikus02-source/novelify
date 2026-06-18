@@ -2,24 +2,24 @@
 
 import { useEffect } from 'react';
 import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 
 export function AuthRedirect() {
   const { data: session, status } = useSession();
   const router = useRouter();
+  const pathname = usePathname();
 
   useEffect(() => {
     if (status === 'authenticated') {
       const user = session?.user as any;
       const onboardingDone = user?.onboardingCompleted === true;
 
-      if (onboardingDone) {
+      // Only redirect if user is on the root landing page and has completed onboarding
+      if (onboardingDone && pathname === '/') {
         router.replace('/dashboard');
-      } else {
-        router.replace('/onboarding');
       }
     }
-  }, [status, router, session]);
+  }, [status, router, session, pathname]);
 
   if (status === 'loading') {
     return (

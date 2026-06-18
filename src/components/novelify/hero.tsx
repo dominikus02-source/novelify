@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { PLANS } from '@/lib/billing/plans';
 import Link from 'next/link';
 import { useI18n } from '@/lib/i18n/context';
+import { useSession } from 'next-auth/react';
 import { LocaleToggle, LocaleToggleMobile } from '@/components/novelify/locale-toggle';
 import { ThemeToggle } from '@/components/novelify/theme-toggle';
 import {
@@ -147,6 +148,7 @@ function scrollTo(id: string) {
 export function Hero() {
   const router = useRouter();
   const { t } = useI18n();
+  const { data: session, status } = useSession();
   const typewriterRef = useTypewriter();
   useScrollReveal();
 
@@ -176,8 +178,14 @@ export function Hero() {
   }, []);
 
   const goToApp = useCallback(() => {
-    router.push('/signup');
-  }, [router]);
+    if (status === 'authenticated') {
+      const user = session?.user as any;
+      const onboardingDone = user?.onboardingCompleted === true;
+      router.push(onboardingDone ? '/dashboard' : '/onboarding');
+    } else {
+      router.push('/signup');
+    }
+  }, [router, status, session]);
 
   const goToPricing = useCallback(() => {
     router.push('/pricing');
@@ -400,7 +408,7 @@ export function Hero() {
                 style={{ background: 'var(--lp-white)', color: '#000', fontWeight: 600, padding: '6px 16px', borderRadius: 20, border: 'none', fontSize: 14, cursor: 'pointer', transition: 'background .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,245,247,0.85)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-white)'; }}
-               >{t('start_free')}</button>
+               >{status === 'authenticated' ? 'Dashboard' : t('start_free')}</button>
              </li>
                <li className="lp-mobile-hidden">
                  <LocaleToggle />
@@ -552,8 +560,12 @@ export function Hero() {
               onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; e.currentTarget.style.background = '#e8e8ea'; }}
               onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}
             >
-              <svg fill="none" viewBox="0 0 16 16" width="16" height="16"><path d="M8 2v6M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
-              {t('hero_cta')}
+              {status === 'authenticated' ? (
+                <svg fill="none" viewBox="0 0 16 16" width="16" height="16"><path d="M2 8h12M9 3l5 5-5 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              ) : (
+                <svg fill="none" viewBox="0 0 16 16" width="16" height="16"><path d="M8 2v6M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
+              )}
+              {status === 'authenticated' ? 'Go to Dashboard' : t('hero_cta')}
             </button>
             <button onClick={goToPricing}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'var(--lp-muted)', fontSize: 15, fontWeight: 500, padding: '14px 20px', borderRadius: 50, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
