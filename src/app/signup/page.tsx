@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { getStoredReferralCode } from '@/components/novelify/affiliate-referral-tracker';
@@ -32,6 +32,7 @@ const goldGradient = 'linear-gradient(135deg, var(--novel-gold), var(--novel-gol
 
 export default function SignupPage() {
   const router = useRouter();
+  const { update } = useSession();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -74,6 +75,7 @@ export default function SignupPage() {
       }
 
       toast.success('Account created! Welcome to Novelify.');
+      await update();
       router.push('/onboarding');
       router.refresh();
     } catch {

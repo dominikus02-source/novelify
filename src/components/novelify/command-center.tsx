@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   BookOpen, Plus, FileText, AlignLeft, Clock, Sparkles,
@@ -79,6 +79,12 @@ export function CommandCenter() {
   const [isDeleting, setIsDeleting] = useState(false);
   const [dailyGoal, setDailyGoal] = useState(1000);
   const [wordsToday, setWordsToday] = useState(0);
+  const [greeting, setGreeting] = useState('');
+
+  useEffect(() => {
+    const h = new Date().getHours();
+    setGreeting(h < 12 ? 'morning' : h < 18 ? 'afternoon' : 'evening');
+  }, []);
 
   const fetchProjects = useCallback(async () => {
     setIsLoading(true);
@@ -181,7 +187,7 @@ export function CommandCenter() {
       <header className="dashboard-topbar" style={{ position: 'sticky', zIndex: 30, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 28px', height: 60, background: 'rgba(8,8,8,0.80)', backdropFilter: 'blur(20px)', borderBottom: `1px solid ${colors.border}` }}>
         <div>
           <h1 style={{ fontSize: 17, fontWeight: 600, color: '#F5F5F7', letterSpacing: '-0.01em' }}>Dashboard</h1>
-          <p style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Good {new Date().getHours() < 12 ? 'morning' : new Date().getHours() < 18 ? 'afternoon' : 'evening'}, {session?.user?.name || 'Writer'}</p>
+          <p style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Good {greeting || 'morning'}, {session?.user?.name || 'Writer'}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
           <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }} title="Search"><Search style={{ width: 16, height: 16 }} /></button>

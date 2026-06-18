@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import LRUCache from 'lru-cache';
+import { LRUCache } from 'lru-cache';
 
 interface RateLimitOptions {
   interval?: number;

@@ -588,7 +588,7 @@ export async function handleOrderCreated(payload: LemonSqueezyWebhookPayload): P
   if (!plan) {
     const variantId = attributes.variant_id
     if (variantId) {
-      const mapping = getPlanFromLemonSqueezyVariantId(variantId)
+      const mapping = getPlanFromLemonSqueezyVariantId(variantId as number)
       if (mapping) plan = mapping.plan
     }
   }

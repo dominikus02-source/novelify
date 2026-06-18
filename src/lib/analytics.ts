@@ -11,7 +11,7 @@ export async function trackEvent(name: string, userId?: string | null, propertie
         userId,
         type: name,
         amount: 1,
-        metadata: properties ? JSON.stringify(properties) : null,
+        metadataJson: properties ? JSON.stringify(properties) : null,
       },
     });
   } catch {

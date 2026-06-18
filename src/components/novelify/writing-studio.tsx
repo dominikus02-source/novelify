@@ -18,6 +18,7 @@ import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { FirstWritingGuide } from '@/components/novelify/first-writing-guide';
+import { saveQueue } from '@/lib/save-queue';
 
 const chapterStatusCfg: Record<string, { label: string; bg: string; color: string; border: string }> = {
   idea: { label: 'Idea', bg: 'rgba(142,142,147,0.1)', color: '#8E8E93', border: 'rgba(255,255,255,0.06)' },
@@ -65,7 +66,7 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
   } = useNovelifyStore();
 
   const [editorContent, setEditorContent] = useState('');
-  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [aiPrompt, setAiPrompt] = useState('');
   const [aiSuggestion, setAiSuggestion] = useState('');
   const [isAddingChapter, setIsAddingChapter] = useState(false);
@@ -168,17 +169,13 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
       const wc = content.split(/\s+/).filter(Boolean).length;
       setSaveStatus('saving');
       try {
-        const endpoint = type === 'chapter' ? `/api/chapters/${id}` : `/api/scenes/${id}`;
-        const body = type === 'chapter'
-          ? JSON.stringify({ contentOriginal: content, wordCount: wc })
-          : JSON.stringify({ content, wordCount: wc });
-        const res = await fetch(endpoint, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body });
-        if (res.ok) {
-          savedTimeRef.current = new Date();
-          setSaveStatus('saved');
-          setTimeout(() => setSaveStatus('idle'), 2000);
-        }
-      } catch { setSaveStatus('idle'); }
+        await saveQueue.enqueue({ id, type, content, wordCount: wc });
+        savedTimeRef.current = new Date();
+        setSaveStatus('saved');
+        setTimeout(() => setSaveStatus('idle'), 2000);
+      } catch {
+        setSaveStatus('error');
+      }
     }, 2000);
   }, []);
 

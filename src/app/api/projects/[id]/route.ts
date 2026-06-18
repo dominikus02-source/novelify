@@ -16,9 +16,76 @@ export async function GET(
 
     const project = await db.project.findUnique({
       where: { id },
-      include: {
-        chapters: true,
-        characters: true,
+      select: {
+        id: true,
+        userId: true,
+        title: true,
+        genre: true,
+        sourceLanguage: true,
+        targetLanguage: true,
+        status: true,
+        plotOutline: true,
+        styleGuide: true,
+        coverImage: true,
+        wordTarget: true,
+        chaptersTarget: true,
+        templateId: true,
+        premise: true,
+        logline: true,
+        theme: true,
+        targetAudience: true,
+        pov: true,
+        tense: true,
+        tone: true,
+        centralConflict: true,
+        stakes: true,
+        endingIdea: true,
+        createdAt: true,
+        updatedAt: true,
+        chapters: {
+          select: {
+            id: true,
+            projectId: true,
+            chapterNumber: true,
+            title: true,
+            contentOriginal: true,
+            contentTranslated: true,
+            wordCount: true,
+            status: true,
+            createdAt: true,
+            updatedAt: true,
+            _count: { select: { scenes: true } },
+          },
+        },
+        characters: {
+          select: {
+            id: true,
+            projectId: true,
+            name: true,
+            description: true,
+            role: true,
+            age: true,
+            gender: true,
+            occupation: true,
+            physicalDescription: true,
+            personality: true,
+            motivation: true,
+            fear: true,
+            secret: true,
+            flaw: true,
+            strength: true,
+            backstory: true,
+            characterArc: true,
+            relationshipToProtagonist: true,
+            firstAppearanceChapter: true,
+            status: true,
+            notes: true,
+            imageUrl: true,
+            colorTag: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
       },
     });
 
@@ -28,7 +95,24 @@ export async function GET(
 
     if (project.userId !== userId) return new Response(null, { status: 403 });
 
-    return NextResponse.json(project);
+    // Serialize dates
+    const serialized = {
+      ...project,
+      createdAt: project.createdAt.toISOString(),
+      updatedAt: project.updatedAt.toISOString(),
+      chapters: project.chapters.map((c) => ({
+        ...c,
+        createdAt: c.createdAt.toISOString(),
+        updatedAt: c.updatedAt.toISOString(),
+      })),
+      characters: project.characters.map((ch) => ({
+        ...ch,
+        createdAt: ch.createdAt.toISOString(),
+        updatedAt: ch.updatedAt.toISOString(),
+      })),
+    };
+
+    return NextResponse.json(serialized);
   } catch (error) {
     console.error('Error fetching project:', error);
     return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 });

@@ -17,6 +17,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Invalid generation data' }, { status: 400 });
     }
 
+    const existingProject = await db.project.findFirst({
+      where: { userId: session.user.id },
+    });
+
+    if (existingProject) {
+      return NextResponse.json({ project: existingProject, existing: true });
+    }
+
     const result = await db.$transaction(async (tx) => {
       const project = await tx.project.create({
         data: {
@@ -75,7 +83,6 @@ export async function POST(request: NextRequest) {
             role: 'protagonist',
             motivation: data.protagonist.desire || '',
             backstory: data.protagonist.emotionalWound || '',
-            conflict: data.protagonist.conflict || '',
           },
         });
       }
@@ -157,7 +164,7 @@ export async function POST(request: NextRequest) {
       await tx.publishingMetadata.create({
         data: {
           projectId: project.id,
-          title: data.title || '',
+          bookTitle: data.title || '',
           authorName: session.user.name || '',
         },
       });

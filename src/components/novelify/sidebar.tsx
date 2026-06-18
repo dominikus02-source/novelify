@@ -153,11 +153,14 @@ export function Sidebar() {
 
   const getVisibleItems = () => {
     if (!isFirstProjectCreated) {
-      return ALL_NAV_ITEMS.filter(item =>
-        item.section === 'workspace' || item.section === 'account'
-      ).filter(item =>
-        item.featureKey === 'my-novels' || item.featureKey === 'dashboard' || item.featureKey === 'settings' || item.adminOnly
-      );
+      return {
+        visible: ALL_NAV_ITEMS.filter(item =>
+          item.section === 'workspace' || item.section === 'account'
+        ).filter(item =>
+          item.featureKey === 'my-novels' || item.featureKey === 'dashboard' || item.featureKey === 'settings' || item.adminOnly
+        ),
+        moreVisible: [],
+      };
     }
 
     const visible: NavItemDef[] = [];
