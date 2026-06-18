@@ -3,7 +3,7 @@
 // Note: page is 'use client' so metadata is set via root layout template
 
 import { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { Loader2, Eye, EyeOff } from 'lucide-react';
@@ -31,6 +31,7 @@ const goldGradient = 'linear-gradient(135deg, var(--novel-gold), var(--novel-gol
 
 export default function LoginPage() {
   const router = useRouter();
+  const { update } = useSession();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -56,7 +57,8 @@ export default function LoginPage() {
     }
 
     toast.success('Welcome back!');
-    router.push('/');
+    await update();
+    router.push('/dashboard');
     router.refresh();
   };
 

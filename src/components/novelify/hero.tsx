@@ -373,6 +373,7 @@ export function Hero() {
                 >{t(f.labelKey as any) || f.label}</button>
               </li>
             ))}
+            {status !== 'authenticated' && (
             <li>
               <button onClick={() => router.push('/login')}
                 style={{ color: 'var(--lp-muted)', fontSize: 14, fontWeight: 500, padding: '6px 14px', borderRadius: 20, background: 'transparent', border: '1px solid var(--lp-border)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
@@ -380,8 +381,9 @@ export function Hero() {
                 onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--lp-muted)'; e.currentTarget.style.borderColor = 'var(--lp-border)'; }}
               >{t('sign_in')}</button>
             </li>
+            )}
             <li>
-              <button onClick={goToApp}
+              <button onClick={() => status === 'authenticated' ? router.push('/dashboard') : goToApp()}
                 style={{ background: 'var(--lp-white)', color: '#000', fontWeight: 600, padding: '6px 16px', borderRadius: 20, border: 'none', fontSize: 14, cursor: 'pointer', transition: 'background .2s' }}
                 onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(245,245,247,0.85)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-white)'; }}
@@ -483,6 +485,7 @@ export function Hero() {
                 padding: '12px 20px',
                 display: 'flex', flexDirection: 'column', gap: 10,
               }}>
+                {status !== 'authenticated' && (
                 <button onClick={() => router.push('/login')}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 12,
@@ -496,7 +499,8 @@ export function Hero() {
                 >
                   {t('sign_in')}
                 </button>
-                <button onClick={goToApp}
+                )}
+                <button onClick={() => status === 'authenticated' ? router.push('/dashboard') : goToApp()}
                   style={{
                     width: '100%', padding: '14px', borderRadius: 12,
                     fontSize: 15, fontWeight: 600, color: '#000',
