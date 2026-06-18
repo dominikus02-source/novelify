@@ -55,7 +55,7 @@ export default function SignupPage() {
       }
 
       toast.success('Account created! Welcome to Novelify.');
-      router.push('/');
+      router.push('/onboarding');
       router.refresh();
     } catch {
       setError('Failed to connect. Please try again.');
