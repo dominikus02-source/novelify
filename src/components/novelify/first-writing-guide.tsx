@@ -20,7 +20,15 @@ interface FirstWritingGuideProps {
 }
 
 export function FirstWritingGuide({ project, onStartWriting, onAskAi, onEditOutline }: FirstWritingGuideProps) {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return localStorage.getItem('novelify:firstGuideDismissed') === 'true';
+  });
+
+  const handleDismiss = () => {
+    setDismissed(true);
+    try { localStorage.setItem('novelify:firstGuideDismissed', 'true'); } catch {}
+  };
 
   if (dismissed) return null;
 
@@ -37,7 +45,7 @@ export function FirstWritingGuide({ project, onStartWriting, onAskAi, onEditOutl
           border: '1px solid rgba(201,169,110,0.2)', borderRadius: 16, padding: 24, marginBottom: 16,
         }}
       >
-        <button onClick={() => setDismissed(true)} style={{
+        <button onClick={handleDismiss} style={{
           position: 'absolute', top: 12, right: 12, padding: 4, borderRadius: 6,
           border: 'none', background: 'rgba(255,255,255,0.04)', color: '#636366',
           cursor: 'pointer', display: 'flex',

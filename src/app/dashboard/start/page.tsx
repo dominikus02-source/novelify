@@ -63,7 +63,7 @@ export default function StartPage() {
           </button>
 
           <button
-            onClick={() => router.push('/onboarding')}
+            onClick={() => router.push('/onboarding?mode=generate')}
             style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 14,
               background: '#121212', color: '#F5F5F7', border: '1px solid rgba(255,255,255,0.08)',
@@ -86,7 +86,7 @@ export default function StartPage() {
           </button>
 
           <button
-            onClick={() => router.push('/onboarding')}
+            onClick={() => router.push('/dashboard/sample-novel')}
             style={{
               display: 'flex', alignItems: 'center', gap: 14, padding: '18px 20px', borderRadius: 14,
               background: '#121212', color: '#F5F5F7', border: '1px solid rgba(255,255,255,0.08)',

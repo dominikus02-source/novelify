@@ -35,7 +35,10 @@ export default function PricingPage() {
   const userPlan: PlanTier = (session?.user as any)?.plan ?? 'free';
 
   const handleCheckout = useCallback(async (plan: PlanTier) => {
-    if (plan === 'free') return;
+    if (plan === 'free') {
+      router.push(session?.user ? '/dashboard' : '/signup');
+      return;
+    }
 
     if (!session?.user) {
       router.push('/login?callbackUrl=/pricing');

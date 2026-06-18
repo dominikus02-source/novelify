@@ -4,12 +4,13 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Languages, CheckCircle2, Clock, Loader2, Save, Sparkles,
-  BookOpen, FileText, ChevronRight, Globe, X,
+  BookOpen, FileText, ChevronRight, Globe, X, AlertCircle,
 } from 'lucide-react';
 import { useNovelifyStore, type Chapter } from '@/lib/store';
 import { colors, Card, StatusBadge, ProgressBar } from './dashboard-components';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { useToast } from '@/hooks/use-toast';
 
 const languageNames: Record<string, string> = {
   id: 'Indonesian', en: 'English', es: 'Spanish', fr: 'French',
@@ -19,6 +20,7 @@ const languageNames: Record<string, string> = {
 
 export function TranslationStudio() {
   const { selectedProject } = useNovelifyStore();
+  const { toast } = useToast();
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
@@ -28,16 +30,18 @@ export function TranslationStudio() {
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saved'>('idle');
   const [fetching, setFetching] = useState(true);
+  const [fetchError, setFetchError] = useState('');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const savedTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     if (!selectedProject) return;
     setFetching(true);
+    setFetchError('');
     fetch(`/api/chapters?projectId=${selectedProject.id}`)
       .then((r) => r.ok ? r.json() : [])
       .then((data) => { setChapters(data); setFetching(false); })
-      .catch(() => setFetching(false));
+      .catch(() => { setFetching(false); setFetchError('Failed to load chapters. Please refresh and try again.'); });
   }, [selectedProject?.id]);
 
   useEffect(() => {
@@ -67,10 +71,14 @@ export function TranslationStudio() {
         ));
         if (savedTimeoutRef.current) clearTimeout(savedTimeoutRef.current);
         savedTimeoutRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+      } else {
+        toast({ title: 'Failed to save translation', variant: 'destructive' });
       }
-    } catch { /* ignore */ }
+    } catch {
+      toast({ title: 'Could not save. Check your connection and try again.', variant: 'destructive' });
+    }
     finally { setIsSaving(false); }
-  }, [selectedChapter, translatedText]);
+  }, [selectedChapter, translatedText, toast]);
 
   const handleAiTranslate = async () => {
     if (!selectedChapter || !selectedProject || !originalText.trim()) return;
@@ -88,8 +96,12 @@ export function TranslationStudio() {
       if (res.ok) {
         const data = await res.json();
         setTranslatedText(data.content || '');
+      } else {
+        toast({ title: 'AI translation failed. Please try again.', variant: 'destructive' });
       }
-    } catch { /* ignore */ }
+    } catch {
+      toast({ title: 'Could not connect. Check your connection and try again.', variant: 'destructive' });
+    }
     finally { setIsTranslating(false); }
   };
 
@@ -140,7 +152,12 @@ export function TranslationStudio() {
         </div>
 
         <ScrollArea className="flex-1">
-          {fetching ? (
+          {fetchError ? (
+            <div className="py-12 text-center px-4">
+              <AlertCircle className="size-5 mx-auto mb-2" style={{ color: '#F87171' }} />
+              <p className="text-xs" style={{ color: '#F87171' }}>{fetchError}</p>
+            </div>
+          ) : fetching ? (
             <div className="flex items-center justify-center py-12">
               <Loader2 className="size-5 animate-spin" style={{ color: '#636366' }} />
             </div>

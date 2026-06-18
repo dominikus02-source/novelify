@@ -65,6 +65,9 @@ export function getStageFromProjects(projects: any[], isPaidUser: boolean = fals
     (p.chapters || []).some((c: any) => (c.contentOriginal?.length || 0) > 0)
   );
   const projectMarkedReady = projects.some((p: any) => p.status === 'ready' || p.status === 'exported');
+  const publishingOpened = projects.some((p: any) =>
+    p.coverImage || (p.plotOutline && p.plotOutline.length > 0)
+  );
 
   return getUserStage({
     projectCount: projects.length,
@@ -72,7 +75,7 @@ export function getStageFromProjects(projects: any[], isPaidUser: boolean = fals
     chapterCount,
     hasContentInChapter,
     isPaidUser,
-    publishingOpened: false,
+    publishingOpened,
     projectMarkedReady,
   });
 }

@@ -7,7 +7,7 @@ import {
   GripVertical, ScrollText, Users, Undo2, Wand2, TextSelect, MessageSquarePlus,
   Layers, Globe, Download, FolderTree, BookMarked, Clock, Target,
   ChevronDown, ChevronRight, CircleDot, Search, Settings2, ArrowLeft,
-  Maximize2, Minimize2, Trash2, Quote, Eye, EyeOff,
+  Maximize2, Minimize2, Trash2, Quote, Eye, EyeOff, AlertCircle,
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useNovelifyStore, type Project, type Chapter, type Scene } from '@/lib/store';
@@ -17,6 +17,11 @@ import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
+import {
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription,
+  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { FirstWritingGuide } from '@/components/novelify/first-writing-guide';
 import { saveQueue } from '@/lib/save-queue';
 
@@ -79,6 +84,7 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
   const [chaptersExpanded, setChaptersExpanded] = useState<Record<string, boolean>>({});
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [showBibleSearch, setShowBibleSearch] = useState(false);
+  const [pendingChapterSwitch, setPendingChapterSwitch] = useState<{ chapter: Chapter; scene: Scene | null; mode: 'chapter' | 'scene' } | null>(null);
   const [bibleSearch, setBibleSearch] = useState('');
   const [wordLimitMsg, setWordLimitMsg] = useState('');
   const [newNoteTitle, setNewNoteTitle] = useState('');
@@ -119,16 +125,41 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
     }
   }, [editingTitle]);
 
+  const isDirty = editorContent !== originalContentRef.current;
+
   useEffect(() => {
     const handler = (event: BeforeUnloadEvent) => {
-      if (editorContent !== originalContentRef.current) {
+      if (isDirty) {
         event.preventDefault();
         event.returnValue = '';
       }
     };
     window.addEventListener('beforeunload', handler);
     return () => window.removeEventListener('beforeunload', handler);
-  }, [editorContent]);
+  }, [isDirty]);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+        e.preventDefault();
+        if (isDirty && selectedChapter) {
+          const id = writingMode === 'scene' && selectedScene ? selectedScene.id : selectedChapter.id;
+          const type = writingMode === 'scene' && selectedScene ? 'scene' : 'chapter';
+          const content = editorContent;
+          const wc = content.split(/\s+/).filter(Boolean).length;
+          setSaveStatus('saving');
+          saveQueue.enqueue({ id, type, content, wordCount: wc }).then(() => {
+            savedTimeRef.current = new Date();
+            setSaveStatus('saved');
+            originalContentRef.current = content;
+            setTimeout(() => setSaveStatus('idle'), 2000);
+          }).catch(() => setSaveStatus('error'));
+        }
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [isDirty, editorContent, selectedChapter, selectedScene, writingMode]);
 
   // Expand current chapter
   useEffect(() => {
@@ -395,10 +426,11 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
               {/* Mode selector */}
               <select value={writingMode} onChange={(e) => setWritingMode(e.target.value as 'chapter' | 'scene' | 'full' | 'focus')}
                 className="h-7 rounded-md border text-xs px-2" style={{ borderColor: 'rgba(0,0,0,0.1)', background: '#f5f5f5', color: '#1a1a1a' }}
+                title="Chapter: edit one chapter at a time | Scene: focus on a single scene | Full Manuscript: view entire chapter content | Focus: distraction-free writing"
               >
                 <option value="chapter">Chapter</option>
                 <option value="scene">Scene</option>
-                <option value="full">Full MS</option>
+                <option value="full">Full Manuscript</option>
                 <option value="focus">Focus</option>
               </select>
 
@@ -406,11 +438,13 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
                 {wordCount} words
               </Badge>
 
-              <div className="flex items-center gap-1 text-xs" style={{ color: saveStatus === 'saved' ? '#10B981' : saveStatus === 'saving' ? '#C8873A' : '#8E8E93' }}>
+              <div className="flex items-center gap-1 text-xs" style={{ color: saveStatus === 'error' ? '#F87171' : saveStatus === 'saved' ? '#10B981' : saveStatus === 'saving' ? '#C8873A' : '#8E8E93' }}>
+                {saveStatus === 'error' && <AlertCircle className="size-3" />}
                 {saveStatus === 'saving' && <Loader2 className="size-3 animate-spin" />}
                 {saveStatus === 'saved' && <Save className="size-3" />}
                 {saveStatus === 'idle' && <span className="size-2 rounded-full" style={{ background: '#8E8E93' }} />}
               </div>
+              {saveStatus === 'error' && <span className="text-[10px]" style={{ color: '#F87171' }}>Save failed</span>}
 
               {savedTimeRef.current && (
                 <span className="text-[10px]" style={{ color: '#8E8E93' }}>{savedTimeRef.current.toLocaleTimeString()}</span>
@@ -552,7 +586,13 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
                     className="p-1 shrink-0" style={{ color: '#636366' }}
                   >{expanded ? <ChevronDown className="size-3" /> : <ChevronRight className="size-3" />}</button>
                   <button
-                    onClick={() => { setSelectedChapter(chapter); setSelectedScene(null); setWritingMode('chapter'); setAiSuggestion(''); }}
+                    onClick={() => {
+                      if (isDirty) {
+                        setPendingChapterSwitch({ chapter, scene: null, mode: 'chapter' });
+                        return;
+                      }
+                      setSelectedChapter(chapter); setSelectedScene(null); setWritingMode('chapter'); setAiSuggestion('');
+                    }}
                     className={`flex w-full items-center gap-2 rounded-lg px-2 py-2 text-left transition-all ${
                       isSelected && writingMode === 'chapter' ? 'bg-[#C8873A]/10' : 'hover:bg-white/5'
                     }`}
@@ -578,7 +618,13 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
                         const scStat = sceneStatusCfg[scene.status] || sceneStatusCfg.idea;
                         return (
                           <button key={scene.id}
-                            onClick={() => { setSelectedChapter(chapter); setSelectedScene(scene); setWritingMode('scene'); setAiSuggestion(''); }}
+                            onClick={() => {
+                              if (isDirty) {
+                                setPendingChapterSwitch({ chapter, scene, mode: 'scene' });
+                                return;
+                              }
+                              setSelectedChapter(chapter); setSelectedScene(scene); setWritingMode('scene'); setAiSuggestion('');
+                            }}
                             className={`flex w-full items-center gap-2 rounded-lg px-2 py-1.5 text-left transition-all ml-5 ${
                               isSceneSelected ? 'bg-white/10' : 'hover:bg-white/5'
                             }`}
@@ -1067,6 +1113,33 @@ export function WritingStudio({ onboarding }: { onboarding?: boolean }) {
           {renderStudioPanel()}
         </SheetContent>
       </Sheet>
+
+      {/* Unsaved Changes Dialog */}
+      <AlertDialog open={!!pendingChapterSwitch} onOpenChange={(open) => { if (!open) setPendingChapterSwitch(null); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unsaved changes</AlertDialogTitle>
+            <AlertDialogDescription>
+              You have unsaved changes in your current chapter. What would you like to do?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setPendingChapterSwitch(null)}>Keep editing</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              if (!pendingChapterSwitch) return;
+              const { chapter, scene, mode } = pendingChapterSwitch;
+              setSelectedChapter(chapter);
+              if (scene) setSelectedScene(scene);
+              else setSelectedScene(null);
+              setWritingMode(mode);
+              setAiSuggestion('');
+              setPendingChapterSwitch(null);
+            }} style={{ background: '#F87171', color: '#fff' }}>
+              Discard & switch
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Template Picker Modal */}
       <AnimatePresence>

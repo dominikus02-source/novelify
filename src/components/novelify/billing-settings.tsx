@@ -728,7 +728,7 @@ function BillingSettings() {
             >
               <AlertCircle style={{ width: 16, height: 16, color: GOLD, flexShrink: 0 }} />
               <div style={{ fontSize: 12, color: MUTED_TEXT, lineHeight: 1.5, flex: 1 }}>
-                Subscription management portal coming soon. Contact support to manage your subscription.
+                <a href="mailto:support@novelify.app" style={{ color: GOLD, textDecoration: 'underline' }}>Contact support</a> to manage your subscription.
               </div>
               <button
                 onClick={() => setShowManageMsg(false)}

@@ -6,7 +6,7 @@ import {
   UserPlus, Save, UserCheck,
 } from 'lucide-react';
 import { useNovelifyStore } from '@/lib/store';
-import { useState, useEffect, useMemo, useCallback } from 'react';
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import {
@@ -277,6 +277,7 @@ export function StoryBiblePage() {
   const [deleteTarget, setDeleteTarget] = useState<{ type: string; id: string } | null>(null);
 
   const [loading, setLoading] = useState(true);
+  const [bibleError, setBibleError] = useState('');
 
   const projectId = selectedProject?.id;
 
@@ -299,8 +300,10 @@ export function StoryBiblePage() {
       setStoryNotes(notes);
       setRelationships(rels);
       setResearchItems(research);
+      setBibleError('');
     } catch (e) {
       console.error('Failed to fetch bible data', e);
+      setBibleError('Failed to load bible data. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -353,9 +356,11 @@ export function StoryBiblePage() {
     }
   }, [projectId]);
 
+  const overviewDebounceRef = useRef<NodeJS.Timeout | null>(null);
   const updateOverviewField = (field: keyof ProjectOverview, value: string) => {
     setOverview(prev => ({ ...prev, [field]: value }));
-    saveOverview(field, value);
+    if (overviewDebounceRef.current) clearTimeout(overviewDebounceRef.current);
+    overviewDebounceRef.current = setTimeout(() => saveOverview(field, value), 300);
   };
 
   // ─── Character Handlers ───
@@ -549,6 +554,18 @@ export function StoryBiblePage() {
           );
         })}
       </div>
+
+      {/* ─── Error Banner ─── */}
+      {bibleError && (
+        <div style={{
+          background: 'rgba(248,113,113,0.10)', border: '1px solid rgba(248,113,113,0.25)',
+          borderRadius: 10, padding: '10px 14px', marginBottom: 16,
+          fontSize: 11, color: '#F87171', display: 'flex', alignItems: 'center', gap: 8,
+        }}>
+          <span>⚠</span>
+          <span>{bibleError}</span>
+        </div>
+      )}
 
       {/* ─── Content Area ─── */}
       {tab === 'overview' && renderOverview()}

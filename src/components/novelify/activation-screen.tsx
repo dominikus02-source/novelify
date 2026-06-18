@@ -7,7 +7,7 @@ export function ActivationScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace('/dashboard/start');
+    router.replace('/onboarding');
   }, [router]);
 
   return null;

@@ -190,8 +190,6 @@ export function CommandCenter() {
           <p style={{ fontSize: 11, color: colors.muted, marginTop: 1 }}>Good {greeting || 'morning'}, {session?.user?.name || 'Writer'}</p>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }} title="Search"><Search style={{ width: 16, height: 16 }} /></button>
-          <button style={{ width: 34, height: 34, borderRadius: '50%', background: '#161616', border: `1px solid ${colors.border}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', color: colors.muted }} title="Notifications"><Bell style={{ width: 16, height: 16 }} /></button>
           <GlassButton onClick={() => setCreateOpen(true)}><Plus style={{ width: 14, height: 14 }} /> New Novel</GlassButton>
         </div>
       </header>
@@ -211,13 +209,12 @@ export function CommandCenter() {
 
         {/* ─── B. Writing Progress Overview ─── */}
         <FadeIn delay={0.05}>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6" style={{ gap: 10 }}>
-            <MetricCard icon={BookOpen} label="Active Novels" value={totalProjects} sub={`${activeProjects} in progress`} color="gold" loading={isLoading} />
-            <MetricCard icon={AlignLeft} label="Total Words" value={fmtWords(totalWords)} sub={`${fmtWords(wordsToday)} today`} color="teal" loading={isLoading} />
-            <MetricCard icon={Clock} label="Today Written" value={fmtWords(wordsToday)} sub={`of ${fmtWords(dailyGoal)} goal`} color="amber" loading={isLoading} />
-            <MetricCard icon={Target} label="Writing Streak" value="0" sub="Start today!" color="purple" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5" style={{ gap: 10 }}>
+            <MetricCard icon={BookOpen} label="Active Novels" value={totalProjects} sub={`${totalChapters} total chapters`} color="gold" loading={isLoading} />
+            <MetricCard icon={AlignLeft} label="Total Words" value={fmtWords(totalWords)} sub={`${readingTime} min reading time`} color="teal" loading={isLoading} />
             <MetricCard icon={FileText} label="In Progress" value={activeProjects} sub="active drafts" color="blue" />
-            <MetricCard icon={CheckCircle2} label="Ready to Publish" value={readyProjects} sub="manuscripts done" color="emerald" />
+            <MetricCard icon={CheckCircle2} label="Chapters Done" value={completedChs} sub={`of ${totalChapters} total`} color="emerald" />
+            <MetricCard icon={BookMarked} label="Ready to Publish" value={readyProjects} sub="manuscripts done" color="amber" />
           </div>
         </FadeIn>
 

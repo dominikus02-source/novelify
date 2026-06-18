@@ -17,6 +17,7 @@ import {
   colors, MetricCard, SectionHeader, StatusBadge,
   EmptyState, Card, FadeIn, GlassButton, PageHeader,
 } from './dashboard-components';
+import { ContextualFeatureReveal } from './contextual-feature-reveal';
 
 // ─── Types ───
 type PubTab = 'metadata' | 'frontmatter' | 'backmatter' | 'cover' | 'synopsis' | 'export' | 'checklist';
@@ -1015,9 +1016,13 @@ export function PublishingCenterPage() {
 
   // ─── No project state ───
   if (!selectedProject) {
+    const pubMaxWords = projects.reduce((s, p) => s + p.chapters.reduce((cs, c) => cs + (c.wordCount || 0), 0), 0);
     return (
       <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
         <PageHeader title="Publishing Center" subtitle="Prepare your manuscript for the world" />
+        <div style={{ marginBottom: 20 }}>
+          <ContextualFeatureReveal feature="publishing" wordCount={pubMaxWords} chapterCount={projects.length} hasSynopsis={false} />
+        </div>
         {projects.length === 0 ? (
           <EmptyState icon={BookOpen} title="No projects yet" desc="Create a novel to start preparing for publication" />
         ) : (

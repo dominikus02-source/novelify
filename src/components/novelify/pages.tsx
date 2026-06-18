@@ -8,6 +8,7 @@ import {
   CheckCircle2, AlignLeft,
 } from 'lucide-react';
 import { useNovelifyStore, type Project } from '@/lib/store';
+import { ContextualFeatureReveal } from './contextual-feature-reveal';
 import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
@@ -67,7 +68,9 @@ export function MyNovelsPage() {
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="My Novels" subtitle={`${projects.length} novel${projects.length !== 1 ? 's' : ''}`} />
+      <PageHeader title="My Novels" subtitle={`${projects.length} novel${projects.length !== 1 ? 's' : ''}`}
+        action={<GlassButton onClick={() => go('templates')}><Plus style={{ width: 13, height: 13 }} /> Create New Novel</GlassButton>}
+      />
       <div style={{ display: 'flex', gap: 8, marginBottom: 16, flexWrap: 'wrap' }}>
         {['all', 'draft', 'translating', 'ready', 'exported'].map((s) => (
           <button key={s} onClick={() => setFilter(s)}
@@ -124,25 +127,25 @@ export function AICoWriterPage() {
   const { go, projects, selectedProject, setSelectedProject } = useNav();
 
   const aiTools = [
-    { icon: Lightbulb, label: 'Generate Novel Idea', desc: 'Get a fresh story concept with characters and plot', view: 'ai-cowriter' },
+    { icon: Lightbulb, label: 'Generate Novel Idea', desc: 'Get a fresh story concept with characters and plot', view: 'writing' },
     { icon: PenTool, label: 'Continue Chapter', desc: 'AI continues your current chapter naturally', view: 'writing' },
     { icon: Wand2, label: 'Rewrite Scene', desc: 'Rewrite a scene with new tone or perspective', view: 'writing' },
     { icon: Quote, label: 'Improve Dialogue', desc: 'Make dialogue more natural and distinctive', view: 'writing' },
-    { icon: Globe, label: 'Fix Pacing', desc: 'Adjust scene pacing for better flow', view: 'writing' },
+    { icon: Globe, label: 'Review Pacing', desc: 'Adjust scene pacing for better flow', view: 'writing' },
     { icon: BookMarked, label: 'Check Continuity', desc: 'Find plot holes and consistency issues', view: 'writing' },
-    { icon: FileText, label: 'Generate Synopsis', desc: 'Create a compelling story synopsis', view: 'ai-cowriter' },
-    { icon: Award, label: 'Generate Title', desc: 'AI suggests titles based on your story', view: 'ai-cowriter' },
+    { icon: FileText, label: 'Generate Synopsis', desc: 'Create a compelling story synopsis', view: 'writing' },
+    { icon: Award, label: 'Generate Title', desc: 'AI suggests titles based on your story', view: 'writing' },
     { icon: Languages, label: 'Translate Text', desc: 'Translate selected text to another language', view: 'translation' },
   ];
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
-      <PageHeader title="AI Co-Writer" subtitle="Your creative partner for every stage of writing"
+      <PageHeader title="AI Co-Writer" subtitle="Open any tool below — each opens in the Writing Studio where you can use AI prompts"
         action={selectedProject ? <GlassButton onClick={() => go('writing', selectedProject)}><Sparkles style={{ width: 13, height: 13 }} /> Open Writing Studio</GlassButton> : undefined}
       />
       {!selectedProject && projects.length > 0 && (
         <div style={{ marginBottom: 20 }}>
-          <p style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>Select a project to use AI tools:</p>
+          <p style={{ fontSize: 12, color: colors.muted, marginBottom: 10 }}>Select a project to continue:</p>
           <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
             {projects.map((p) => (
               <button key={p.id} onClick={() => setSelectedProject(p)} style={{ padding: '6px 14px', borderRadius: 20, border: `1px solid ${colors.border}`, background: '#161616', color: '#F5F5F7', fontSize: 11, cursor: 'pointer' }}>{p.title}</button>
@@ -150,11 +153,20 @@ export function AICoWriterPage() {
           </div>
         </div>
       )}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12 }}>
+      {!selectedProject && projects.length === 0 && (
+        <div style={{ marginBottom: 20, padding: 24, borderRadius: 12, background: 'rgba(201,169,110,0.04)', border: '1px solid rgba(201,169,110,0.1)', textAlign: 'center' }}>
+          <p style={{ fontSize: 13, color: '#8E8E93', marginBottom: 10 }}>Create your first novel to use AI writing tools.</p>
+          <GlassButton onClick={() => go('my-novels')}><Plus style={{ width: 13, height: 13 }} /> Create Your First Novel</GlassButton>
+        </div>
+      )}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 12 }}>
         {aiTools.map((tool) => {
           const Icon = tool.icon;
+          const hasProject = !!selectedProject;
           return (
-            <Card key={tool.label} hover onClick={() => go(tool.view, selectedProject)}>
+            <Card key={tool.label} hover={hasProject} onClick={() => hasProject ? go(tool.view, selectedProject) : undefined}
+              style={{ opacity: hasProject ? 1 : 0.5, cursor: hasProject ? 'pointer' : 'default' }}
+            >
               <div style={{ padding: 16, display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                 <div style={{ width: 40, height: 40, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon style={{ width: 18, height: 18, color: colors.gold }} />
@@ -162,6 +174,7 @@ export function AICoWriterPage() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>{tool.label}</div>
                   <div style={{ fontSize: 10, color: colors.muted, marginTop: 2, lineHeight: 1.4 }}>{tool.desc}</div>
+                  {!hasProject && <div style={{ fontSize: 9, color: '#636366', marginTop: 4, fontStyle: 'italic' }}>Select a project first</div>}
                 </div>
               </div>
             </Card>
@@ -178,40 +191,54 @@ export function AICoWriterPage() {
 export function RevisionRoomPage() {
   const { go, projects, selectedProject } = useNav();
   const p = selectedProject || projects[0];
+  const revWordCount = p ? p.chapters.reduce((s: number, c: any) => s + (c.wordCount || 0), 0) : 0;
+  const revChapterCount = p ? p.chapters.length : 0;
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="Revision Room" subtitle="Polish your manuscript to perfection"
         action={p ? <GlassButton onClick={() => go('writing', p)}><PenTool style={{ width: 13, height: 13 }} /> Edit in Studio</GlassButton> : undefined}
       />
+      {p && revWordCount < 300 && revChapterCount > 0 && (
+        <div style={{ marginBottom: 16 }}>
+          <ContextualFeatureReveal feature="revision" wordCount={revWordCount} chapterCount={revChapterCount} hasSynopsis={false}
+            onCta={() => go('writing', p)} ctaLabel="Open Writing Studio"
+          />
+        </div>
+      )}
       {!p || p.chapters.length === 0 ? (
         <EmptyState icon={FileEdit} title="No chapters to revise" desc="Write some chapters first, then come here to polish them" />
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
-          {[
-            { icon: CheckCircle2, label: 'AI Prose Check', desc: 'Polish grammar, style, and flow' },
-            { icon: Quote, label: 'Dialogue Check', desc: 'Make every voice distinct and natural' },
-            { icon: Wand2, label: 'Pacing Check', desc: 'Ensure rhythm and momentum are right' },
-            { icon: FileText, label: 'Repetition Check', desc: 'Find overused words and phrases' },
-            { icon: BookMarked, label: 'Continuity Check', desc: 'Catch plot holes and inconsistencies' },
-            { icon: Star, label: 'Style Enhancement', desc: 'Elevate prose to match your target genre' },
-          ].map((item) => {
-            const Icon = item.icon;
-            return (
-              <Card key={item.label} hover onClick={() => go('writing', p)}>
-                <div style={{ padding: 16, display: 'flex', gap: 14 }}>
-                  <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                    <Icon style={{ width: 16, height: 16, color: colors.gold }} />
+        <div>
+          <div style={{ marginBottom: 16, padding: '14px 18px', borderRadius: 12, background: 'rgba(201,169,110,0.04)', border: '1px solid rgba(201,169,110,0.1)' }}>
+            <p style={{ fontSize: 12, color: '#aeaeb2', lineHeight: 1.5 }}>
+              Open a chapter in the Writing Studio. Use the AI tools there to polish prose, improve dialogue, adjust pacing, and check consistency.
+            </p>
+          </div>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(260px, 1fr))', gap: 14 }}>
+            {[
+              { icon: CheckCircle2, label: 'Review Prose', desc: 'Polish grammar, style, and flow in the editor' },
+              { icon: Quote, label: 'Polish Dialogue', desc: 'Make every voice distinct and natural' },
+              { icon: Wand2, label: 'Review Pacing', desc: 'Adjust rhythm and momentum as you write' },
+              { icon: BookMarked, label: 'Check Continuity', desc: 'Review plot consistency in each chapter' },
+            ].map((item) => {
+              const Icon = item.icon;
+              return (
+                <Card key={item.label} hover onClick={() => go('writing', p)}>
+                  <div style={{ padding: 16, display: 'flex', gap: 14 }}>
+                    <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Icon style={{ width: 16, height: 16, color: colors.gold }} />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>{item.label}</div>
+                      <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>{item.desc}</div>
+                      <div style={{ fontSize: 9, color: colors.gold, marginTop: 6 }}>Open Writing Studio →</div>
+                    </div>
                   </div>
-                  <div>
-                    <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>{item.label}</div>
-                    <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>{item.desc}</div>
-                    <div style={{ fontSize: 9, color: colors.gold, marginTop: 6 }}>Open Writing Studio →</div>
-                  </div>
-                </div>
-              </Card>
-            );
-          })}
+                </Card>
+              );
+            })}
+          </div>
         </div>
       )}
     </div>
@@ -223,6 +250,10 @@ export function RevisionRoomPage() {
 // ═══════════════════════════════════════════
 export function TranslationStudioPage() {
   const { go, selectedProject } = useNav();
+  const trWordCount = selectedProject
+    ? selectedProject.chapters.reduce((s: number, c: any) => s + (c.wordCount || 0), 0)
+    : 0;
+  const trChapterCount = selectedProject ? selectedProject.chapters.length : 0;
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
@@ -230,7 +261,10 @@ export function TranslationStudioPage() {
         action={selectedProject ? <GlassButton onClick={() => go('translate', selectedProject)}><Languages style={{ width: 13, height: 13 }} /> Open Translator</GlassButton> : undefined}
       />
       {!selectedProject ? (
-        <EmptyState icon={Languages} title="Select a project" desc="Choose a project from My Novels to translate" />
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <ContextualFeatureReveal feature="translation" wordCount={0} chapterCount={0} hasSynopsis={false} />
+          <EmptyState icon={Languages} title="Select a project" desc="Choose a project from My Novels to translate" />
+        </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
           <Card hover onClick={() => go('translate', selectedProject)}>
@@ -335,25 +369,31 @@ export function WritingGoalsPage() {
 // ═══════════════════════════════════════════
 export function MarketingKitPage() {
   const { go, selectedProject } = useNav();
+  const mkWordCount = selectedProject
+    ? selectedProject.chapters.reduce((s: number, c: any) => s + (c.wordCount || 0), 0)
+    : 0;
+  const mkChapterCount = selectedProject ? selectedProject.chapters.length : 0;
+  const hasSynopsis = !!(selectedProject as any)?.plotOutline;
 
   return (
     <div style={{ background: colors.darkBg, minHeight: '100vh', padding: '24px 28px 48px' }}>
       <PageHeader title="Marketing Kit" subtitle="Everything you need to promote your novel"
         action={<GlassButton onClick={() => go('synopsis', selectedProject)}><FileText style={{ width: 13, height: 13 }} /> Generate Synopsis</GlassButton>}
       />
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 12, marginBottom: 24 }}>
+      <div style={{ marginBottom: 16 }}>
+        <ContextualFeatureReveal feature="marketing" wordCount={mkWordCount} chapterCount={mkChapterCount} hasSynopsis={hasSynopsis}
+          onCta={selectedProject ? () => go('synopsis', selectedProject) : undefined} ctaLabel="Create Synopsis"
+        />
+      </div>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: 12, marginBottom: 24 }}>
         {[
           { icon: BookMarked, label: 'Book Blurb', desc: 'Back-cover copy that sells', view: 'synopsis' },
           { icon: Award, label: 'Tagline', desc: 'Memorable one-line hook', view: 'synopsis' },
           { icon: FileText, label: 'Amazon Description', desc: 'KDP-optimized listing', view: 'synopsis' },
-          { icon: Megaphone, label: 'Social Captions', desc: 'For TikTok, IG, Twitter' },
-          { icon: Star, label: 'Launch Announcement', desc: 'Coming-soon template' },
-          { icon: Users, label: 'Author Bio', desc: 'About the author page' },
         ].map((item) => {
           const Icon = item.icon;
-          const v = 'view' in item ? item.view : undefined;
           return (
-            <Card key={item.label} hover onClick={() => v && go(v, selectedProject)}>
+            <Card key={item.label} hover onClick={() => go('synopsis', selectedProject)}>
               <div style={{ padding: 16, display: 'flex', gap: 14 }}>
                 <div style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(201,169,110,0.10)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <Icon style={{ width: 16, height: 16, color: colors.gold }} />
@@ -361,7 +401,7 @@ export function MarketingKitPage() {
                 <div>
                   <div style={{ fontSize: 13, fontWeight: 600, color: '#F5F5F7' }}>{item.label}</div>
                   <div style={{ fontSize: 10, color: colors.muted, marginTop: 2 }}>{item.desc}</div>
-                  {v ? <div style={{ fontSize: 9, color: colors.gold, marginTop: 4 }}>Open →</div> : <div style={{ fontSize: 9, color: '#636366', marginTop: 4, fontStyle: 'italic' }}>Coming soon</div>}
+                  <div style={{ fontSize: 9, color: colors.gold, marginTop: 4 }}>Open →</div>
                 </div>
               </div>
             </Card>

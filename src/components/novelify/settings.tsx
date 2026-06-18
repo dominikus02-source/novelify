@@ -302,7 +302,7 @@ export function SettingsPage() {
                           </Field>
                         </div>
                         <div className="grid grid-cols-2 gap-4">
-                          <Field label="Autosave Interval (ms)" desc="How often your work is auto-saved">
+                          <Field label="Autosave Interval" desc="How often your work is auto-saved">
                             <Input type="number" value={s.autosaveInterval ?? 2000}
                               onChange={(e) => updateField('autosaveInterval', (v => isNaN(v) ? 2000 : v)(parseInt(e.target.value)))}
                               style={{ borderColor: 'rgba(255,255,255,0.1)', background: '#1c1c1e', color: '#F5F5F7' }}
