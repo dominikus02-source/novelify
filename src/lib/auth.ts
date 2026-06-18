@@ -63,6 +63,7 @@ export const authOptions: NextAuthOptions = {
         token.id = user.id;
         token.role = user.role;
         token.onboardingCompleted = (user as any).onboardingCompleted;
+        token.projectCount = 0;
       }
 
       if (trigger === 'update') {
@@ -95,6 +96,11 @@ export const authOptions: NextAuthOptions = {
         }
       }
 
+      if (token.id) {
+        const count = await db.project.count({ where: { userId: token.id as string } });
+        token.projectCount = count;
+      }
+
       return token;
     },
     async session({ session, token }) {
@@ -102,6 +108,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id as string;
         session.user.role = token.role as UserRole;
         (session.user as any).onboardingCompleted = token.onboardingCompleted as boolean;
+        (session.user as any).projectCount = token.projectCount as number;
       }
       return session;
     },

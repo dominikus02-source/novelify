@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, useCallback, useState } from 'react';
+import { useEffect, useRef, useCallback, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import Image from 'next/image';
 import { PLANS } from '@/lib/billing/plans';
@@ -177,15 +177,23 @@ export function Hero() {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const goToApp = useCallback(() => {
-    if (status === 'authenticated') {
-      const user = session?.user as any;
-      const onboardingDone = user?.onboardingCompleted === true;
-      router.push(onboardingDone ? '/dashboard' : '/onboarding');
-    } else {
-      router.push('/signup');
+  const cta = useMemo(() => {
+    if (status !== 'authenticated') {
+      return { text: 'Start Your Novel', route: '/signup' as const, icon: 'arrow-up' as const };
     }
-  }, [router, status, session]);
+    const user = session?.user as any;
+    if (!user?.onboardingCompleted) {
+      return { text: 'Continue Your Novel', route: '/onboarding' as const, icon: 'arrow-right' as const };
+    }
+    if (!user?.projectCount) {
+      return { text: 'Create Your First Novel', route: '/dashboard/start' as const, icon: 'arrow-right' as const };
+    }
+    return { text: 'Continue Writing', route: '/dashboard' as const, icon: 'arrow-right' as const };
+  }, [status, session]);
+
+  const goToApp = useCallback(() => {
+    router.push(cta.route);
+  }, [router, cta.route]);
 
   const goToPricing = useCallback(() => {
     router.push('/pricing');
@@ -530,7 +538,7 @@ export function Hero() {
                   onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.3)'; }}
                   onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; }}
                 >
-                  {t('start_free')}
+                  {status === 'authenticated' ? cta.text : t('start_free')}
                 </button>
                 <LocaleToggleMobile />
               </div>
@@ -565,7 +573,7 @@ export function Hero() {
               ) : (
                 <svg fill="none" viewBox="0 0 16 16" width="16" height="16"><path d="M8 2v6M5 5l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/><path d="M2 10v2a2 2 0 002 2h8a2 2 0 002-2v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/></svg>
               )}
-              {status === 'authenticated' ? 'Go to Dashboard' : t('hero_cta')}
+              {cta.text}
             </button>
             <button onClick={goToPricing}
               style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'var(--lp-muted)', fontSize: 15, fontWeight: 500, padding: '14px 20px', borderRadius: 50, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', transition: 'color .2s, border-color .2s' }}
@@ -726,7 +734,7 @@ export function Hero() {
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; }}
               >
-                Start Your First Novel
+                {cta.text}
               </button>
             </div>
           </div>
@@ -947,7 +955,7 @@ export function Hero() {
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; e.currentTarget.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)'; e.currentTarget.style.background = '#e8e8ea'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 24px rgba(0,0,0,0.4)'; e.currentTarget.style.background = 'var(--lp-white)'; }}
               >
-                {t('cta_button')}
+                {cta.text}
               </button>
               <button onClick={goToPricing}
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 8, background: 'transparent', color: 'var(--lp-muted)', fontSize: 15, fontWeight: 500, padding: '14px 20px', borderRadius: 50, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', transition: 'color .2s' }}
