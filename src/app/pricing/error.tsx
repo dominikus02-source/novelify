@@ -6,10 +6,10 @@ export default function Error({ error, reset }: { error: Error & { digest?: stri
   useEffect(() => { console.error(error); }, [error]);
 
   return (
-    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#080808', color: '#F5F5F7', padding: 24, textAlign: 'center' }}>
-      <h2 style={{ fontSize: 20, fontWeight: 600, color: '#E8C98A', marginBottom: 8 }}>Something went wrong</h2>
-      <p style={{ fontSize: 14, color: '#8E8E93', marginBottom: 24, maxWidth: 400 }}>An unexpected error occurred. Please try again.</p>
-      <button onClick={reset} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: '#C9A96E', color: '#000', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Try again</button>
+    <div style={{ display: 'flex', minHeight: '100vh', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: 'var(--novel-bg)', color: 'var(--novel-text)', padding: 24, textAlign: 'center' }}>
+      <h2 style={{ fontSize: 20, fontWeight: 600, color: 'var(--novel-gold-light)', marginBottom: 8 }}>Something went wrong</h2>
+      <p style={{ fontSize: 14, color: 'var(--novel-muted)', marginBottom: 24, maxWidth: 400 }}>An unexpected error occurred. Please try again.</p>
+      <button onClick={reset} style={{ padding: '10px 24px', borderRadius: 10, border: 'none', background: 'var(--novel-gold)', color: '#000', fontWeight: 600, fontSize: 14, cursor: 'pointer' }}>Try again</button>
     </div>
   );
 }

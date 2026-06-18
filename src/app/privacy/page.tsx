@@ -19,19 +19,19 @@ export default function PrivacyPage() {
       />
 
       <LegalSection title="1. Information We Collect">
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Account Information</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Account Information</p>
         <p style={{ margin: '0 0 12px' }}>
           When you create an account, we collect your name, email address, and a password. If you subscribe to a paid plan, we collect billing information such as your name, billing address, and payment method details. Payment transactions are processed by our third-party payment processor (Stripe), and we do not store full credit card numbers on our servers.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>User Content</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>User Content</p>
         <p style={{ margin: '0 0 12px' }}>
           We collect and store the manuscripts, outlines, character profiles, notes, and other content you create, upload, or generate using Novelify. This content is processed to provide our AI-assisted writing features.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Usage Data</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Usage Data</p>
         <p style={{ margin: '0 0 12px' }}>
           We automatically collect information about how you interact with the Platform, including pages visited, features used, writing session duration, and AI feature usage. This data helps us improve the service.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Device & Technical Data</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Device & Technical Data</p>
         <p style={{ margin: 0 }}>
           We may collect your IP address, browser type, operating system, device identifiers, and approximate geographic location for security, analytics, and performance optimization purposes.
         </p>

@@ -11,6 +11,25 @@ import { toast } from 'sonner';
 import { AuthLayout } from '@/components/auth/auth-layout';
 import { getStoredReferralCode } from '@/components/novelify/affiliate-referral-tracker';
 
+const inputBase: React.CSSProperties = {
+  background: 'var(--novel-card)',
+  border: '1px solid var(--novel-border)',
+  color: 'var(--novel-text)',
+  outline: 'none',
+};
+
+const inputFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+  e.currentTarget.style.borderColor = 'var(--novel-gold)';
+  e.currentTarget.style.boxShadow = '0 0 0 3px var(--novel-gold-bg)';
+};
+
+const inputBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+  e.currentTarget.style.borderColor = 'var(--novel-border)';
+  e.currentTarget.style.boxShadow = 'none';
+};
+
+const goldGradient = 'linear-gradient(135deg, var(--novel-gold), var(--novel-gold-light))';
+
 export default function SignupPage() {
   const router = useRouter();
   const [name, setName] = useState('');
@@ -70,7 +89,7 @@ export default function SignupPage() {
     >
       <form onSubmit={handleSubmit} className="space-y-5">
         <div>
-          <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+          <label htmlFor="name" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--novel-text-secondary)' }}>
             Name
           </label>
           <input
@@ -80,20 +99,15 @@ export default function SignupPage() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             className="block w-full rounded-xl px-4 py-3 text-sm transition-all duration-200"
-            style={{
-              background: '#161616',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#F5F5F7',
-              outline: 'none',
-            }}
+            style={inputBase}
             placeholder="Your name"
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+            onFocus={inputFocus}
+            onBlur={inputBlur}
           />
         </div>
 
         <div>
-          <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+          <label htmlFor="email" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--novel-text-secondary)' }}>
             Email
           </label>
           <input
@@ -103,20 +117,15 @@ export default function SignupPage() {
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             className="block w-full rounded-xl px-4 py-3 text-sm transition-all duration-200"
-            style={{
-              background: '#161616',
-              border: '1px solid rgba(255,255,255,0.08)',
-              color: '#F5F5F7',
-              outline: 'none',
-            }}
+            style={inputBase}
             placeholder="you@example.com"
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
-            onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+            onFocus={inputFocus}
+            onBlur={inputBlur}
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium mb-1.5" style={{ color: '#aeaeb2' }}>
+          <label htmlFor="password" className="block text-sm font-medium mb-1.5" style={{ color: 'var(--novel-text-secondary)' }}>
             Password
           </label>
           <div className="relative">
@@ -128,23 +137,18 @@ export default function SignupPage() {
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="block w-full rounded-xl px-4 py-3 pr-11 text-sm transition-all duration-200"
-              style={{
-                background: '#161616',
-                border: '1px solid rgba(255,255,255,0.08)',
-                color: '#F5F5F7',
-                outline: 'none',
-              }}
+              style={inputBase}
               placeholder="At least 6 characters"
-              onFocus={(e) => { e.currentTarget.style.borderColor = '#C9A96E'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(201,169,110,0.08)'; }}
-              onBlur={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)'; e.currentTarget.style.boxShadow = 'none'; }}
+              onFocus={inputFocus}
+              onBlur={inputBlur}
             />
             <button
               type="button"
               onClick={() => setShowPassword(!showPassword)}
               className="absolute right-3 top-1/2 -translate-y-1/2 transition-colors"
-              style={{ color: '#636366' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#8E8E93'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#636366'; }}
+              style={{ color: 'var(--novel-muted-dark)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-muted)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-muted-dark)'; }}
               aria-label={showPassword ? 'Hide password' : 'Show password'}
             >
               {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
@@ -153,7 +157,7 @@ export default function SignupPage() {
         </div>
 
         {error && (
-          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.15)', color: '#F87171' }}>
+          <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--novel-error-bg)', border: '1px solid var(--novel-error-border)', color: 'var(--destructive)' }}>
             {error}
           </div>
         )}
@@ -163,38 +167,47 @@ export default function SignupPage() {
           disabled={loading}
           className="flex w-full items-center justify-center rounded-xl px-4 py-3 text-sm font-semibold transition-all duration-200 disabled:opacity-50"
           style={{
-            background: 'linear-gradient(135deg, #C9A96E, #E8C98A)',
+            background: goldGradient,
             color: '#1a0f00',
-            boxShadow: '0 2px 12px rgba(201,169,110,0.15)',
+            boxShadow: '0 2px 12px var(--novel-gold-border)',
           }}
-          onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.25)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
-          onMouseLeave={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 2px 12px rgba(201,169,110,0.15)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
+          onMouseEnter={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 4px 20px var(--novel-gold-border)'; e.currentTarget.style.transform = 'translateY(-1px)'; } }}
+          onMouseLeave={(e) => { if (!loading) { e.currentTarget.style.boxShadow = '0 2px 12px var(--novel-gold-border)'; e.currentTarget.style.transform = 'translateY(0)'; } }}
         >
           {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : 'Create your account'}
         </button>
 
         <div className="text-center">
-          <p className="text-sm" style={{ color: '#636366' }}>
+          <p className="text-sm" style={{ color: 'var(--novel-muted-dark)' }}>
             Already have an account?{' '}
-            <Link href="/login" className="font-medium transition-colors" style={{ color: '#C9A96E' }}
-              onMouseEnter={(e) => { e.currentTarget.style.color = '#E8C98A'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.color = '#C9A96E'; }}
+            <Link href="/login" className="font-medium transition-colors" style={{ color: 'var(--novel-gold)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-gold-light)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-gold)'; }}
             >
               Sign in
             </Link>
           </p>
         </div>
 
-        <p className="text-center text-[11px] leading-relaxed" style={{ color: '#48484a' }}>
+        <p className="text-center text-[11px] leading-relaxed" style={{ color: 'var(--novel-muted-darker)' }}>
           By creating an account, you agree to{' '}
-          <Link href="/terms" className="underline hover:text-[#636366] transition-colors">Terms of Service</Link>
+          <Link href="/terms" className="underline transition-colors" style={{ color: 'var(--novel-muted-darker)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-muted-dark)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-muted-darker)'; }}
+          >Terms of Service</Link>
           {' '}and{' '}
-          <Link href="/privacy" className="underline hover:text-[#636366] transition-colors">Privacy Policy</Link>.
+          <Link href="/privacy" className="underline transition-colors" style={{ color: 'var(--novel-muted-darker)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-muted-dark)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-muted-darker)'; }}
+          >Privacy Policy</Link>.
         </p>
 
         <div className="pt-1">
-          <p className="text-center" style={{ color: '#48484a' }}>
-            <Link href="/" className="text-xs transition-colors hover:text-[#636366]">
+          <p className="text-center" style={{ color: 'var(--novel-muted-darker)' }}>
+            <Link href="/" className="text-xs transition-colors" style={{ color: 'var(--novel-muted-darker)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-muted-dark)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-muted-darker)'; }}
+            >
               Back to home
             </Link>
           </p>

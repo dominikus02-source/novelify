@@ -2,8 +2,8 @@ export default function OnboardingLayout({ children }: { children: React.ReactNo
   return (
     <div style={{
       minHeight: '100vh',
-      background: '#080808',
-      color: '#F5F5F7',
+      background: 'var(--novel-bg)',
+      color: 'var(--novel-text)',
     }}>
       {children}
     </div>

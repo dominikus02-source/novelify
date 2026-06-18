@@ -66,22 +66,22 @@ export default function OnboardingPage() {
     return (
       <div style={{
         minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: '#080808', padding: 24,
+        background: 'var(--novel-bg)', padding: 24,
       }}>
         <div style={{ textAlign: 'center', maxWidth: 400 }}>
           <div style={{
             width: 64, height: 64, borderRadius: '50%',
-            background: 'rgba(201,169,110,0.12)',
+            background: 'var(--novel-gold-bg)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            margin: '0 auto 20px', color: '#C9A96E',
+            margin: '0 auto 20px', color: 'var(--novel-gold)',
           }}>
             <Loader2 style={{ width: 28, height: 28, animation: 'spin 1s linear infinite' }} />
           </div>
           <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: '#F5F5F7', marginBottom: 8 }}>
+          <h2 style={{ fontFamily: "'Playfair Display',serif", fontSize: 22, fontWeight: 700, color: 'var(--novel-text)', marginBottom: 8 }}>
             We are building your workspace
           </h2>
-          <p style={{ fontSize: 13, color: '#8E8E93', marginBottom: 24 }}>{status}</p>
+          <p style={{ fontSize: 13, color: 'var(--novel-muted)', marginBottom: 24 }}>{status}</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8, textAlign: 'left' }}>
             {[
               'Generating story outline',
@@ -92,18 +92,18 @@ export default function OnboardingPage() {
             ].map((s, i) => (
               <div key={i} style={{
                 display: 'flex', alignItems: 'center', gap: 10,
-                fontSize: 12, color: '#636366',
+                fontSize: 12, color: 'var(--novel-muted-dark)',
               }}>
                 <div style={{
                   width: 16, height: 16, borderRadius: '50%',
-                  background: 'rgba(201,169,110,0.15)',
+                  background: 'var(--novel-gold-border)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0,
                 }}>
                   {i < 3 ? (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#C9A96E' }} />
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--novel-gold)' }} />
                   ) : (
-                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: '#2a2a2a' }} />
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--novel-muted-dark)' }} />
                   )}
                 </div>
                 {s}

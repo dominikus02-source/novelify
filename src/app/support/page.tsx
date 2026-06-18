@@ -24,13 +24,13 @@ export default function SupportPage() {
         </p>
         <p style={{ margin: '0 0 12px' }}>
           <strong>General Support:</strong>{' '}
-          <a href="mailto:support@novelify.online" style={{ color: '#C9A96E', textDecoration: 'none' }}>
+          <a href="mailto:support@novelify.online" style={{ color: 'var(--novel-gold)', textDecoration: 'none' }}>
             support@novelify.online
           </a>
         </p>
         <p style={{ margin: '0 0 12px' }}>
           <strong>Billing Support:</strong>{' '}
-          <a href="mailto:billing@novelify.online" style={{ color: '#C9A96E', textDecoration: 'none' }}>
+          <a href="mailto:billing@novelify.online" style={{ color: 'var(--novel-gold)', textDecoration: 'none' }}>
             billing@novelify.online
           </a>
         </p>
@@ -54,19 +54,19 @@ export default function SupportPage() {
       </LegalSection>
 
       <LegalSection title="Common Topics">
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Account & Login Issues</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Account & Login Issues</p>
         <p style={{ margin: '0 0 12px' }}>
           If you&apos;re having trouble logging in, try resetting your password using the &quot;Forgot Password&quot; link on the login page. If you continue to experience issues, please contact support with your account email.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Subscription & Billing</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Subscription & Billing</p>
         <p style={{ margin: '0 0 12px' }}>
           Questions about your subscription plan, billing date, or payment method? Visit your account settings to manage your subscription or contact our billing team for assistance with payment-related issues.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>AI Writing Features</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>AI Writing Features</p>
         <p style={{ margin: '0 0 12px' }}>
           If AI features are not working as expected, ensure you have an active internet connection and that your usage has not exceeded the rate limits for your plan. For persistent issues, please contact support with details about the feature and behavior you&apos;re experiencing.
         </p>
-        <p style={{ margin: '0 0 12px', fontWeight: 600, color: '#F5F5F7' }}>Lost or Missing Content</p>
+        <p style={{ margin: '0 0 12px', fontWeight: 600, color: 'var(--novel-text)' }}>Lost or Missing Content</p>
         <p style={{ margin: '0' }}>
           Novelify automatically saves your work as you write. If you believe content is missing, check your project&apos;s version history (available in the project settings menu). Automated backups are retained for 30 days. Contact support if you need assistance restoring from a backup.
         </p>
@@ -104,7 +104,7 @@ export default function SupportPage() {
 
       <LegalSection title="Feature Requests">
         <p style={{ margin: '0' }}>
-          We welcome feedback and suggestions for improving Novelify. To submit a feature request, please email us at <a href="mailto:support@novelify.online" style={{ color: '#C9A96E', textDecoration: 'none' }}>support@novelify.online</a> with &quot;Feature Request&quot; in the subject line. While we cannot guarantee implementation, we review all suggestions and consider them for future development.
+          We welcome feedback and suggestions for improving Novelify. To submit a feature request, please email us at <a href="mailto:support@novelify.online" style={{ color: 'var(--novel-gold)', textDecoration: 'none' }}>support@novelify.online</a> with &quot;Feature Request&quot; in the subject line. While we cannot guarantee implementation, we review all suggestions and consider them for future development.
         </p>
       </LegalSection>
 

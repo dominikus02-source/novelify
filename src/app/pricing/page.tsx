@@ -115,8 +115,8 @@ export default function PricingPage() {
     <div
       style={{
         minHeight: '100vh',
-        background: '#080808',
-        color: '#F5F5F7',
+        background: 'var(--novel-bg)',
+        color: 'var(--novel-text)',
         fontFamily: "'Geist', system-ui, sans-serif",
       }}
     >
@@ -128,13 +128,13 @@ export default function PricingPage() {
             style={{
               display: 'inline-flex', alignItems: 'center', gap: 6,
               padding: '6px 12px', borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.08)',
-              background: 'transparent', color: '#8E8E93',
+              border: '1px solid var(--novel-border)',
+              background: 'transparent', color: 'var(--novel-muted)',
               fontSize: 13, fontWeight: 500, cursor: 'pointer',
               transition: 'all 0.15s',
             }}
-            onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.color = '#F5F5F7'; }}
-            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = '#8E8E93'; }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--novel-border)'; e.currentTarget.style.color = 'var(--novel-text)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.color = 'var(--novel-muted)'; }}
           >
             <ArrowLeft size={16} />
             Back
@@ -148,7 +148,7 @@ export default function PricingPage() {
               fontFamily: "'Playfair Display', serif",
               fontSize: 48,
               fontWeight: 700,
-              color: '#C9A96E',
+              color: 'var(--novel-gold)',
               margin: '0 0 12px',
               letterSpacing: '-0.02em',
             }}
@@ -158,7 +158,7 @@ export default function PricingPage() {
           <p
             style={{
               fontSize: 18,
-              color: '#F5F5F7',
+              color: 'var(--novel-text)',
               opacity: 0.6,
               margin: 0,
             }}
@@ -175,9 +175,9 @@ export default function PricingPage() {
               margin: '0 auto 32px',
               padding: '14px 20px',
               borderRadius: 10,
-              background: 'rgba(201, 169, 110, 0.1)',
-              border: '1px solid rgba(201, 169, 110, 0.3)',
-              color: '#C9A96E',
+              background: 'var(--novel-gold-bg)',
+              border: '1px solid var(--novel-gold-border)',
+              color: 'var(--novel-gold)',
               fontSize: 14,
               textAlign: 'center',
             }}
@@ -197,7 +197,7 @@ export default function PricingPage() {
             flexWrap: 'wrap',
           }}
         >
-          <span style={{ fontSize: 12, fontWeight: 600, color: '#8E8E93', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
+          <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--novel-muted)', letterSpacing: '0.05em', textTransform: 'uppercase' }}>
             USD
           </span>
 
@@ -205,7 +205,7 @@ export default function PricingPage() {
             style={{
               fontSize: 14,
               fontWeight: 500,
-              color: yearly ? '#F5F5F780' : '#F5F5F7',
+              color: yearly ? '#F5F5F780' : 'var(--novel-text)',
               transition: 'color 0.2s',
             }}
           >
@@ -220,7 +220,7 @@ export default function PricingPage() {
               borderRadius: 14,
               border: 'none',
               cursor: 'pointer',
-              background: yearly ? '#C9A96E' : '#2a2a2a',
+              background: yearly ? 'var(--novel-gold)' : '#2a2a2a',
               transition: 'background 0.2s',
             }}
           >
@@ -232,7 +232,7 @@ export default function PricingPage() {
                 width: 22,
                 height: 22,
                 borderRadius: '50%',
-                background: '#080808',
+                background: 'var(--novel-bg)',
                 transition: 'left 0.2s',
               }}
             />
@@ -241,7 +241,7 @@ export default function PricingPage() {
             style={{
               fontSize: 14,
               fontWeight: 500,
-              color: yearly ? '#F5F5F7' : '#F5F5F780',
+              color: yearly ? 'var(--novel-text)' : '#F5F5F780',
               transition: 'color 0.2s',
             }}
           >
@@ -252,8 +252,8 @@ export default function PricingPage() {
               style={{
                 fontSize: 11,
                 fontWeight: 600,
-                color: '#080808',
-                background: '#C9A96E',
+                color: 'var(--novel-bg)',
+                background: 'var(--novel-gold)',
                 padding: '2px 10px',
                 borderRadius: 999,
                 letterSpacing: '0.02em',
@@ -281,15 +281,15 @@ export default function PricingPage() {
                 className="p-6 md:p-8"
                 style={{
                   position: 'relative',
-                  background: '#121212',
-                  border: `1px solid rgba(201, 169, 110, ${plan.highlighted ? 0.6 : 0.3})`,
+                  background: 'var(--novel-input-bg)',
+                  border: '1px solid var(--novel-gold-border)',
                   borderRadius: 16,
                   display: 'flex',
                   flexDirection: 'column',
                   ...(plan.highlighted
                     ? {
-                        boxShadow: '0 0 30px rgba(201, 169, 110, 0.15)',
-                        borderColor: '#C9A96E',
+                        boxShadow: '0 0 30px var(--novel-gold-border)',
+                        borderColor: 'var(--novel-gold)',
                       }
                     : {}),
                 }}
@@ -302,8 +302,8 @@ export default function PricingPage() {
                       top: -12,
                       left: '50%',
                       transform: 'translateX(-50%)',
-                      background: '#C9A96E',
-                      color: '#080808',
+                      background: 'var(--novel-gold)',
+                      color: 'var(--novel-bg)',
                       fontSize: 11,
                       fontWeight: 700,
                       padding: '3px 14px',
@@ -318,13 +318,13 @@ export default function PricingPage() {
 
                 {/* Icon + Name */}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
-                  <div style={{ color: '#C9A96E' }}>{IconComponent}</div>
+                  <div style={{ color: 'var(--novel-gold)' }}>{IconComponent}</div>
                   <h3
                     style={{
                       fontFamily: "'Playfair Display', serif",
                       fontSize: 22,
                       fontWeight: 600,
-                      color: '#F5F5F7',
+                      color: 'var(--novel-text)',
                       margin: 0,
                     }}
                   >
@@ -349,7 +349,7 @@ export default function PricingPage() {
                     style={{
                       fontSize: 42,
                       fontWeight: 700,
-                      color: '#F5F5F7',
+                      color: 'var(--novel-text)',
                       fontFamily: "'Playfair Display', serif",
                     }}
                   >
@@ -378,13 +378,13 @@ export default function PricingPage() {
                 >
                   {FEATURES.filter((f) => f.planRequired === 'free').map((f) => (
                     <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Check size={16} style={{ color: '#10B981', flexShrink: 0 }} />
+                      <Check size={16} style={{ color: 'var(--chart-2)', flexShrink: 0 }} />
                       <span style={{ fontSize: 13, color: 'rgba(245,245,247,0.7)' }}>{f.label}</span>
                     </div>
                   ))}
                   {FEATURES.filter((f) => f.planRequired === tier && tier !== 'free').map((f) => (
                     <div key={f.key} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                      <Check size={16} style={{ color: '#10B981', flexShrink: 0 }} />
+                      <Check size={16} style={{ color: 'var(--chart-2)', flexShrink: 0 }} />
                       <span style={{ fontSize: 13, color: 'rgba(245,245,247,0.7)' }}>{f.label}</span>
                     </div>
                   ))}
@@ -393,7 +393,7 @@ export default function PricingPage() {
                   ).length > 0 && (
                     <div
                       style={{
-                        borderTop: '1px solid rgba(255,255,255,0.06)',
+                        borderTop: '1px solid var(--novel-border)',
                         paddingTop: 12,
                         marginTop: 4,
                       }}
@@ -416,7 +416,7 @@ export default function PricingPage() {
                       fontSize: 14,
                       fontWeight: 600,
                       border: '1px solid rgba(201, 169, 110, 0.4)',
-                      color: '#C9A96E',
+                      color: 'var(--novel-gold)',
                       background: 'transparent',
                     }}
                   >
@@ -433,8 +433,8 @@ export default function PricingPage() {
                       fontSize: 14,
                       fontWeight: 600,
                       border: plan.highlighted ? 'none' : '1px solid rgba(201, 169, 110, 0.4)',
-                      color: plan.highlighted ? '#080808' : '#C9A96E',
-                      background: plan.highlighted ? '#C9A96E' : 'transparent',
+                      color: plan.highlighted ? 'var(--novel-bg)' : 'var(--novel-gold)',
+                      background: plan.highlighted ? 'var(--novel-gold)' : 'transparent',
                       cursor: isLoading ? 'not-allowed' : 'pointer',
                       opacity: isLoading ? 0.6 : 1,
                       transition: 'opacity 0.2s',
@@ -472,7 +472,7 @@ export default function PricingPage() {
         {/* Comparison Table */}
         <div
           style={{
-            border: '1px solid rgba(201, 169, 110, 0.15)',
+            border: '1px solid var(--novel-gold-border)',
             borderRadius: 16,
             overflow: 'hidden',
             marginBottom: 80,
@@ -485,7 +485,7 @@ export default function PricingPage() {
                   style={{
                     position: 'sticky' as any,
                     top: 0,
-                    background: '#0d0d0d',
+                    background: 'var(--novel-surface)',
                     zIndex: 10,
                   }}
                 >
@@ -495,11 +495,11 @@ export default function PricingPage() {
                       textAlign: 'left',
                       padding: '18px 24px',
                       fontWeight: 600,
-                      color: '#F5F5F7',
+                      color: 'var(--novel-text)',
                       fontSize: 13,
                       letterSpacing: '0.03em',
                       textTransform: 'uppercase' as const,
-                      borderBottom: '1px solid rgba(201, 169, 110, 0.15)',
+                      borderBottom: '1px solid var(--novel-gold-border)',
                     }}
                   >
                     Feature
@@ -512,11 +512,11 @@ export default function PricingPage() {
                         textAlign: 'center',
                         padding: '18px 16px',
                         fontWeight: 600,
-                        color: tier === 'pro' ? '#C9A96E' : '#F5F5F7',
+                        color: tier === 'pro' ? 'var(--novel-gold)' : 'var(--novel-text)',
                         fontSize: 13,
                         letterSpacing: '0.03em',
                         textTransform: 'uppercase' as const,
-                        borderBottom: '1px solid rgba(201, 169, 110, 0.15)',
+                        borderBottom: '1px solid var(--novel-gold-border)',
                       }}
                     >
                       {PLANS[tier].name}
@@ -535,7 +535,7 @@ export default function PricingPage() {
                       <tr
                         key={`group-${groupKey}`}
                         style={{
-                          background: 'rgba(201, 169, 110, 0.06)',
+                          background: 'var(--novel-gold-bg)',
                         }}
                       >
                         <td
@@ -543,7 +543,7 @@ export default function PricingPage() {
                           style={{
                             padding: '14px 24px',
                             fontWeight: 600,
-                            color: '#C9A96E',
+                            color: 'var(--novel-gold)',
                             fontSize: 13,
                             letterSpacing: '0.02em',
                           }}
@@ -556,7 +556,7 @@ export default function PricingPage() {
                       {groupFeatures.map((feature, idx) => {
                         const bgColor =
                           idx % 2 === 0
-                            ? 'rgba(255, 255, 255, 0.02)'
+                            ? 'var(--novel-bg)'
                             : 'transparent';
 
                         return (
@@ -569,7 +569,7 @@ export default function PricingPage() {
                               style={{
                                 padding: '14px 24px',
                                 color: '#F5F5F7CC',
-                                borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                borderBottom: '1px solid var(--novel-border)',
                               }}
                             >
                               {feature.label}
@@ -583,14 +583,14 @@ export default function PricingPage() {
                                   style={{
                                     textAlign: 'center',
                                     padding: '14px 16px',
-                                    borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                    borderBottom: '1px solid var(--novel-border)',
                                   }}
                                 >
                                   {available ? (
                                     <Check
                                       size={18}
                                       style={{
-                                        color: '#10B981',
+                                        color: 'var(--chart-2)',
                                         display: 'inline-block',
                                       }}
                                     />
@@ -624,7 +624,7 @@ export default function PricingPage() {
               fontFamily: "'Playfair Display', serif",
               fontSize: 32,
               fontWeight: 700,
-              color: '#C9A96E',
+              color: 'var(--novel-gold)',
               textAlign: 'center',
               margin: '0 0 40px',
             }}
@@ -654,8 +654,8 @@ export default function PricingPage() {
               <div
                 key={faq.q}
                 style={{
-                  background: '#121212',
-                  border: '1px solid rgba(201, 169, 110, 0.15)',
+                  background: 'var(--novel-input-bg)',
+                  border: '1px solid var(--novel-gold-border)',
                   borderRadius: 12,
                   padding: '20px 24px',
                 }}
@@ -665,7 +665,7 @@ export default function PricingPage() {
                     fontFamily: "'Playfair Display', serif",
                     fontSize: 16,
                     fontWeight: 600,
-                    color: '#F5F5F7',
+                    color: 'var(--novel-text)',
                     margin: '0 0 8px',
                   }}
                 >
