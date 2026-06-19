@@ -364,7 +364,7 @@ export function Hero() {
             borderBottom: '1px solid var(--lp-border)',
           }}
         >
-          <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
+          <Image src="/images/Novelify_logo_web.png" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
           <ul style={{ display: 'flex', alignItems: 'center', gap: 4, listStyle: 'none', margin: 0 }}>
             {navLinks.map((f) => (
               <li key={f.key} className="lp-mobile-hidden">
@@ -440,7 +440,7 @@ export function Hero() {
                 padding: '14px 20px',
                 borderBottom: '1px solid var(--lp-border)',
               }}>
-                <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
+                <Image src="/images/Novelify_logo_web.png" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
                 <button onClick={() => setDrawerOpen(false)} aria-label="Close menu"
                   style={{
                     width: 44, height: 44,
@@ -1016,7 +1016,7 @@ export function Hero() {
             <div className="lp-grid-footer-links" style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'flex-start', gap: 24 }}>
               <div>
                 <Link href="/" style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={100} height={26} style={{ objectFit: 'contain' }} />
+                  <Image src="/images/Novelify_logo_web.png" alt="Novelify" width={100} height={26} style={{ objectFit: 'contain' }} />
                 </Link>
                 <p style={{ fontSize: 11, color: 'var(--lp-muted)', margin: '8px 0 0', maxWidth: 260, lineHeight: 1.5 }}>
                   {t('footer_about')}

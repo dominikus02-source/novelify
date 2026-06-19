@@ -124,7 +124,7 @@ export function CommandCenter() {
     const project = lastEdited;
     if (!project) return { ...item, done: false };
     switch (item.key) {
-      case 'draft': return { ...item, done: project.chapters.length > 0 && project.chapters.some((c) => c.contentOriginal.length > 0) };
+      case 'draft': return { ...item, done: project.chapters.length > 0 && project.chapters.some((c) => c.contentOriginal && c.contentOriginal.length > 0) };
       case 'revised': return { ...item, done: project.chapters.some((c) => c.status !== 'draft') };
       case 'cover': return { ...item, done: !!project.coverImage };
       case 'synopsis': return { ...item, done: !!project.plotOutline };

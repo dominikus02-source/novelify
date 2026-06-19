@@ -77,7 +77,7 @@ export function Synopsis() {
   // Build chapter summaries
   const chapterSummaries = selectedProject.chapters
     .sort((a, b) => a.chapterNumber - b.chapterNumber)
-    .map((c) => `Chapter ${c.chapterNumber}: ${c.title} — ${c.contentOriginal.substring(0, 200)}...`)
+    .map((c) => `Chapter ${c.chapterNumber}: ${c.title} — ${(c.contentOriginal || '').substring(0, 200)}...`)
     .join('\n');
 
   // Generate blurb

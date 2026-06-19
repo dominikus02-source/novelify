@@ -212,7 +212,7 @@ export function Sidebar() {
         }}
       >
         <a href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 10, padding: sidebarOpen ? '18px 14px 20px' : '18px 0 20px', justifyContent: sidebarOpen ? 'flex-start' : 'center', textDecoration: 'none', flexShrink: 0 }}>
-          <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={sidebarOpen ? 120 : 30} height={30} style={{ objectFit: 'contain', flexShrink: 0, borderRadius: sidebarOpen ? 0 : 6 }} />
+          <Image src="/images/Novelify_logo_web.png" alt="Novelify" width={sidebarOpen ? 120 : 30} height={30} style={{ objectFit: 'contain', flexShrink: 0, borderRadius: sidebarOpen ? 0 : 6 }} />
         </a>
 
         {sidebarOpen && (

@@ -31,7 +31,7 @@ export function AuthLayout({ children, title, subtitle, backLink = true }: AuthL
           {/* Brand */}
           <div className="mb-10">
             <Link href="/" className="inline-flex items-center gap-2.5 group">
-              <Image src="/images/Novelify_logo.jpeg" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
+              <Image src="/images/Novelify_logo_web.png" alt="Novelify" width={120} height={30} style={{ objectFit: 'contain' }} />
             </Link>
           </div>
 
