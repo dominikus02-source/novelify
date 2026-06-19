@@ -193,7 +193,7 @@ export function getLimit(plan: string, limitKey: keyof PlanLimits): number | 'un
   return config.limits[limitKey]
 }
 
-export function isUnlimited(value: number | 'unlimited'): boolean {
+export function isUnlimited(value: number | 'unlimited'): value is 'unlimited' {
   return value === 'unlimited'
 }
 

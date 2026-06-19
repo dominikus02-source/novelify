@@ -34,3 +34,41 @@ export function rateLimit(opts: RateLimitOptions = {}) {
     },
   };
 }
+
+const CHECK_WINDOW_MS = 15 * 60 * 1000;
+const MAX_REQUESTS = 5;
+
+interface CheckRateLimitEntry {
+  count: number;
+  resetAt: number;
+}
+
+const checkStore = new Map<string, CheckRateLimitEntry>();
+
+function cleanup() {
+  const now = Date.now();
+  for (const [key, entry] of checkStore) {
+    if (now >= entry.resetAt) {
+      checkStore.delete(key);
+    }
+  }
+}
+
+setInterval(cleanup, 60_000);
+
+export function checkRateLimit(ip: string): { allowed: boolean; remaining: number } {
+  const now = Date.now();
+  const entry = checkStore.get(ip);
+
+  if (!entry || now >= entry.resetAt) {
+    checkStore.set(ip, { count: 1, resetAt: now + CHECK_WINDOW_MS });
+    return { allowed: true, remaining: MAX_REQUESTS - 1 };
+  }
+
+  if (entry.count >= MAX_REQUESTS) {
+    return { allowed: false, remaining: 0 };
+  }
+
+  entry.count++;
+  return { allowed: true, remaining: MAX_REQUESTS - entry.count };
+}

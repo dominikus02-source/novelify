@@ -153,6 +153,7 @@ export function Hero() {
   useScrollReveal();
 
   const [drawerOpen, setDrawerOpen] = useState(false);
+  const [billingInterval, setBillingInterval] = useState<'monthly' | 'yearly'>('monthly');
 
   useEffect(() => {
     if (drawerOpen) {
@@ -794,12 +795,55 @@ export function Hero() {
               <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--lp-gold)', letterSpacing: '0.1em', textTransform: 'uppercase', marginBottom: 12 }}>Pricing</div>
               <h2 className="lp-serif" style={{ fontSize: 'clamp(28px, 4vw, 44px)', fontWeight: 600, letterSpacing: '-0.02em', lineHeight: 1.15, color: 'var(--lp-white)' }}>{t('pricing_title')}</h2>
               <p style={{ marginTop: 16, fontSize: 16, color: 'var(--lp-muted)', maxWidth: 440, lineHeight: 1.65, margin: '16px auto 0' }}>No hidden fees. No surprises. Cancel anytime.</p>
+              <p style={{ marginTop: 8, fontSize: 12, color: 'var(--lp-muted)', opacity: 0.6 }}>Early access — help shape the future of novel writing</p>
             </div>
 
-            <div className="reveal lp-grid-pricing" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 56 }}>
+            <div className="reveal" style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, marginTop: 28 }}>
+              <button onClick={() => setBillingInterval('monthly')}
+                style={{
+                  padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+                  border: billingInterval === 'monthly' ? '1px solid var(--lp-gold)' : '1px solid var(--lp-border)',
+                  background: billingInterval === 'monthly' ? 'rgba(201,169,110,0.12)' : 'var(--lp-glass)',
+                  color: billingInterval === 'monthly' ? 'var(--lp-gold)' : 'var(--lp-muted)',
+                  cursor: 'pointer', transition: 'all .2s',
+                }}
+                onMouseEnter={(e) => { if (billingInterval !== 'monthly') { e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; e.currentTarget.style.color = 'var(--lp-white)'; } }}
+                onMouseLeave={(e) => { if (billingInterval !== 'monthly') { e.currentTarget.style.borderColor = 'var(--lp-border)'; e.currentTarget.style.color = 'var(--lp-muted)'; } }}
+              >Monthly</button>
+              <button onClick={() => setBillingInterval('yearly')}
+                style={{
+                  padding: '8px 16px', borderRadius: 20, fontSize: 13, fontWeight: 600,
+                  border: billingInterval === 'yearly' ? '1px solid var(--lp-gold)' : '1px solid var(--lp-border)',
+                  background: billingInterval === 'yearly' ? 'rgba(201,169,110,0.12)' : 'var(--lp-glass)',
+                  color: billingInterval === 'yearly' ? 'var(--lp-gold)' : 'var(--lp-muted)',
+                  cursor: 'pointer', transition: 'all .2s',
+                }}
+                onMouseEnter={(e) => { if (billingInterval !== 'yearly') { e.currentTarget.style.borderColor = 'var(--lp-border-bright)'; e.currentTarget.style.color = 'var(--lp-white)'; } }}
+                onMouseLeave={(e) => { if (billingInterval !== 'yearly') { e.currentTarget.style.borderColor = 'var(--lp-border)'; e.currentTarget.style.color = 'var(--lp-muted)'; } }}
+              >
+                Yearly
+                <span style={{ display: 'inline-block', marginLeft: 6, padding: '2px 6px', borderRadius: 8, fontSize: 10, fontWeight: 700, background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', color: '#000', verticalAlign: 'middle' }}>Save 2 months</span>
+              </button>
+            </div>
+
+            <div className="reveal lp-grid-pricing" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginTop: 40 }}>
               {(['free', 'starter', 'pro', 'studio'] as const).map((tier) => {
                 const plan = PLANS[tier];
                 const isFeatured = plan.highlighted;
+                const isYearly = billingInterval === 'yearly';
+                const mainPrice = isYearly ? plan.yearlyPrice : plan.monthlyPrice;
+                const mainSuffix = isYearly ? '/ yr' : '/ mo';
+                const monthlyRate = plan.yearlyPrice > 0 ? (plan.yearlyPrice / 12).toFixed(2) : '0';
+                const projectText = plan.limits.maxProjects === 'unlimited'
+                  ? 'Unlimited projects'
+                  : `${plan.limits.maxProjects} project${plan.limits.maxProjects !== 1 ? 's' : ''}`;
+                const aiCreditsText = plan.limits.aiCreditsMonthly === 'unlimited'
+                  ? 'Unlimited AI credits'
+                  : `${plan.limits.aiCreditsMonthly} AI credits / mo`;
+                const ctaRoute = tier === 'free'
+                  ? '/signup'
+                  : `/pricing?billing=${billingInterval}`;
+                const ctaLabel = tier === 'free' ? 'Start Free' : 'Subscribe';
                 return (
                   <div key={tier} className="lp-pcard-hover lp-pricing-card" style={{
                     background: isFeatured ? 'linear-gradient(160deg, #16102A 0%, #0f0f14 100%)' : 'var(--lp-surface)',
@@ -815,23 +859,43 @@ export function Hero() {
                         Most Popular
                       </div>
                     )}
+                    {isYearly && mainPrice > 0 && (
+                      <div style={{ position: 'absolute', top: isFeatured ? 32 : 8, right: 8, padding: '2px 8px', borderRadius: 6, fontSize: 9, fontWeight: 700, background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', color: '#000' }}>
+                        Save 2 months
+                      </div>
+                    )}
                     <div style={{ fontSize: 12, fontWeight: 600, color: isFeatured ? 'var(--lp-gold)' : 'var(--lp-muted)', textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 12 }}>{plan.name}</div>
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 4, justifyContent: 'center' }}>
-                      <span style={{ fontSize: 16, color: plan.monthlyPrice > 0 ? 'var(--lp-white)' : 'var(--lp-muted)' }}>$</span>
-                      <span className="lp-serif" style={{ fontSize: 36, fontWeight: 600, color: 'var(--lp-white)', letterSpacing: '-0.03em' }}>{plan.monthlyPrice}</span>
-                      <span style={{ fontSize: 13, color: 'var(--lp-muted)' }}>/ mo</span>
+                      <span style={{ fontSize: 16, color: mainPrice > 0 ? 'var(--lp-white)' : 'var(--lp-muted)' }}>$</span>
+                      <span className="lp-serif" style={{ fontSize: 36, fontWeight: 600, color: 'var(--lp-white)', letterSpacing: '-0.03em' }}>{mainPrice}</span>
+                      <span style={{ fontSize: 13, color: 'var(--lp-muted)' }}>{mainSuffix}</span>
                     </div>
-                    {plan.yearlyPrice > 0 && (
+                    {isYearly && mainPrice > 0 && (
+                      <div style={{ fontSize: 11, color: 'var(--lp-muted)', marginBottom: 12 }}>
+                        ${monthlyRate} / mo
+                      </div>
+                    )}
+                    {!isYearly && plan.yearlyPrice > 0 && (
                       <div style={{ fontSize: 11, color: 'var(--lp-muted)', marginBottom: 12 }}>
                         ${plan.yearlyPrice}/yr (${Math.round(plan.yearlyPrice / 12)}/mo)
                       </div>
                     )}
                     <p style={{ fontSize: 12, color: 'var(--lp-muted)', marginBottom: 20 }}>{plan.description}</p>
 
+                    <div style={{ marginBottom: 16, display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}>
+                        <Check size={13} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0 }} />
+                        {projectText}
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}>
+                        <Check size={13} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0 }} />
+                        {aiCreditsText}
+                      </div>
+                    </div>
+
                     <ul style={{ listStyle: 'none', marginBottom: 24, display: 'flex', flexDirection: 'column', gap: 8, padding: 0, textAlign: 'left' }}>
                       {tier === 'free' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />1 project</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Writing Studio + AI Co-Writer</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Story Bible + Plot Board</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />EPUB + Markdown export</li>
@@ -841,8 +905,6 @@ export function Hero() {
                       )}
                       {tier === 'starter' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />5 projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />500 AI credits / mo</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Full manuscript revision</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />PDF export</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Marketing assets</li>
@@ -851,18 +913,14 @@ export function Hero() {
                       )}
                       {tier === 'pro' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />20 projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3,000 AI credits / mo</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />DOCX export</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Amazon metadata optimization</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Priority support</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />3 team seats</li>
+                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />5 team seats</li>
                         </>
                       )}
                       {tier === 'studio' && (
                         <>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited projects</li>
-                          <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited AI credits</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited exports</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Unlimited translation</li>
                           <li style={{ display: 'flex', alignItems: 'flex-start', gap: 8, fontSize: 12, color: 'rgba(245,245,247,0.7)' }}><Check size={14} aria-hidden={true} style={{ color: 'var(--lp-gold)', flexShrink: 0, marginTop: 1 }} />Team collaboration (10 seats)</li>
@@ -871,19 +929,32 @@ export function Hero() {
                       )}
                     </ul>
 
-                    {isFeatured ? (
-                      <button onClick={goToPricing}
-                        style={{ width: '100%', display: 'block', textAlign: 'center', padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 600, border: 'none', cursor: 'pointer', background: 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))', color: '#000', transition: 'all .2s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.4)'; e.currentTarget.style.transform = 'translateY(-1px)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.transform = 'translateY(0)'; }}
-                      >Get Started</button>
-                    ) : (
-                      <button onClick={goToPricing}
-                        style={{ width: '100%', display: 'block', textAlign: 'center', padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 600, border: '1px solid var(--lp-border-bright)', cursor: 'pointer', background: 'var(--lp-glass)', color: 'var(--lp-white)', transition: 'all .2s' }}
-                        onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--lp-glass-hover)'; }}
-                        onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--lp-glass)'; }}
-                      >{tier === 'free' ? 'Start Free' : 'Learn More'}</button>
-                    )}
+                    <button onClick={() => router.push(ctaRoute)}
+                      style={{
+                        width: '100%', display: 'block', textAlign: 'center', padding: 12, borderRadius: 10, fontSize: 14, fontWeight: 600,
+                        border: isFeatured ? 'none' : '1px solid var(--lp-border-bright)',
+                        cursor: 'pointer',
+                        background: isFeatured ? 'linear-gradient(135deg, var(--lp-gold), var(--lp-gold-light))' : 'var(--lp-glass)',
+                        color: isFeatured ? '#000' : 'var(--lp-white)',
+                        transition: 'all .2s',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (isFeatured) {
+                          e.currentTarget.style.boxShadow = '0 4px 20px rgba(201,169,110,0.4)';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                        } else {
+                          e.currentTarget.style.background = 'var(--lp-glass-hover)';
+                        }
+                      }}
+                      onMouseLeave={(e) => {
+                        if (isFeatured) {
+                          e.currentTarget.style.boxShadow = 'none';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                        } else {
+                          e.currentTarget.style.background = 'var(--lp-glass)';
+                        }
+                      }}
+                    >{ctaLabel}</button>
                   </div>
                 );
               })}

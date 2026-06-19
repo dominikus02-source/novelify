@@ -1,11 +1,11 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { Loader2, Check, X, Star, Zap, Crown, Sparkles, ArrowLeft } from 'lucide-react';
-import { PLANS, FEATURES, hasFeature, type PlanTier } from '@/lib/billing/plans';
+import { PLANS, FEATURES, hasFeature, isUnlimited, type PlanTier, type PlanLimits } from '@/lib/billing/plans';
 
 const GROUP_LABELS: Record<string, string> = {
   writing: 'Writing',
@@ -25,6 +25,41 @@ const PLAN_ICONS: Record<string, React.ReactNode> = {
 };
 
 const TIERS: PlanTier[] = ['free', 'starter', 'pro', 'studio'];
+
+const LIMIT_INFO: { key: keyof PlanLimits; label: string; type: 'count' | 'countPerMo' | 'translation' | 'storage' }[] = [
+  { key: 'maxProjects', label: 'Projects', type: 'count' },
+  { key: 'aiCreditsMonthly', label: 'AI Credits', type: 'countPerMo' },
+  { key: 'exportsMonthly', label: 'Exports', type: 'countPerMo' },
+  { key: 'translationWordsMonthly', label: 'Translation', type: 'translation' },
+  { key: 'maxTeamMembers', label: 'Team Members', type: 'count' },
+  { key: 'storagePerProjectMb', label: 'Storage', type: 'storage' },
+];
+
+function formatLimitValue(value: number | 'unlimited', type: 'count' | 'countPerMo' | 'translation' | 'storage'): string {
+  if (isUnlimited(value)) return '∞';
+  if (type === 'count') return String(value);
+  if (type === 'countPerMo') return `${value.toLocaleString()}/mo`;
+  if (type === 'translation') {
+    if (value === 0) return '—';
+    return `${(value / 1000).toLocaleString()}K words/mo`;
+  }
+  if (type === 'storage') {
+    if (value >= 1000) return `${value / 1000}GB`;
+    return `${value}MB`;
+  }
+  return String(value);
+}
+
+const limitPillStyle: React.CSSProperties = {
+  background: 'rgba(201, 169, 110, 0.1)',
+  border: '1px solid rgba(201, 169, 110, 0.3)',
+  borderRadius: 6,
+  padding: '4px 10px',
+  fontSize: 12,
+  fontWeight: 500,
+  color: 'var(--novel-gold)',
+  whiteSpace: 'nowrap',
+};
 
 export default function PricingPage() {
   const [yearly, setYearly] = useState(false);
@@ -262,7 +297,7 @@ export default function PricingPage() {
                 letterSpacing: '0.02em',
               }}
             >
-              Save 15%
+              Save 2 months
             </span>
           )}
         </div>
@@ -271,12 +306,12 @@ export default function PricingPage() {
         <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4" style={{ marginBottom: 80 }}>
           {TIERS.map((tier) => {
             const plan = PLANS[tier];
-            const displayPrice = yearly
-              ? `$${(plan.yearlyPrice / 12).toFixed(2)}`
-              : `$${plan.monthlyPrice}`;
+            const mainPrice = yearly ? `$${plan.yearlyPrice}` : `$${plan.monthlyPrice}`;
+            const periodText = yearly ? '/year' : '/month';
             const isCurrent = userPlan === tier;
             const isLoading = loading === tier;
             const IconComponent = PLAN_ICONS[tier];
+            const limits = plan.limits;
 
             return (
               <div
@@ -347,7 +382,7 @@ export default function PricingPage() {
                 </p>
 
                 {/* Price */}
-                <div style={{ marginBottom: 24 }}>
+                <div style={{ marginBottom: 16 }}>
                   <span
                     style={{
                       fontSize: 42,
@@ -356,7 +391,7 @@ export default function PricingPage() {
                       fontFamily: "'Playfair Display', serif",
                     }}
                   >
-                    {displayPrice}
+                    {mainPrice}
                   </span>
                   <span
                     style={{
@@ -365,8 +400,33 @@ export default function PricingPage() {
                       marginLeft: 6,
                     }}
                   >
-                    /month
+                    {periodText}
                   </span>
+                  {yearly && (
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: '#F5F5F780',
+                        marginTop: 4,
+                      }}
+                    >
+                      ${(plan.yearlyPrice / 12).toFixed(2)} /month
+                    </div>
+                  )}
+                </div>
+
+                {/* Limit Pills */}
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
+                  <div style={limitPillStyle}>
+                    {isUnlimited(limits.maxProjects)
+                      ? 'Unlimited projects'
+                      : `${limits.maxProjects} ${limits.maxProjects === 1 ? 'project' : 'projects'}`}
+                  </div>
+                  <div style={limitPillStyle}>
+                    {isUnlimited(limits.aiCreditsMonthly)
+                      ? 'Unlimited AI credits'
+                      : `${limits.aiCreditsMonthly.toLocaleString()} AI credits / mo`}
+                  </div>
                 </div>
 
                 {/* Features */}
@@ -528,19 +588,64 @@ export default function PricingPage() {
                 </tr>
               </thead>
               <tbody>
+                {/* Plan Limits group */}
+                <tr style={{ background: 'var(--novel-gold-bg)' }}>
+                  <td
+                    colSpan={5}
+                    style={{
+                      padding: '14px 24px',
+                      fontWeight: 600,
+                      color: 'var(--novel-gold)',
+                      fontSize: 13,
+                      letterSpacing: '0.02em',
+                    }}
+                  >
+                    Plan Limits
+                  </td>
+                </tr>
+                {LIMIT_INFO.map((info, idx) => (
+                  <tr
+                    key={info.key}
+                    style={{
+                      background: idx % 2 === 0 ? 'var(--novel-bg)' : 'transparent',
+                    }}
+                  >
+                    <td
+                      className="text-xs md:text-sm"
+                      style={{
+                        padding: '14px 24px',
+                        color: '#F5F5F7CC',
+                        borderBottom: '1px solid var(--novel-border)',
+                      }}
+                    >
+                      {info.label}
+                    </td>
+                    {TIERS.map((tier) => (
+                      <td
+                        key={`${info.key}-${tier}`}
+                        className="text-xs md:text-sm"
+                        style={{
+                          textAlign: 'center',
+                          padding: '14px 16px',
+                          borderBottom: '1px solid var(--novel-border)',
+                          color: '#F5F5F7CC',
+                        }}
+                      >
+                        {formatLimitValue(PLANS[tier].limits[info.key], info.type)}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+
+                {/* Feature groups */}
                 {Object.entries(GROUP_LABELS).map(([groupKey, groupLabel]) => {
                   const groupFeatures = FEATURES.filter((f) => f.group === groupKey);
                   if (groupFeatures.length === 0) return null;
 
                   return (
-                    <>
+                    <React.Fragment key={`group-${groupKey}`}>
                       {/* Group header */}
-                      <tr
-                        key={`group-${groupKey}`}
-                        style={{
-                          background: 'var(--novel-gold-bg)',
-                        }}
-                      >
+                      <tr style={{ background: 'var(--novel-gold-bg)' }}>
                         <td
                           colSpan={5}
                           style={{
@@ -601,7 +706,7 @@ export default function PricingPage() {
                                     <X
                                       size={18}
                                       style={{
-                                        color: '#F5F5F740',
+                                        color: '#636366',
                                         display: 'inline-block',
                                       }}
                                     />
@@ -612,7 +717,7 @@ export default function PricingPage() {
                           </tr>
                         );
                       })}
-                    </>
+                    </React.Fragment>
                   );
                 })}
               </tbody>

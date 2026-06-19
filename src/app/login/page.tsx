@@ -117,6 +117,18 @@ export default function LoginPage() {
           </div>
         </div>
 
+        <div className="flex justify-end -mt-2">
+          <Link
+            href="/forgot-password"
+            className="text-xs font-medium transition-colors"
+            style={{ color: 'var(--novel-muted-dark)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.color = 'var(--novel-gold)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.color = 'var(--novel-muted-dark)'; }}
+          >
+            Forgot password?
+          </Link>
+        </div>
+
         {error && (
           <div className="rounded-lg px-4 py-3 text-sm" style={{ background: 'var(--novel-error-bg)', border: '1px solid var(--novel-error-border)', color: 'var(--destructive)' }}>
             {error}
