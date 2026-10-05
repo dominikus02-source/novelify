@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-REPO_DIR="${REPO_DIR:-/opt/novelify/apps/novelify}"
-CONFIG_DIR="${NOVELIFY_CONFIG_DIR:-/opt/novelify/config}"
+REPO_DIR="${REPO_DIR:-/opt/bahasacerdas/apps/novelify}"
+CONFIG_DIR="${NOVELIFY_CONFIG_DIR:-/opt/bahasacerdas/config/novelify}"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-main}"
 
 exec 9>/tmp/novelify-deploy.lock
