@@ -1,0 +1,46 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql://user:pass@localhost:5432/db
+      NEXTAUTH_SECRET: ci-placeholder
+      NEXTAUTH_URL: http://localhost:3000
+      NEXT_PUBLIC_APP_URL: http://localhost:3000
+      AI_BASE_URL: https://example.com
+      AI_API_KEY: ci-placeholder
+      AI_MODEL: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - run: npm run typecheck
+      - run: npm run build
+      - name: Verify VPS image
+        run: |
+          cat >/tmp/novelify-ci.env <<'EOF'
+          DATABASE_URL=postgresql://user:pass@localhost:5432/db
+          NEXTAUTH_SECRET=ci-placeholder
+          NEXTAUTH_URL=http://localhost:3000
+          NEXT_PUBLIC_APP_URL=http://localhost:3000
+          AI_BASE_URL=https://example.com
+          AI_API_KEY=ci-placeholder
+          AI_MODEL=ci-placeholder
+          EOF
+          DOCKER_BUILDKIT=1 docker build \
+            -f Dockerfile.vps \
+            --secret id=app_env,src=/tmp/novelify-ci.env \
+            -t novelify-ci .
