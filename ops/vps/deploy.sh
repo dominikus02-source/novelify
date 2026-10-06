@@ -38,6 +38,12 @@ for i in {1..40}; do
   sleep 3
 done
 
+echo "==> Verify production route + database"
+curl -fsS --max-time 15 https://novelify.online/ >/dev/null
+curl -fsS --max-time 15   'https://novelify.online/api/affiliate/validate-code?code=__vps_deploy_probe__'   | grep -q '"valid":false'
+
 "${COMPOSE[@]}" ps
-docker builder prune -af --filter until=168h >/dev/null || true
+# Keep recent BuildKit cache for fast follow-up deploys, but prevent cache from
+# consuming tens of gigabytes on the shared VPS.
+docker builder prune -af --filter until=24h >/dev/null || true
 echo "==> Novelify deploy complete"
