@@ -1,7 +1,7 @@
 name: novelify-prod
 
 services:
-  web:
+  novelify:
     build:
       context: ../..
       dockerfile: Dockerfile.vps
