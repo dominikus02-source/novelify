@@ -20,10 +20,10 @@ cd ops/vps
 COMPOSE=(docker compose)
 
 echo "==> Build Novelify"
-DOCKER_BUILDKIT=1 "${COMPOSE[@]}" build web
+DOCKER_BUILDKIT=1 "${COMPOSE[@]}" build novelify
 
 echo "==> Start Novelify"
-"${COMPOSE[@]}" up -d web
+"${COMPOSE[@]}" up -d novelify
 
 echo "==> Wait for health"
 for i in {1..40}; do
